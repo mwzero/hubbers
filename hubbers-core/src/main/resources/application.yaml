@@ -1,0 +1,30 @@
+spring.datasource.url: jdbc:h2:file:./camunda-h22-database
+
+spring:
+  h2:
+    console.enabled: true
+
+
+camunda:
+  bpm:
+    id-generator: simple
+    auto-deployment-enabled: true
+    application:
+      deploy-changed-only: true
+    admin-user:
+      id: demo
+      password: demo
+      first-name: Administrator
+    filter:
+      create: All tasks
+    history-level: full
+    # TTL specific properties
+    generic-properties:
+      properties:
+        historyCleanupStrategy: endTimeBased
+        fridayHistoryCleanupBatchWindowStartTime: "21:00"
+        fridayHistoryCleanupBatchWindowEndTime: "23:00"
+        historyCleanupBatchSize: 300
+
+history-cleanup:
+  uri: http://localhost:8080/rest/history/process-instance
