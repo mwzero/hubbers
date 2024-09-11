@@ -10,8 +10,6 @@ import javax.mail.search.FlagTerm;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.hubbers.core.tools.mail.PrintMailMessageSinker;
-
 public class MailTests {
 	
 	@Test
