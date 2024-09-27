@@ -53,6 +53,7 @@
 			<artifactId>langchain4j-spring-boot-starter</artifactId>
 			<version>0.31.0</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>dev.langchain4j</groupId>
 			<artifactId>langchain4j-ollama</artifactId>

@@ -15,6 +15,7 @@ import java.util.Map;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
+import com.hubbers.ConfifurationEnvironment;
 import com.hubbers.core.Agent;
 import com.hubbers.core.Task;
 import com.hubbers.core.model.AgentResponse;
@@ -27,6 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 public class ScrapeAndSummarizeRecipe {
 	
 	String url;
+	
+	public static void main(String... args) throws Exception {
+		
+		ConfifurationEnvironment.settingProxy();
+
+		ScrapeAndSummarizeRecipe
+			.builder()
+			.url("https://jsoup.org/cookbook/extracting-data/attributes-text-html")
+			.build()
+			.execute();
+	}
 
 	public void execute() throws Exception {
 
