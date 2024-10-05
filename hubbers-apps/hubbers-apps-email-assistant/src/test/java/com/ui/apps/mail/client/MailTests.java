@@ -10,16 +10,21 @@ import javax.mail.search.FlagTerm;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import com.ui.apps.mail.GoogleEmailReader;
+import com.ui.apps.mail.OfficeEmailReader;
+import com.ui.apps.mail.PrintMailMessageSinker;
+
 public class MailTests {
 	
 	@Test
+	@Disabled
 	public void readOfficeMail() throws Exception {
 		
 		String username = System.getenv("OFFICE_USERNAME");
         String password = System.getenv("OFFICE_PASSWORD");
         String host = System.getenv("OFFICE_HOST");
         
-        ReadEmailMicrosoft
+        OfficeEmailReader
         	.builder()
         		.username(username)
         		.password(password)
@@ -30,13 +35,12 @@ public class MailTests {
 	}
 	
 	@Test
-	@Disabled
 	public void readGoogleMail() throws IOException, URISyntaxException, MessagingException {
 		
 		String username = System.getenv("GMAIL_USERNAME");
         String password = System.getenv("GMAIL_PASSWORD");
 
-		ReadEmail
+        GoogleEmailReader
 			.builder()
 				.username(username)
 				.password(password)
