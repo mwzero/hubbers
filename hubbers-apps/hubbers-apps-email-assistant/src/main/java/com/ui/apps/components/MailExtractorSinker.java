@@ -25,6 +25,16 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+/**
+ * Extracts mail information and metadata.
+ * 
+ * all data are persisted over rootDirectory attribute in a folder for each message
+ * 
+ * body.txt: contains mail body
+ * metadata.json contains mail attributes such ad : senders, title, content-type, etc..
+ * attches: attachments are persisted in the same folder
+ * @return
+ */
 @Builder
 public class MailExtractorSinker implements IMailMessageSinker  {
 	

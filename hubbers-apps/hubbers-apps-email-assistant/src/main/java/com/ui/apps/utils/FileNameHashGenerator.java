@@ -1,11 +1,27 @@
 package com.ui.apps.utils;
 
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class FileNameHashGenerator {
 
+	public static String getFileExtension(String filename) {
+	    if (filename == null) {
+	        return null;
+	    }
+	    int dotIndex = filename.lastIndexOf(".");
+	    if (dotIndex >= 0) {
+	        return filename.substring(dotIndex + 1);
+	    }
+	    return "";
+	}
+	
+	public static String getFileExtension(File file) {
+		return getFileExtension(file.getName());
+	}
+	
     public static String generateSafeFileName(String input) {
         // Genera un hash SHA-256 della stringa di input
         String hash = generateSHA256Hash(input);
