@@ -92,8 +92,8 @@ public class MailExtractorSinker implements IMailMessageSinker  {
     			String.join(",",files.keySet()));
 		
 		Map<String, Object> metadata = new HashMap<>();
-		metadata.put("From", InternetAddress.toString(fromAddress));
-		metadata.put("Subject", subject);
+		metadata.put("from", InternetAddress.toString(fromAddress));
+		metadata.put("subject", subject);
 		metadata.put("sentDate", sentDate);
 		metadata.put("contentType", contentType);
 		

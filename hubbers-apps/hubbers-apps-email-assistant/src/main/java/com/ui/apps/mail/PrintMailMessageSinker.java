@@ -53,7 +53,7 @@ public class PrintMailMessageSinker implements IMailMessageSinker  {
 				}
 			}
 
-		} else if (contentType.contains("text/plain") || contentType.contains("text/html")) {
+		} else if ( MailProcessor.isHtml(contentType) || MailProcessor.isHtml(contentType) ) {
 			Object content = message.getContent();
 			if (content != null) {
 				messageContent = content.toString();

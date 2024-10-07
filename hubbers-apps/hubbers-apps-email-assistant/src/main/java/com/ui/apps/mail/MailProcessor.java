@@ -1,21 +1,70 @@
 package com.ui.apps.mail;
 
-import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 public class MailProcessor {
+
+	public static boolean isHtml (String contentType) {
+		
+		if (contentType.toUpperCase().contains("TEXT/HTML")) return true;
+		
+		return false;
+
+	}
+	
+	public static boolean isText (String contentType) {
+		
+		if (contentType.toUpperCase().contains("TEXT/PLAIN")) return true;
+		
+		return false;
+
+	}
+	
+	public static String mailContentCleaner(
+			File fileEmail, 
+			boolean preProcess,
+			int maxSentences) throws IOException {
+		
+		String email = new String(Files.readAllBytes(Paths.get(fileEmail.getAbsolutePath() + "/content.txt")));
+		if ( preProcess) {
+			
+			// Rimuovi firme, saluti, risposte citate e footer
+	        email = email.replaceAll("--.*$", "");  // Rimuove firme
+	        email = email.replaceAll("^Ciao .*?\n", "");  // Rimuove saluti
+	        email = email.replaceAll(">.*\n", "");  // Rimuove risposte citate
+	        email = email.replaceAll("Questa email .*?\n", "");  // Rimuove avvisi tipici
+	        
+	        // Converti a minuscolo
+	        email = email.toLowerCase();
+	        
+	        // Rimuovi link e caratteri speciali
+	        email = email.replaceAll("http\\S+", "");  // Rimuove URL
+	        email = email.replaceAll("[^\\p{L}\\p{N}\\s]", "");  // Rimuove caratteri non alfanumerici
+	        email = email.replaceAll("\\s+", " ");  // Rimuove spazi multipli
+	        
+	        // Unisci elenchi e limita la lunghezza del testo
+	        email = email.replaceAll("\\n\\s*[-*•]\\s*", " ");  // Unisce gli elenchi
+	        String[] frasi = email.split("\\.");
+	        StringBuilder risultato = new StringBuilder();
+	        for (int i = 0; i < Math.min(frasi.length, maxSentences); i++) {
+	            risultato.append(frasi[i]).append(".");
+	        }
+	        email = risultato.toString();
+
+		}
+		return email.trim();
+	}
 
 	public static String processMessage(Message message) throws IOException, MessagingException {
 		
@@ -43,10 +92,10 @@ public class MailProcessor {
 			}
 		} else {
 			String contentType = part.getContentType().toLowerCase();
-			if (contentType.contains("text/plain")) {
+			if ( isText(contentType) ) {
 				// Parte in testo semplice
 				return part.getContent().toString();
-			} else if (contentType.contains("text/html")) {
+			} else if ( isHtml(contentType) ) {
 				// Parte in HTML
 				return part.getContent().toString();
 			} else if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
@@ -70,11 +119,11 @@ public class MailProcessor {
 			Part part = multipart.getBodyPart(i);
 			String contentType = part.getContentType().toLowerCase();
 
-			if (contentType.contains("text/plain")) {
+			if ( isText(contentType ))
 				plainText = (String) part.getContent();
-			} else if (contentType.contains("text/html")) {
+			else if ( isHtml(contentType) ) 
 				htmlText = (String) part.getContent();
-			}
+			
 		}
 
 		/*if (plainText != null) {
@@ -83,7 +132,7 @@ public class MailProcessor {
 			return tika_autoParser(htmlText);
 			
 		}
-		return htmlText;
+		return plainText;
 	}
 	
 	public static String tika_autoParser(String htmlContent) {
