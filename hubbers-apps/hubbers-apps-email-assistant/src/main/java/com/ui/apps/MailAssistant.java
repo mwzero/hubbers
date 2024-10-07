@@ -1,7 +1,13 @@
 package com.ui.apps;
 
-import java.time.Duration;
+import static com.jui.JuiApp.jui;
+import static com.st.ST.st;
 
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+
+import com.st.DataFrame;
 import com.ui.apps.components.EmbeddingStoreGeneric;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -24,11 +30,51 @@ public class MailAssistant {
 		String dbPgUser = System.getenv("DB_PG_USER");
 		String dbPgPwd = System.getenv("DB_PG_PWD");
         String rootFolder = "C:\\temp\\mail-assistant";
-		log.info("WorkingFolder [{}] Store: [{}] [{}] [{}]",
+        log.info("WorkingFolder [{}] Store: [{}] [{}] [{}]",
 				rootFolder,
 				dbPgHost, 
 				dbPgPort, 
 				dbPgUser);
+        
+        //jui.set_page_config().rootDoc("sidebar");
+    	
+    	jui.markdown("""
+    			# Dashboard: Mail Assistant
+    			""");
+    	jui.divider();
+    	
+    	jui.markdown("""
+    			## PostgreSQL Database settings
+    			""");
+    	jui.divider();
+    	
+    	jui.input.input("PostregSQL Host",  dbPgHost, "PostgreSQL host address");
+    	jui.input.input("PostregSQL Port",  dbPgPort + "", "PostgreSQL host port");
+    	jui.input.input("PostregSQL User",  dbPgUser, "PostgreSQL host address");
+    	jui.input.input("PostregSQL Password",  dbPgPwd, "PostgreSQL host address");
+    	
+    	
+    	st.setOptions(Map.of("classLoading", "true"));
+    	
+    	try {
+    		DataFrame df = st
+    					 .read_json("../../../../datasets/dpc-covid19-ita-province.zip")
+    					.select(
+    						List.of("data",
+    						"denominazione_regione",
+    						"denominazione_provincia",
+    						"sigla_provincia",
+    						"lat", "long",
+    						"totale_casi"));
+
+    		jui.table("Covid", df, 4);
+    	
+    	} catch ( Exception err) {
+    		
+    		log.error(err.getLocalizedMessage());
+    	}
+    	
+    	jui.start();
 		
 		ChatLanguageModel chatModel = OllamaChatModel.builder()
                 .baseUrl("http://localhost:11434")
@@ -56,6 +102,6 @@ public class MailAssistant {
 	            .build();
 
 		EmbeddingStoreGeneric store = new EmbeddingStoreGeneric(embeddingModel,embeddingStore );
-
+		
     }
 }
