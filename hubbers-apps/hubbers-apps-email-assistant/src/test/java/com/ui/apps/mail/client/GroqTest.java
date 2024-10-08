@@ -17,7 +17,7 @@ public class GroqTest {
     	
 		EmbeddingModel model = OpenAiEmbeddingModel.builder()
 				.baseUrl("https://api.groq.com/openai/v1/embeddings")
-		        .apiKey("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")
+		        .apiKey("")
 		        .modelName("llama3-8b-8192")
 	            .timeout(Duration.ofMinutes(5))
 	            .build();
