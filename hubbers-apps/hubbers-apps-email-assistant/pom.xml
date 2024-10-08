@@ -95,6 +95,13 @@
 		</dependency>
 		
 		<dependency>
+		    <groupId>dev.langchain4j</groupId>
+		    <artifactId>langchain4j-open-ai</artifactId>
+		    <version>0.35.0</version>
+		</dependency>
+
+		
+		<dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
             <version>0.25.0</version>
