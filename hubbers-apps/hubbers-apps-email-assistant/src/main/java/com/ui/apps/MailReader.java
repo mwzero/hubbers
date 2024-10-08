@@ -5,6 +5,7 @@ import javax.mail.search.FlagTerm;
 
 import com.ui.apps.components.MailExtractorSinker;
 import com.ui.apps.mail.GoogleEmailReader;
+import com.ui.apps.utils.ConfifurationEnvironment;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,6 +14,7 @@ public class MailReader {
 	
 	public static void main(String[] args) throws Exception {
     	
+		ConfifurationEnvironment.settingProxy();
     	//parameters
 		String rootFolder = "C:\\temp\\mail-assistant";
     	String username = System.getenv("GMAIL_USERNAME");
