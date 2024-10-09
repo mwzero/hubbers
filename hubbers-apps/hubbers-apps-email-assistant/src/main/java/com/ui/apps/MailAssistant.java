@@ -7,8 +7,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import com.st.DataFrame;
-import com.ui.apps.components.EmbeddingStoreGeneric;
+import com.ui.apps.components.MailReader;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatLanguageModel;
@@ -43,9 +42,11 @@ public class MailAssistant {
         MailReader mailReader = new MailReader();
         mailReader.process(rootFolder, username, password);
         
-        jui.set_page_config().rootDoc("sidebar");
+        /*
+        jui.set_page_config().rootDoc("sidebar-toolbar");
 
         // Sidebar with instructions
+        
  		jui.sidebar.markdown("""
  				# Mail Assistant App
  				
@@ -54,13 +55,15 @@ public class MailAssistant {
  				**Source Code:** You can access the code on GitHub
  				""");
  		
- 		jui.sidebar.dropDownButton("Settings", List.of("Profile", "Account Settings", "Logout"));    	
+ 		jui.sidebar.dropDownButton("Settings", List.of("Profile", "Account Settings", "Logout"));
+ 		*/    	
      		
     	jui.markdown("""
     			# Dashboard: Mail Assistant
     			""");
     	jui.divider();
     	
+    	/*
     	jui.markdown("""
     			## PostgreSQL Database settings
     			""");
@@ -70,8 +73,11 @@ public class MailAssistant {
     	jui.input.input("PostregSQL Port",  dbPgPort + "", "PostgreSQL host port");
     	jui.input.input("PostregSQL User",  dbPgUser, "PostgreSQL host address");
     	jui.input.input("PostregSQL Password",  dbPgPwd, "PostgreSQL host address");
+    	*/
     	
     	st.setOptions(Map.of("classLoading", "true"));
+    	
+    	jui.button("Load Mail","", "", null);
     	
     	try {
     		jui.table("Mails", mailReader.getDF().select(
@@ -109,7 +115,5 @@ public class MailAssistant {
 	            .timeout(Duration.ofMinutes(5))
 	            .build();
 
-		EmbeddingStoreGeneric store = new EmbeddingStoreGeneric(embeddingModel,embeddingStore );
-		
     }
 }

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import com.ui.apps.mail.GoogleEmailReader;
 import com.ui.apps.mail.OfficeEmailReader;
-import com.ui.apps.mail.PrintMailMessageSinker;
+import com.ui.apps.mail.sinker.PrintMailMessageSinker;
 
 public class MailTests {
 	

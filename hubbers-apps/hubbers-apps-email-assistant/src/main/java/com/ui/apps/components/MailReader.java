@@ -1,11 +1,11 @@
-package com.ui.apps;
+package com.ui.apps.components;
 
 import javax.mail.Flags;
 import javax.mail.search.FlagTerm;
 
 import com.st.DataFrame;
-import com.ui.apps.components.MailExtractorSinker;
 import com.ui.apps.mail.GoogleEmailReader;
+import com.ui.apps.mail.sinker.MailExtractorSinker;
 
 import lombok.extern.slf4j.Slf4j;
 

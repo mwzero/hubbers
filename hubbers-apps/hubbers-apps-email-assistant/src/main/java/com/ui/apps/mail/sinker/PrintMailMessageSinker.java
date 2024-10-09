@@ -1,4 +1,4 @@
-package com.ui.apps.mail;
+package com.ui.apps.mail.sinker;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +8,8 @@ import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
+
+import com.ui.apps.mail.utils.MailProcessor;
 
 import lombok.extern.slf4j.Slf4j;
 

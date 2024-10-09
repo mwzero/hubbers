@@ -1,4 +1,4 @@
-package com.ui.apps.components;
+package com.ui.apps.mail.sinker;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -20,8 +20,7 @@ import javax.mail.internet.MimeBodyPart;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.st.DataSet;
-import com.ui.apps.mail.IMailMessageSinker;
-import com.ui.apps.mail.MailProcessor;
+import com.ui.apps.mail.utils.MailProcessor;
 import com.ui.apps.utils.FileNameHashGenerator;
 
 import lombok.Builder;

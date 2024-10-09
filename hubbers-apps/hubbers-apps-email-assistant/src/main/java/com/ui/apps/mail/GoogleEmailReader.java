@@ -8,6 +8,8 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.search.FlagTerm;
 
+import com.ui.apps.mail.sinker.IMailMessageSinker;
+
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,4 +1,4 @@
-package com.ui.apps.components;
+package com.ui.apps.utils;
 
 import java.io.File;
 import java.io.IOException;
