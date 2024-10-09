@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.mail.Address;
@@ -17,11 +19,14 @@ import javax.mail.internet.MimeBodyPart;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.st.DataSet;
 import com.ui.apps.mail.IMailMessageSinker;
 import com.ui.apps.mail.MailProcessor;
 import com.ui.apps.utils.FileNameHashGenerator;
 
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -35,10 +40,25 @@ import lombok.extern.slf4j.Slf4j;
  * attches: attachments are persisted in the same folder
  * @return
  */
-@Builder
+
 public class MailExtractorSinker implements IMailMessageSinker  {
 	
+	@Setter
 	String rootDirectory;
+	
+	@Getter
+	DataSet ds;
+	
+	public MailExtractorSinker() {
+		
+		log.debug("Initialize DataFrame");
+		
+		String[] headers = new String[] {"Sender","Date","Subject"};
+		List<String[]> data = new ArrayList<>();
+		
+		ds = new DataSet(headers, data);
+	}
+	
 	
 	@Override
     public void process(Message message) throws MessagingException, IOException {
@@ -59,6 +79,11 @@ public class MailExtractorSinker implements IMailMessageSinker  {
 		String sentDate = message.getSentDate().toString();
 		String contentType = message.getContentType();
 		
+		ds.getData().add(new String[] {
+				InternetAddress.toString(fromAddress), 
+				sentDate,
+				subject});
+		
 		String messageContent = null;
 
 		if (contentType.contains("multipart")) {
@@ -75,11 +100,8 @@ public class MailExtractorSinker implements IMailMessageSinker  {
 					String name = fileName.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
 					part.saveFile(workFolder + File.separator + name);
 					files.put(name, workFolder + File.separator + name);
-					
-					
 				} 
 			}
-
 		} 
 		
 		messageContent  = MailProcessor.processMessage(message);
@@ -102,18 +124,10 @@ public class MailExtractorSinker implements IMailMessageSinker  {
 		    gson.toJson(metadata, writer);
 		}
 		
-		
 		String fileContent = workFolder + File.separator + "content.txt";
-		
-		 
 		
 		try (Writer out = new FileWriter(fileContent)) {
 			out.write(messageContent);
-			
 		}
-
     }
-	
-	
-    	
 }

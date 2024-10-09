@@ -25,7 +25,7 @@ public class MailAssistant {
     
     public static void main(String[] args) throws Exception {
     	
-        String dbPgHost = System.getenv("DB_PG_HOST");
+    	String dbPgHost = System.getenv("DB_PG_HOST");
 		int dbPgPort = Integer.parseInt(System.getenv("DB_PG_PORT"));
 		String dbPgUser = System.getenv("DB_PG_USER");
 		String dbPgPwd = System.getenv("DB_PG_PWD");
@@ -36,8 +36,26 @@ public class MailAssistant {
 				dbPgPort, 
 				dbPgUser);
         
-        //jui.set_page_config().rootDoc("sidebar");
-    	
+        String username = System.getenv("GMAIL_USERNAME");
+        String password = System.getenv("GMAIL_PASSWORD");
+        log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
+        
+        MailReader mailReader = new MailReader();
+        mailReader.process(rootFolder, username, password);
+        
+        jui.set_page_config().rootDoc("sidebar");
+
+        // Sidebar with instructions
+ 		jui.sidebar.markdown("""
+ 				# Mail Assistant App
+ 				
+ 				**Overview:** A collection of AI agents around e-mail
+ 				**About the Developer:** I'm Maurizio Farina. Let's connect on LinkedIn: https://www.linkedin.com/in/farinamaurizio/
+ 				**Source Code:** You can access the code on GitHub
+ 				""");
+ 		
+ 		jui.sidebar.dropDownButton("Settings", List.of("Profile", "Account Settings", "Logout"));    	
+     		
     	jui.markdown("""
     			# Dashboard: Mail Assistant
     			""");
@@ -53,21 +71,11 @@ public class MailAssistant {
     	jui.input.input("PostregSQL User",  dbPgUser, "PostgreSQL host address");
     	jui.input.input("PostregSQL Password",  dbPgPwd, "PostgreSQL host address");
     	
-    	
     	st.setOptions(Map.of("classLoading", "true"));
     	
     	try {
-    		DataFrame df = st
-    					 .read_json("../../../../datasets/dpc-covid19-ita-province.zip")
-    					.select(
-    						List.of("data",
-    						"denominazione_regione",
-    						"denominazione_provincia",
-    						"sigla_provincia",
-    						"lat", "long",
-    						"totale_casi"));
-
-    		jui.table("Covid", df, 4);
+    		jui.table("Mails", mailReader.getDF().select(
+    								List.of("Sender","Date","Subject")).limit(100));
     	
     	} catch ( Exception err) {
     		
