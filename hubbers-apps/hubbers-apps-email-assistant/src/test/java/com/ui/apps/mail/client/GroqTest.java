@@ -14,6 +14,8 @@ public class GroqTest {
 	
 	@Test
 	public void test() throws Exception {
+		
+		log.info("Invoking model throught-out Groq");
     	
 		EmbeddingModel model = OpenAiEmbeddingModel.builder()
 				.baseUrl("https://api.groq.com/openai/v1/embeddings")
@@ -23,9 +25,9 @@ public class GroqTest {
 	            .build();
 		
 		
-		List<Float> embedding = model.embed("la città di Praga è la capitale della Repubblica Ceca").content().vectorAsList();
+		List<Float> embeddings = model.embed("la città di Praga è la capitale della Repubblica Ceca").content().vectorAsList();
 		
-		System.out.println(embedding.size());
+		log.info("Embedding Size[{}]", embeddings.size());
     	
     	
         

@@ -27,6 +27,7 @@ public class JuiMailAssistant {
 	
     public static void main(String[] args) throws Exception {
     	
+    	log.debug("Acquiring parameters via System-env");
     	String dbPgHost = System.getenv("DB_PG_HOST");
 		int dbPgPort = Integer.parseInt(System.getenv("DB_PG_PORT"));
 		String dbPgUser = System.getenv("DB_PG_USER");
@@ -43,37 +44,19 @@ public class JuiMailAssistant {
         log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
         
         
-        //building models
-        ChatLanguageModel chatModel = OllamaChatModel.builder()
-                .baseUrl("http://localhost:11434")
-                .timeout(Duration.ofMinutes(10))
-                //.modelName("llama3")
-                .modelName("llama3")
-                .build();
-		
-		EmbeddingStore<TextSegment> embeddingStore = PgVectorEmbeddingStore.builder()
-            .host(System.getenv("DB_PG_HOST"))
-            .port(Integer.parseInt(System.getenv("DB_PG_PORT")))
-            .user(System.getenv("DB_PG_USER"))
-            .password(System.getenv("DB_PG_PWD"))
-            .database("postgres")
-            .table("mailclassifier")
-            .dimension(4096)
-            //.dropTableFirst(true)
-            .build();
-
-		//EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
-		EmbeddingModel embeddingModel = OllamaEmbeddingModel.builder()
-	            .baseUrl("http://localhost:11434")
-	            .modelName("llama2:7b")
-	            .timeout(Duration.ofMinutes(5))
-	            .build();
+        //initialize AI components
+        /*
+        ChatLanguageModel chatModel = initializeChatModel();
+        EmbeddingStore<TextSegment> embeddingStore = initializeEmbeddingStore();
+        EmbeddingModel embeddingModel = initializeEmbeddingModel();
+        */
+        ChatLanguageModel chatModel = null;
+        EmbeddingStore<TextSegment> embeddingStore = null;
+        EmbeddingModel embeddingModel = null;
+        
         
         /*
         jui.set_page_config().rootDoc("sidebar-toolbar");
-
-        // Sidebar with instructions
-        
  		jui.sidebar.markdown("""
  				# Mail Assistant App
  				
@@ -115,9 +98,9 @@ public class JuiMailAssistant {
 				
 			} catch (Exception e) {
 				
-				jui.markdown("""
-						Error %s
-						""", e.getLocalizedMessage());
+				log.error("Error [{}]", e.getLocalizedMessage());
+				jui.setJuiResponse(e.getLocalizedMessage());
+				
 			}
         
     	});
@@ -171,10 +154,6 @@ public class JuiMailAssistant {
         
     	});
     	
-    	
-    	
-    	
-    	
     	jui.start();
 		
     }
@@ -221,5 +200,37 @@ public class JuiMailAssistant {
 		
 		return page;
     	
+	}
+	
+	public static ChatLanguageModel initializeChatModel() {
+		 //building models
+	    return OllamaChatModel.builder()
+	            .baseUrl("http://localhost:11434")
+	            .timeout(Duration.ofMinutes(10))
+	            //.modelName("llama3")
+	            .modelName("llama3")
+	            .build();
+	}
+	
+	public static EmbeddingStore<TextSegment> initializeEmbeddingStore() {
+		return PgVectorEmbeddingStore.builder()
+	        .host(System.getenv("DB_PG_HOST"))
+	        .port(Integer.parseInt(System.getenv("DB_PG_PORT")))
+	        .user(System.getenv("DB_PG_USER"))
+	        .password(System.getenv("DB_PG_PWD"))
+	        .database("postgres")
+	        .table("mailclassifier")
+	        .dimension(4096)
+	        //.dropTableFirst(true)
+	        .build();
+	}
+	
+	public static EmbeddingModel initializeEmbeddingModel() {
+		//EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
+		return OllamaEmbeddingModel.builder()
+            .baseUrl("http://localhost:11434")
+            .modelName("llama2:7b")
+            .timeout(Duration.ofMinutes(5))
+            .build();
 	}
 }
