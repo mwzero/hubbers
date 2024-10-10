@@ -1,14 +1,10 @@
 package com.ui.apps.components;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Writer;
 import java.time.Duration;
 import java.util.Map;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
+import com.ui.apps.mail.utils.MailFileHelper;
 import com.ui.apps.utils.EmbeddingStoreGeneric;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -37,22 +33,16 @@ public class MailClassifier {
     	for (File file : root.listFiles()) {
      	
 			if (file.isDirectory()) {
-				 
-				Gson gson = new Gson();
-				JsonReader reader = new JsonReader(new FileReader(
-						file.getAbsolutePath() + "/metadata.json"));
-				Map<String, String> metadata = gson.fromJson(reader, Map.class);
+				Map<String, String> metadata = MailFileHelper.getMetaDataFile(file.getAbsolutePath());
 				
-				EmbeddingMatch<TextSegment> category = store.query(new File(file.getAbsolutePath() + "/content.txt"));
+				EmbeddingMatch<TextSegment> category = store.query(MailFileHelper.getContent(file.getAbsolutePath()));
 				category.score(); // 0.8144288515898701
 				category.embedded().text(); // I like football.
 				
 				String categories = category.embedded().metadata("categories");
 				
 				metadata.put("categories", String.join(",", categories));
-				try (Writer writer = new FileWriter(file.getAbsolutePath() + "/metadata.json")) {
-				    gson.toJson(metadata, writer);
-				}
+				MailFileHelper.setMetaDataFile(file.getAbsolutePath() , metadata);
 	    	}
     	}
 	}

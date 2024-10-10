@@ -40,7 +40,7 @@ public class MailReader {
 	public static void main(String[] args) throws Exception {
     	
 		//parameters
-		String rootFolder = "C:\\temp\\mail-assistant";
+		String rootFolder = System.getenv("ROOT_FOLDER");
     	String username = System.getenv("GMAIL_USERNAME");
         String password = System.getenv("GMAIL_PASSWORD");
         log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);

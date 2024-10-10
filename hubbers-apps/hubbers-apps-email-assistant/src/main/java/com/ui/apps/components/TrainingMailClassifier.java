@@ -12,6 +12,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
+import com.ui.apps.mail.utils.MailFileHelper;
 import com.ui.apps.utils.EmbeddingStoreGeneric;
 
 import dev.langchain4j.data.message.AiMessage;
@@ -34,7 +35,6 @@ public class TrainingMailClassifier {
 	
     public void process(String rootFolder, ChatLanguageModel chatModel) throws Exception {
 		
-    	String categorie = "Promozione, Social  News, Fatture da pagare, Abbonamenti in scadenza, Notizie dal medico, Altro";
     	PromptTemplate promptTemplate = PromptTemplate.from("""
     			Classifica il seguente testo di email in una delle seguenti categorie:
     			{{categorie}}
@@ -50,12 +50,11 @@ public class TrainingMailClassifier {
      	
 			if (file.isDirectory()) {
 				 
-				Gson gson = new Gson();
-				JsonReader reader = new JsonReader(new FileReader(file.getAbsolutePath() + "/metadata.json"));
-				Map<String, String> metadata = gson.fromJson(reader, Map.class);
+				Map<String, String> metadata = MailFileHelper.getMetaDataFile(file.getAbsolutePath());
 				
-				String content = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath() + "/content.txt")));
-				
+				String content = MailFileHelper.getContent(file.getAbsolutePath());
+				String categorie = "Promozione, Social  News, Fatture da pagare, Abbonamenti in scadenza, Notizie dal medico, Altro";
+		    	
 				Map<String, Object> variables = new HashMap<>();
 	            variables.put("categorie", categorie);
 	            variables.put("email", content);
@@ -66,9 +65,7 @@ public class TrainingMailClassifier {
 				
 				
 				metadata.put("categories", String.join(",", categories));
-				try (Writer writer = new FileWriter(file.getAbsolutePath() + "/metadata.json")) {
-				    gson.toJson(metadata, writer);
-				}
+				MailFileHelper.setMetaDataFile(file.getAbsolutePath(), metadata);
 	    	}
     	}
 	}

@@ -4,12 +4,10 @@ import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.load
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
 import java.time.Duration;
 import java.util.Map;
 
-import com.google.gson.Gson;
-import com.google.gson.stream.JsonReader;
+import com.ui.apps.mail.utils.MailFileHelper;
 import com.ui.apps.utils.EmbeddingStoreGeneric;
 import com.ui.apps.utils.FileNameHashGenerator;
 
@@ -50,31 +48,34 @@ public class MailIngestor {
      	
 			if (file.isDirectory()) {
 				 
-				Gson gson = new Gson();
-				JsonReader reader = new JsonReader(new FileReader(file.getAbsolutePath() + "/metadata.json"));
-				Map<String, String> metadata = gson.fromJson(reader, Map.class);
+				Map<String, String> metadata = MailFileHelper.getMetaDataFile(file.getAbsolutePath());
 				
 				for (File file2Process : file.listFiles(
 							new FileFilter() {
 				        		@Override
 				        		public boolean accept(File pathname) {
 				        			
-				        			if ( pathname.getAbsolutePath().contains("metadata.json"))
+				        			if ( onlyContent ) {
+				        				if ( MailFileHelper.isContent(pathname.getAbsolutePath() ) )
+											return true;
+				        				
 				        				return false;
+				        				
+				        			} else {
+				        				if ( MailFileHelper.isMetaData(pathname.getAbsolutePath() ) )
+				        					return false;
 				        			
-				        			return true;
+				        				return true;
+				        			}
 				        			
 				        		}
 							})) {
 					
 					log.debug("Adding File[{}]", file2Process.getAbsolutePath());
-					if ( onlyContent ) {
-						if ( file2Process.getAbsolutePath().contains("content.txt")) {
-							store.add(file2Process, metadata);
-						}
+					if ( MailFileHelper.isContent(file2Process.getAbsolutePath() ) )
+						store.add(file2Process, metadata);
+					else {
 						
-					} else {
-							
 						Document document;
 						if ( "pdf".compareTo(FileNameHashGenerator.getFileExtension(file2Process)) == 0 )
 							document = loadDocument(file2Process.toPath(), new ApachePdfBoxDocumentParser());

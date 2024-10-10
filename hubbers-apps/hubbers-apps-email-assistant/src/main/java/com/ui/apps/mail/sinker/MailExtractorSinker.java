@@ -20,6 +20,7 @@ import javax.mail.internet.MimeBodyPart;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.st.DataSet;
+import com.ui.apps.mail.utils.MailFileHelper;
 import com.ui.apps.mail.utils.MailProcessor;
 import com.ui.apps.utils.FileNameHashGenerator;
 
@@ -69,10 +70,9 @@ public class MailExtractorSinker implements IMailMessageSinker  {
 		if ( file.exists()) return ;
 		file.mkdirs();
 		
-    	log.debug("Processing message[{}] to folder[{}]", 
-    			message.getSubject(), workFolder);
-    	Map<String, String> files = new HashMap<>(); 
+    	log.debug("Processing message[{}] to folder[{}]", message.getSubject(), workFolder);
     	
+    	Map<String, String> files = new HashMap<>(); 
     	Address[] fromAddress = message.getFrom();
 		String subject = message.getSubject();
 		String sentDate = message.getSentDate().toString();
@@ -112,21 +112,14 @@ public class MailExtractorSinker implements IMailMessageSinker  {
     			contentType, 
     			String.join(",",files.keySet()));
 		
-		Map<String, Object> metadata = new HashMap<>();
+		Map<String, String> metadata = new HashMap<>();
 		metadata.put("from", InternetAddress.toString(fromAddress));
 		metadata.put("subject", subject);
 		metadata.put("sentDate", sentDate);
 		metadata.put("contentType", contentType);
 		
-		try (Writer writer = new FileWriter(workFolder + File.separator + "metadata.json")) {
-		    Gson gson = new GsonBuilder().create();
-		    gson.toJson(metadata, writer);
-		}
+		MailFileHelper.setMetaDataFile(workFolder, metadata);
+		MailFileHelper.setContentFile(workFolder, messageContent);
 		
-		String fileContent = workFolder + File.separator + "content.txt";
-		
-		try (Writer out = new FileWriter(fileContent)) {
-			out.write(messageContent);
-		}
     }
 }

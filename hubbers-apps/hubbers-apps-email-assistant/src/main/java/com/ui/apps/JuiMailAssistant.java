@@ -7,7 +7,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import com.jui.JuiContainer;
 import com.ui.apps.components.MailClassifier;
 import com.ui.apps.components.MailIngestor;
 import com.ui.apps.components.MailReader;
@@ -32,7 +31,7 @@ public class JuiMailAssistant {
 		int dbPgPort = Integer.parseInt(System.getenv("DB_PG_PORT"));
 		String dbPgUser = System.getenv("DB_PG_USER");
 		String dbPgPwd = System.getenv("DB_PG_PWD");
-        String rootFolder = "C:\\temp\\mail-assistant";
+        String rootFolder = System.getenv("ROOT_FOLDER");
         log.info("WorkingFolder [{}] Store: [{}] [{}] [{}]",
 				rootFolder,
 				dbPgHost, 
@@ -44,16 +43,15 @@ public class JuiMailAssistant {
         log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
         
         
-        //initialize AI components
-        /*
+        /* initialize AI components */
         ChatLanguageModel chatModel = initializeChatModel();
         EmbeddingStore<TextSegment> embeddingStore = initializeEmbeddingStore();
         EmbeddingModel embeddingModel = initializeEmbeddingModel();
-        */
+        /*
         ChatLanguageModel chatModel = null;
         EmbeddingStore<TextSegment> embeddingStore = null;
         EmbeddingModel embeddingModel = null;
-        
+        */
         
         /*
         jui.set_page_config().rootDoc("sidebar-toolbar");
@@ -69,7 +67,7 @@ public class JuiMailAssistant {
  		*/    	
      		
     	jui.markdown("""
-    			# Dashboard: Mail Assistant
+    			# Mail Assistant
     			""");
     	jui.divider();
     	
@@ -105,8 +103,22 @@ public class JuiMailAssistant {
         
     	});
     	
-    	jui.button("Classify Mail","primary", "", () -> {
+    	jui.button("Training Classifier","primary", "", () -> {
     		
+            try {
+            	
+            	TrainingMailClassifier training = new TrainingMailClassifier();		
+        		training.process(rootFolder, chatModel);
+        		
+			} catch (Exception e) {
+				
+				log.error("Error [{}]", e.getLocalizedMessage());
+				jui.setJuiResponse(e.getLocalizedMessage());
+			}
+        
+    	});
+    	
+    	jui.button("Classify Mail","primary", "", () -> {
     		
             try {
             	MailClassifier classifier = new MailClassifier(embeddingStore, embeddingModel);
@@ -114,9 +126,8 @@ public class JuiMailAssistant {
 				
 			} catch (Exception e) {
 				
-				jui.markdown("""
-						Error %s
-						""", e.getLocalizedMessage());
+				log.error("Error [{}]", e.getLocalizedMessage());
+				jui.setJuiResponse(e.getLocalizedMessage());
 			}
         
     	});
@@ -130,26 +141,8 @@ public class JuiMailAssistant {
 				
 			} catch (Exception e) {
 				
-				jui.markdown("""
-						Error %s
-						""", e.getLocalizedMessage());
-			}
-        
-    	});
-    	
-    	jui.button("Training Classifier","primary", "", () -> {
-    		
-    		
-            try {
-            	
-            	TrainingMailClassifier training = new TrainingMailClassifier();		
-        		training.process(rootFolder, chatModel);
-        		
-			} catch (Exception e) {
-				
-				jui.markdown("""
-						Error %s
-						""", e.getLocalizedMessage());
+				log.error("Error [{}]", e.getLocalizedMessage());
+				jui.setJuiResponse(e.getLocalizedMessage());
 			}
         
     	});
@@ -158,50 +151,6 @@ public class JuiMailAssistant {
 		
     }
     
-    public static void main2(String... args) {
-		
-    	jui.sidebar
-    		.ul("JUI Example")
-	    		.add("MapZoomer", "compass", null, mapZoomer(), true)
-	    		.add("MarkDown", "file-text", null, markdownTrials(), false);
-    	
-    	jui.start();
-	}
-	
-	static JuiContainer mapZoomer() {
-		
-		JuiContainer page = jui.addContainer();
-		
-		page.markdown("## Map Chart Example");
-		page.divider("blue");
-    	
-    	var slider = page.input.slider("Zoom Level", 0, 19, 13);
-    	var lat = page.input.input("lat", "40.85631", "latitude");
-    	var lng = page.input.input("lng", "14.24641" ,"longitude");
-    	
-    	page.chart.map()
-					.c_lat(lat)
-					.c_lng(lng)
-					.c_zoom(slider)
-				.build();
-    	
-    	return page;
-    	
-	}
-	
-	static JuiContainer markdownTrials() {
-		
-		JuiContainer page = jui.addContainer();
-		
-		page.markdown("# Header 1");
-		page.markdown("## Header 2");
-		page.markdown("### Header 3");
-		page.divider("blue");
-		
-		return page;
-    	
-	}
-	
 	public static ChatLanguageModel initializeChatModel() {
 		 //building models
 	    return OllamaChatModel.builder()
