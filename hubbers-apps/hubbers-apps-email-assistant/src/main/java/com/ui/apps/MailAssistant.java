@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import com.ui.apps.components.MailClassifier;
 import com.ui.apps.components.MailReader;
 
 import dev.langchain4j.data.segment.TextSegment;
@@ -39,64 +40,8 @@ public class MailAssistant {
         String password = System.getenv("GMAIL_PASSWORD");
         log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
         
-        MailReader mailReader = new MailReader();
-        mailReader.process(rootFolder, username, password);
         
-        /*
-        jui.set_page_config().rootDoc("sidebar-toolbar");
-
-        // Sidebar with instructions
-        
- 		jui.sidebar.markdown("""
- 				# Mail Assistant App
- 				
- 				**Overview:** A collection of AI agents around e-mail
- 				**About the Developer:** I'm Maurizio Farina. Let's connect on LinkedIn: https://www.linkedin.com/in/farinamaurizio/
- 				**Source Code:** You can access the code on GitHub
- 				""");
- 		
- 		jui.sidebar.dropDownButton("Settings", List.of("Profile", "Account Settings", "Logout"));
- 		*/    	
-     		
-    	jui.markdown("""
-    			# Dashboard: Mail Assistant
-    			""");
-    	jui.divider();
-    	
-    	/*
-    	jui.markdown("""
-    			## PostgreSQL Database settings
-    			""");
-    	jui.divider();
-    	
-    	jui.input.input("PostregSQL Host",  dbPgHost, "PostgreSQL host address");
-    	jui.input.input("PostregSQL Port",  dbPgPort + "", "PostgreSQL host port");
-    	jui.input.input("PostregSQL User",  dbPgUser, "PostgreSQL host address");
-    	jui.input.input("PostregSQL Password",  dbPgPwd, "PostgreSQL host address");
-    	*/
-    	
-    	st.setOptions(Map.of("classLoading", "true"));
-    	
-    	jui.button("Load Mail","", "", null);
-    	
-    	try {
-    		jui.table("Mails", mailReader.getDF().select(
-    								List.of("Sender","Date","Subject")).limit(100));
-    	
-    	} catch ( Exception err) {
-    		
-    		log.error(err.getLocalizedMessage());
-    	}
-    	
-    	jui.start();
-		
-		ChatLanguageModel chatModel = OllamaChatModel.builder()
-                .baseUrl("http://localhost:11434")
-                .timeout(Duration.ofMinutes(10))
-                //.modelName("llama3")
-                .modelName("llama3")
-                .build();
-		
+	
 		EmbeddingStore<TextSegment> embeddingStore = PgVectorEmbeddingStore.builder()
             .host(System.getenv("DB_PG_HOST"))
             .port(Integer.parseInt(System.getenv("DB_PG_PORT")))
@@ -114,6 +59,12 @@ public class MailAssistant {
 	            .modelName("llama2:7b")
 	            .timeout(Duration.ofMinutes(5))
 	            .build();
+		
+		MailClassifier classifier = new MailClassifier(embeddingStore, embeddingModel);
+		String result = classifier.query("assicurazione");
+		
+		System.out.println(result);
+		
 
     }
 }

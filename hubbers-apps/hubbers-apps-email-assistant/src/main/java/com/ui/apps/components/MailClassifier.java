@@ -25,6 +25,17 @@ public class MailClassifier {
 		store = new EmbeddingStoreGeneric(embeddingModel,embeddingStore );
 		
 	}
+	
+	public String query(String content) {
+		
+		EmbeddingMatch<TextSegment> category = store.query(content);
+		category.score(); // 0.8144288515898701
+		category.embedded().text(); // I like football.
+		
+		return category.embedded().text();
+
+		
+	}
     
 	public void process(String rootFolder) throws Exception {
 		
