@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MailAssistant {
 	
-    
     public static void main(String[] args) throws Exception {
     	
     	String dbPgHost = System.getenv("DB_PG_HOST");
@@ -40,8 +39,6 @@ public class MailAssistant {
         String password = System.getenv("GMAIL_PASSWORD");
         log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
         
-        
-	
 		EmbeddingStore<TextSegment> embeddingStore = PgVectorEmbeddingStore.builder()
             .host(System.getenv("DB_PG_HOST"))
             .port(Integer.parseInt(System.getenv("DB_PG_PORT")))
@@ -56,14 +53,10 @@ public class MailAssistant {
 		//EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 		EmbeddingModel embeddingModel = OllamaEmbeddingModel.builder()
 	            .baseUrl("http://localhost:11434")
-	            .modelName("llama2:7b")
+	            .modelName("llama3")
 	            .timeout(Duration.ofMinutes(5))
 	            .build();
 		
-		MailClassifier classifier = new MailClassifier(embeddingStore, embeddingModel);
-		String result = classifier.query("assicurazione");
-		
-		System.out.println(result);
 		
 
     }

@@ -81,7 +81,7 @@ public class MailClassifier {
         //EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 		EmbeddingModel embeddingModel = OllamaEmbeddingModel.builder()
 	            .baseUrl("http://localhost:11434")
-	            .modelName("llama2:7b")
+	            .modelName("llama3")
 	            .timeout(Duration.ofMinutes(5))
 	            .build();
 		
@@ -89,6 +89,8 @@ public class MailClassifier {
 		
 		MailClassifier classifier = new MailClassifier(embeddingStore, embeddingModel);
 		classifier.process(rootFolder);
+		
+		String result = classifier.query("assicurazione");
     	
     }
 }

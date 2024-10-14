@@ -108,7 +108,7 @@ public class JuiMailAssistant {
             try {
             	
             	TrainingMailClassifier training = new TrainingMailClassifier();		
-        		training.process(rootFolder, chatModel);
+        		training.processFolder(rootFolder, chatModel);
         		
 			} catch (Exception e) {
 				
@@ -152,6 +152,7 @@ public class JuiMailAssistant {
     }
     
 	public static ChatLanguageModel initializeChatModel() {
+		
 		 //building models
 	    return OllamaChatModel.builder()
 	            .baseUrl("http://localhost:11434")
@@ -159,9 +160,12 @@ public class JuiMailAssistant {
 	            //.modelName("llama3")
 	            .modelName("llama3")
 	            .build();
+	    
+	    
 	}
 	
 	public static EmbeddingStore<TextSegment> initializeEmbeddingStore() {
+		
 		return PgVectorEmbeddingStore.builder()
 	        .host(System.getenv("DB_PG_HOST"))
 	        .port(Integer.parseInt(System.getenv("DB_PG_PORT")))
@@ -178,7 +182,7 @@ public class JuiMailAssistant {
 		//EmbeddingModel embeddingModel = new AllMiniLmL6V2EmbeddingModel();
 		return OllamaEmbeddingModel.builder()
             .baseUrl("http://localhost:11434")
-            .modelName("llama2:7b")
+            .modelName("llama3")
             .timeout(Duration.ofMinutes(5))
             .build();
 	}
