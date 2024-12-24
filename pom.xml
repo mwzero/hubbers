@@ -47,8 +47,6 @@
     <module>hubbers-core</module>
     <module>hubbers-recipes</module>
 	<module>hubbers-tasks</module>
-	<module>hubbers-sandbox</module>
-	
 	<module>hubbers-apps</module>
 	
   </modules>

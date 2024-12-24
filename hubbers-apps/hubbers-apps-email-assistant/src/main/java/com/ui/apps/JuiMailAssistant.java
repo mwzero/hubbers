@@ -85,7 +85,8 @@ public class JuiMailAssistant {
     	
     	st.setOptions(Map.of("classLoading", "true"));
     	
-    	jui.button("Donwload Mail","primary", "", () -> {
+    	var btnDownload = jui.button("Donwload Mail","primary", "");
+    	btnDownload.onClick( () -> {
     		log.info("Reading mail for [{}] writing to [{}]", username, rootFolder);
     		MailReader mailReader = new MailReader();
             try {
@@ -103,7 +104,9 @@ public class JuiMailAssistant {
         
     	});
     	
-    	jui.button("Training Classifier","primary", "", () -> {
+    	var btnTraining = jui.button("Training Classifier","primary", "");
+    	btnTraining.onClick( () -> {
+    		
     		
             try {
             	
@@ -118,7 +121,8 @@ public class JuiMailAssistant {
         
     	});
     	
-    	jui.button("Classify Mail","primary", "", () -> {
+    	var btnClassify = jui.button("Classify Mail","primary", "");
+    	btnClassify.onClick( () -> {
     		
             try {
             	MailClassifier classifier = new MailClassifier(embeddingStore, embeddingModel);
@@ -132,7 +136,8 @@ public class JuiMailAssistant {
         
     	});
     	
-    	jui.button("Ingest Mail","primary", "", () -> {
+    	var btnIngest = jui.button("Ingest Mail","primary", "");
+    	btnIngest.onClick( () -> {
     		
     		
             try {

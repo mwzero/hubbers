@@ -1,0 +1,20 @@
+Sure, here's an example Java code that uses the Apache HttpComponents library to evaluate the status code of a rest endpoint and return the appropriate response. 
+
+```java
+import java.net.*;
+import org.apache.http.*;
+import org.apache.http.message.*;
+
+public class HttpInvoker {
+ public static String invokeRestEndpoint(String url) throws Exception {
+ HttpClient client = HttpClient.create();
+ HttpResponse response = client.send(new HttpGet(url), null);
+ int statusCode = response.getStatusLine().getIntValue();
+ return statusCode + ""; // replace with appropriate response code
+ }
+}
+```
+
+This code uses the Apache HttpComponents library to create an HTTP client and send a GET request to the specified rest endpoint. It then retrieves the status code of the response and returns it along with the status code itself. 
+
+You can modify the `url` parameter to specify a different rest endpoint to test against.
