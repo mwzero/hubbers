@@ -1,15 +1,8 @@
 package com.sandbox.llm;
 
-import java.time.Duration;
-import java.util.List;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
 
 public class OllamaExample {
 
@@ -28,7 +21,7 @@ public class OllamaExample {
                 .baseUrl("http://localhost:11434")
                 .modelName("llama3.2:1b")
                 .responseFormat(ResponseFormat.JSON)
-                .timeout(Duration.ofMinutes(5))
+                .timeout(java.time.Duration.ofMinutes(5))
                 .build();
 
 
