@@ -1,5 +1,7 @@
 package com.hubbers.tasks.browser;
 
+import java.nio.file.Paths;
+
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
@@ -20,6 +22,10 @@ public class PlaywrightTask {
             System.out.println(markdown);
             
             System.out.println(page.title());
+            
+            page.screenshot(new Page.ScreenshotOptions()
+            	      .setPath(Paths.get("screenshot.png")));
+            
         }
     }
 	
