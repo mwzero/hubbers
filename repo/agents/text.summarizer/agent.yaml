@@ -1,0 +1,31 @@
+agent:
+  name: text.summarizer
+  version: 1.0.0
+  description: Summarize text in Italian
+
+model:
+  provider: openai
+  name: gpt-4.1-mini
+  temperature: 0.2
+
+instructions:
+  system_prompt: |
+    Riassumi il testo in italiano in massimo 5 punti.
+
+input:
+  schema:
+    type: object
+    properties:
+      text:
+        type: string
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      summary:
+        type: string
+        required: true
+
+tools: []

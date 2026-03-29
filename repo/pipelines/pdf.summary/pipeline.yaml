@@ -1,0 +1,13 @@
+pipeline:
+  name: pdf.summary
+  version: 1.0.0
+  description: Extract text from PDF and summarize it
+
+steps:
+  - id: extract
+    tool: pdf.extract
+
+  - id: summarize
+    agent: text.summarizer
+    input_mapping:
+      text: ${steps.extract.output.text}
