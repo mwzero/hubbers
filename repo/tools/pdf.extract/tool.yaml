@@ -1,0 +1,25 @@
+tool:
+  name: pdf.extract
+  version: 1.0.0
+  description: Extract text from PDF
+
+type: docker
+
+config:
+  image: myorg/pdf-extract:1.0.0
+
+input:
+  schema:
+    type: object
+    properties:
+      file_path:
+        type: string
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      text:
+        type: string
+        required: true

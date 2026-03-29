@@ -1,0 +1,26 @@
+tool:
+  name: weather.lookup
+  version: 1.0.0
+  description: Lookup weather using external API
+
+type: http
+
+config:
+  base_url: https://example.com/api/weather
+  method: POST
+
+input:
+  schema:
+    type: object
+    properties:
+      city:
+        type: string
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      temperature:
+        type: number
+        required: true
