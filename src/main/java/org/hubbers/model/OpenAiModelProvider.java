@@ -40,6 +40,7 @@ public class OpenAiModelProvider implements ModelProvider {
             if (request.getTemperature() != null) {
                 payload.put("temperature", request.getTemperature());
             }
+            payload.putObject("response_format").put("type", "json_object");
             ArrayNode messages = payload.putArray("messages");
             messages.addObject().put("role", "system").put("content", request.getSystemPrompt());
             messages.addObject().put("role", "user").put("content", request.getUserPrompt());
@@ -64,7 +65,9 @@ public class OpenAiModelProvider implements ModelProvider {
             modelResponse.setModel(root.path("model").asText(payload.path("model").asText()));
             modelResponse.setLatencyMs(System.currentTimeMillis() - start);
             return modelResponse;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
+            throw new IllegalStateException("OpenAI call failed", e);
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("OpenAI call failed", e);
         }

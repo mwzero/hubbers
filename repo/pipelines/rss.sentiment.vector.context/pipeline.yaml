@@ -1,0 +1,38 @@
+pipeline:
+  name: rss.sentiment.vector.context
+  version: 1.0.0
+  description: Fetch RSS, retrieve context from Lucene vector DB, then run sentiment agent
+
+steps:
+  - id: fetch
+    tool: rss.fetch
+
+  - id: vector_search
+    tool: vector.lucene.search
+    input_mapping:
+      items: ${steps.fetch.output.items}
+      index_path: ${vector_index_path}
+      top_k: ${top_k}
+
+  - id: sentiment
+    agent: rss.sentiment
+    input_mapping:
+      items: ${steps.vector_search.output.items}
+
+examples:
+  - name: rss-with-vector-context
+    description: Enrich new RSS entries with historical vector context before sentiment
+    input:
+      feeds:
+        - https://example.com/rss.xml
+      limit: 10
+      vector_index_path: ./datasets/lucene/rss-sentiment-index
+      top_k: 3
+    output:
+      items:
+        - title: Central bank hints at rate cuts
+          sentiment: positive
+          sentiment_score: 0.79
+          retrieved_context:
+            - id: historical-1
+              score: 0.89

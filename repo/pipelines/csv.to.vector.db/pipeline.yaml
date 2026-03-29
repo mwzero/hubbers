@@ -1,0 +1,26 @@
+pipeline:
+  name: csv.to.vector.db
+  version: 1.0.0
+  description: Read CSV records and load them into embedded Lucene vector DB
+
+steps:
+  - id: read_csv
+    tool: csv.read
+    input_mapping:
+      file_path: ${csv_input_path}
+
+  - id: vector_upsert
+    tool: vector.lucene.upsert
+    input_mapping:
+      items: ${steps.read_csv.output.items}
+      index_path: ${vector_index_path}
+
+examples:
+  - name: csv-to-lucene
+    description: Load historical sentiment CSV into Lucene index
+    input:
+      csv_input_path: ./datasets/rss-sentiment.csv
+      vector_index_path: ./datasets/lucene/rss-sentiment-index
+    output:
+      index_path: ./datasets/lucene/rss-sentiment-index
+      upserted: 200

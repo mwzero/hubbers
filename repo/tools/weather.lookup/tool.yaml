@@ -24,3 +24,11 @@ output:
       temperature:
         type: number
         required: true
+
+examples:
+  - name: weather-rome
+    description: Lookup meteo per una citta
+    input:
+      city: Rome
+    output:
+      temperature: 22.4

@@ -1,0 +1,31 @@
+pipeline:
+  name: rss.sentiment.csv
+  version: 1.0.0
+  description: Fetch RSS, run sentiment agent, and write output CSV
+
+steps:
+  - id: fetch
+    tool: rss.fetch
+
+  - id: sentiment
+    agent: rss.sentiment
+    input_mapping:
+      items: ${steps.fetch.output.items}
+
+  - id: write_csv
+    tool: csv.write
+    input_mapping:
+      items: ${steps.sentiment.output.items}
+      file_path: ${csv_output_path}
+
+examples:
+  - name: rss-to-csv
+    description: Fetch 5 RSS entries, annotate sentiment and save to CSV
+    input:
+      feeds:
+        - https://example.com/rss.xml
+      limit: 5
+      csv_output_path: ./datasets/rss-sentiment.csv
+    output:
+      file_path: ./datasets/rss-sentiment.csv
+      rows: 5

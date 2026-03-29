@@ -4,13 +4,21 @@ import org.hubbers.agent.AgentExecutor;
 import org.hubbers.agent.AgentPromptBuilder;
 import org.hubbers.artifact.ArtifactScanner;
 import org.hubbers.artifact.LocalArtifactRepository;
+import org.hubbers.config.OllamaConfig;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.model.ModelProviderRegistry;
+import org.hubbers.model.OllamaModelProvider;
 import org.hubbers.model.OpenAiModelProvider;
 import org.hubbers.pipeline.InputMapper;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.DockerToolDriver;
 import org.hubbers.tool.HttpToolDriver;
+import org.hubbers.tool.CsvReadToolDriver;
+import org.hubbers.tool.CsvWriteToolDriver;
+import org.hubbers.tool.LuceneVectorContextToolDriver;
+import org.hubbers.tool.LuceneVectorSearchToolDriver;
+import org.hubbers.tool.LuceneVectorUpsertToolDriver;
+import org.hubbers.tool.RssToolDriver;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
@@ -30,7 +38,8 @@ public class Bootstrap {
         var repository = new LocalArtifactRepository(Path.of(config.getRepoRoot()), new ArtifactScanner());
 
         var modelRegistry = new ModelProviderRegistry(List.of(
-                new OpenAiModelProvider(httpClient, config.getOpenai())
+                new OpenAiModelProvider(httpClient, config.getOpenai()),
+                new OllamaModelProvider(httpClient, config.getOllama() != null ? config.getOllama() : new OllamaConfig())
         ));
 
         var schemaValidator = new SchemaValidator();
@@ -38,7 +47,13 @@ public class Bootstrap {
 
         var toolExecutor = new ToolExecutor(List.of(
                 new HttpToolDriver(httpClient, jsonMapper),
-                new DockerToolDriver(jsonMapper)
+                new DockerToolDriver(jsonMapper),
+                new RssToolDriver(httpClient, jsonMapper),
+                new LuceneVectorContextToolDriver(jsonMapper),
+                new LuceneVectorUpsertToolDriver(jsonMapper),
+                new LuceneVectorSearchToolDriver(jsonMapper),
+                new CsvWriteToolDriver(jsonMapper),
+                new CsvReadToolDriver(jsonMapper)
         ), schemaValidator);
 
         var pipelineExecutor = new PipelineExecutor(repository, agentExecutor, toolExecutor, new InputMapper(jsonMapper));

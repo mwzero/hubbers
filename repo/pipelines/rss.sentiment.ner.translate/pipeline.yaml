@@ -1,0 +1,30 @@
+pipeline:
+  name: rss.sentiment.ner.translate
+  version: 1.0.0
+  description: Fetch RSS, enrich with sentiment and NER, then translate title and summary
+
+steps:
+  - id: fetch
+    tool: rss.fetch
+
+  - id: vector_context
+    tool: rss.vector.context
+    input_mapping:
+      items: ${steps.fetch.output.items}
+
+  - id: sentiment
+    agent: rss.sentiment
+    input_mapping:
+      items: ${steps.vector_context.output.items}
+      target_language: ${target_language}
+
+  - id: ner
+    agent: rss.ner
+    input_mapping:
+      items: ${steps.sentiment.output.items}
+
+  - id: translate
+    agent: rss.translate
+    input_mapping:
+      items: ${steps.ner.output.items}
+      target_language: ${target_language}

@@ -1,0 +1,45 @@
+tool:
+  name: csv.write
+  version: 1.0.0
+  description: Write items array to a CSV file
+
+type: csv.write
+
+config:
+  default_file_path: ./datasets/rss-sentiment.csv
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+      file_path:
+        type: string
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      file_path:
+        type: string
+        required: true
+      rows:
+        type: number
+        required: true
+
+examples:
+  - name: write-rss-sentiment
+    description: Persist sentiment results to CSV
+    input:
+      file_path: ./datasets/rss-sentiment.csv
+      items:
+        - title: AI stocks rally
+          source: Example News
+          sentiment: positive
+          sentiment_score: 0.81
+    output:
+      file_path: ./datasets/rss-sentiment.csv
+      rows: 1

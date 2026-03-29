@@ -23,11 +23,17 @@ public class ConfigLoader {
     }
 
     private void resolveEnv(AppConfig appConfig) {
-        if (appConfig.getOpenai() == null) {
-            return;
+        if (appConfig.getOpenai() != null) {
+            OpenAiConfig openAi = appConfig.getOpenai();
+            openAi.setApiKey(resolveValue(openAi.getApiKey()));
+            openAi.setBaseUrl(resolveValue(openAi.getBaseUrl()));
+            openAi.setDefaultModel(resolveValue(openAi.getDefaultModel()));
         }
-        OpenAiConfig openAi = appConfig.getOpenai();
-        openAi.setApiKey(resolveValue(openAi.getApiKey()));
+        if (appConfig.getOllama() != null) {
+            OllamaConfig ollama = appConfig.getOllama();
+            ollama.setBaseUrl(resolveValue(ollama.getBaseUrl()));
+            ollama.setDefaultModel(resolveValue(ollama.getDefaultModel()));
+        }
     }
 
     private String resolveValue(String value) {

@@ -11,6 +11,8 @@ model:
 instructions:
   system_prompt: |
     Riassumi il testo in italiano in massimo 5 punti.
+    Restituisci SOLO JSON valido nel formato:
+    {"summary":"..."}
 
 input:
   schema:
@@ -29,3 +31,14 @@ output:
         required: true
 
 tools: []
+
+examples:
+  - name: basic-summary
+    description: Riassunto di un testo breve
+    input:
+      text: >
+        L'intelligenza artificiale sta cambiando il modo in cui lavoriamo.
+        Le aziende la usano per automatizzare task ripetitivi e migliorare la qualità.
+    output:
+      summary: >
+        L'IA sta trasformando il lavoro, automatizzando attività ripetitive e migliorando qualità ed efficienza.

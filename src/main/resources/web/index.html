@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hubbers Studio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Hubbers Studio</h1>
+    <div id="status" class="status">Checking API...</div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel left">
+      <h2>Repository</h2>
+      <div class="group">
+        <h3>Agents</h3>
+        <ul id="agents-list"></ul>
+      </div>
+      <div class="group">
+        <h3>Tools</h3>
+        <ul id="tools-list"></ul>
+      </div>
+      <div class="group">
+        <h3>Pipelines</h3>
+        <ul id="pipelines-list"></ul>
+      </div>
+    </aside>
+
+    <section class="panel center">
+      <div class="section-header">
+        <h2 id="editor-title">Manifest</h2>
+        <div class="actions">
+          <button id="validate-btn" type="button">Validate</button>
+          <button id="save-btn" type="button">Save</button>
+        </div>
+      </div>
+      <textarea id="manifest-editor" spellcheck="false" placeholder="Select an artifact..."></textarea>
+      
+    </section>
+
+    <section class="panel right">
+      <div class="section-header">
+        <h2>Runner</h2>
+        <button id="run-btn" type="button">Run</button>
+      </div>
+      <label for="run-input">Input JSON</label>
+      <textarea id="run-input" spellcheck="false">{}</textarea>
+      <label for="run-output">Output</label>
+      <pre id="run-output" class="messages"></pre>
+    </section>
+  </main>
+  <div id="editor-messages" class="notification-bar" aria-live="polite"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

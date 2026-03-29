@@ -3,8 +3,11 @@ package org.hubbers.manifest.tool;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hubbers.manifest.agent.InputDefinition;
 import org.hubbers.manifest.agent.OutputDefinition;
+import org.hubbers.manifest.common.ExampleDefinition;
 import org.hubbers.manifest.common.Metadata;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ToolManifest {
@@ -13,6 +16,7 @@ public class ToolManifest {
     private Map<String, Object> config;
     private InputDefinition input;
     private OutputDefinition output;
+    private List<ExampleDefinition> examples = new ArrayList<>();
 
     public Metadata getTool() { return tool; }
     public void setTool(Metadata tool) { this.tool = tool; }
@@ -24,4 +28,6 @@ public class ToolManifest {
     public void setInput(InputDefinition input) { this.input = input; }
     public OutputDefinition getOutput() { return output; }
     public void setOutput(OutputDefinition output) { this.output = output; }
+    public List<ExampleDefinition> getExamples() { return examples; }
+    public void setExamples(List<ExampleDefinition> examples) { this.examples = examples; }
 }

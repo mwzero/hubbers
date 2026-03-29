@@ -3,20 +3,26 @@ package org.hubbers.cli;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hubbers.app.RuntimeFacade;
+import org.hubbers.config.ConfigLoader;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
 import org.hubbers.util.JacksonFactory;
+import org.hubbers.validation.ManifestValidator;
+import org.hubbers.web.ManifestFileService;
+import org.hubbers.web.WebServer;
 import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "hubbers", mixinStandardHelpOptions = true,
         subcommands = {HubbersCommand.ListCommand.class, HubbersCommand.AgentCommand.class,
-                HubbersCommand.ToolCommand.class, HubbersCommand.PipelineCommand.class})
+                HubbersCommand.ToolCommand.class, HubbersCommand.PipelineCommand.class,
+                HubbersCommand.WebCommand.class})
 public class HubbersCommand implements Callable<Integer> {
     final RuntimeFacade runtimeFacade;
 
@@ -94,6 +100,27 @@ public class HubbersCommand implements Callable<Integer> {
         @CommandLine.Parameters(index = "0") String name;
         @CommandLine.Option(names = "--input", required = true) File input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.PIPELINE); }
+    }
+
+    @CommandLine.Command(name = "web", description = "Start web UI and API")
+    static class WebCommand implements Callable<Integer> {
+        @CommandLine.ParentCommand HubbersCommand root;
+        @CommandLine.Option(names = "--port", defaultValue = "7070") int port;
+
+        @Override
+        public Integer call() {
+            var appConfig = new ConfigLoader().load();
+            var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
+            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator()).start(port);
+            System.out.println("Hubbers Web UI available at http://localhost:" + port);
+            try {
+                Thread.currentThread().join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return 1;
+            }
+            return 0;
+        }
     }
 
     private enum Mode { AGENT, TOOL, PIPELINE }

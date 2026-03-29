@@ -1,0 +1,45 @@
+tool:
+  name: vector.lucene.upsert
+  version: 1.0.0
+  description: Upsert items into embedded Lucene vector index
+
+type: vector.lucene.upsert
+
+config:
+  index_path: ./datasets/lucene/rss-sentiment-index
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+      index_path:
+        type: string
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      index_path:
+        type: string
+        required: true
+      upserted:
+        type: number
+        required: true
+
+examples:
+  - name: upsert-from-csv
+    description: Load historical sentiment records into Lucene index
+    input:
+      index_path: ./datasets/lucene/rss-sentiment-index
+      items:
+        - title: AI stocks rally
+          summary: Market optimism after strong earnings
+          sentiment: positive
+          source: Example News
+    output:
+      index_path: ./datasets/lucene/rss-sentiment-index
+      upserted: 1

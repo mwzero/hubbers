@@ -23,3 +23,12 @@ output:
       text:
         type: string
         required: true
+
+examples:
+  - name: extract-contract
+    description: Estrazione testo da un PDF locale
+    input:
+      file_path: /tmp/sample-contract.pdf
+    output:
+      text: >
+        Contratto di servizio tra Alpha Srl e Beta Spa. Durata 12 mesi.

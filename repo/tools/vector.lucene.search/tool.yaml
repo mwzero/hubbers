@@ -1,0 +1,56 @@
+tool:
+  name: vector.lucene.search
+  version: 1.0.0
+  description: Search embedded Lucene vector index and enrich items with retrieved context
+
+type: vector.lucene.search
+
+config:
+  index_path: ./datasets/lucene/rss-sentiment-index
+  top_k: 3
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+      index_path:
+        type: string
+        required: false
+      top_k:
+        type: number
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+examples:
+  - name: enrich-with-historical-context
+    description: Retrieve nearest historical records for each incoming RSS item
+    input:
+      index_path: ./datasets/lucene/rss-sentiment-index
+      top_k: 2
+      items:
+        - title: Central bank hints at rate cuts
+          summary: Markets jump on expected policy shift
+          content: Investors increased risk appetite.
+          source: Example News
+          link: https://example.com/articles/rate-cuts
+    output:
+      items:
+        - title: Central bank hints at rate cuts
+          summary: Markets jump on expected policy shift
+          content: Investors increased risk appetite.
+          source: Example News
+          link: https://example.com/articles/rate-cuts
+          retrieved_context:
+            - id: historical-1
+              score: 0.89
+              title: Previous rate cut expectations

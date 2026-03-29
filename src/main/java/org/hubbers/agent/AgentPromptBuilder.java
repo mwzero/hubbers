@@ -12,7 +12,7 @@ public class AgentPromptBuilder {
     public ModelRequest build(AgentRunContext context) {
         AgentManifest manifest = context.getManifest();
         ModelRequest request = new ModelRequest();
-        request.setSystemPrompt(manifest.getInstructions().getSystemPrompt());
+        request.setSystemPrompt(buildSystemPrompt(manifest));
         request.setModel(manifest.getModel().getName());
         request.setTemperature(manifest.getModel().getTemperature());
         try {
@@ -21,5 +21,18 @@ public class AgentPromptBuilder {
             throw new IllegalStateException("Cannot serialize input", e);
         }
         return request;
+    }
+
+    private String buildSystemPrompt(AgentManifest manifest) {
+        String basePrompt = manifest.getInstructions().getSystemPrompt();
+        if (manifest.getOutput() == null || manifest.getOutput().getSchema() == null) {
+            return basePrompt;
+        }
+        try {
+            String schema = mapper.writeValueAsString(manifest.getOutput().getSchema());
+            return basePrompt + "\nReturn ONLY valid JSON that matches this output schema: " + schema;
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize output schema", e);
+        }
     }
 }

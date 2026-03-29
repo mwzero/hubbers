@@ -1,0 +1,56 @@
+tool:
+  name: rss.vector.context
+  version: 1.0.0
+  description: Enrich RSS items with similar context using embedded Lucene vector index
+
+type: vector.lucene.enrich
+
+config:
+  index_path: ./datasets/lucene/rss-sentiment-index
+  top_k: 3
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+examples:
+  - name: enrich-context
+    description: Add similar context snippets to RSS items before sentiment classification
+    input:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: Central bank hints at rate cuts
+          link: https://example.com/articles/rate-cuts
+          published_at: "2026-03-29T10:00:00Z"
+          summary: Markets jumped on expectations of lower rates.
+          content: Traders increased risk appetite after policy comments.
+    output:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: Central bank hints at rate cuts
+          link: https://example.com/articles/rate-cuts
+          published_at: "2026-03-29T10:00:00Z"
+          summary: Markets jumped on expectations of lower rates.
+          content: Traders increased risk appetite after policy comments.
+          retrieved_context:
+            - id: https://example.com/articles/older-rate-cut-story
+              score: 0.89
+              title: Previous signals from central bank
+              summary: Analysts compare current statement with last quarter.
+              source: Example News
+              link: https://example.com/articles/older-rate-cut-story
+              published_at: "2026-02-15T11:20:00Z"

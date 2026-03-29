@@ -4,3 +4,7 @@ openai:
   apiKey: ${OPENAI_API_KEY}
   baseUrl: https://api.openai.com/v1
   defaultModel: gpt-4.1-mini
+
+ollama:
+  baseUrl: http://localhost:11434
+  defaultModel: llama3.2:3b

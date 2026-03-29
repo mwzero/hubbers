@@ -19,6 +19,9 @@ public class ManifestValidator {
         if (manifest.getInstructions() == null || manifest.getInstructions().getSystemPrompt() == null) {
             result.addError("Agent instructions missing");
         }
+        if (manifest.getExamples() == null || manifest.getExamples().isEmpty()) {
+            result.addError("Agent examples missing");
+        }
         return result;
     }
 
@@ -28,11 +31,21 @@ public class ManifestValidator {
             result.addError("Tool metadata missing");
             return result;
         }
-        if (!"http".equals(manifest.getType()) && !"docker".equals(manifest.getType())) {
+        if (!"http".equals(manifest.getType())
+                && !"docker".equals(manifest.getType())
+                && !"rss".equals(manifest.getType())
+                && !"vector.lucene.enrich".equals(manifest.getType())
+                && !"vector.lucene.upsert".equals(manifest.getType())
+                && !"vector.lucene.search".equals(manifest.getType())
+                && !"csv.write".equals(manifest.getType())
+                && !"csv.read".equals(manifest.getType())) {
             result.addError("Invalid tool type: " + manifest.getType());
         }
         if (manifest.getConfig() == null || manifest.getConfig().isEmpty()) {
             result.addError("Tool config missing");
+        }
+        if (manifest.getExamples() == null || manifest.getExamples().isEmpty()) {
+            result.addError("Tool examples missing");
         }
         return result;
     }

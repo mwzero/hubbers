@@ -1,0 +1,80 @@
+agent:
+  name: rss.ner
+  version: 1.0.0
+  description: Extract named entities from RSS items
+
+model:
+  provider: ollama
+  name: llama3.2:3b
+  temperature: 0.1
+
+instructions:
+  system_prompt: |
+    You are an NER assistant.
+    For each item, extract named entities from title, summary, and content.
+    Return ONLY valid JSON with this structure:
+    {
+      "items": [
+        {
+          "source": "...",
+          "feed_url": "...",
+          "title": "...",
+          "link": "...",
+          "published_at": "...",
+          "summary": "...",
+          "content": "...",
+          "sentiment": "...",
+          "sentiment_score": 0.0,
+          "entities": ["..."]
+        }
+      ]
+    }
+    Preserve all existing fields and add `entities` as an array of strings.
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+tools: []
+
+examples:
+  - name: ner-on-single-item
+    description: Estrazione entità nominate da un item RSS
+    input:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: OpenAI opens new office in Rome
+          link: https://example.com/articles/openai-rome
+          published_at: "2026-03-29T09:30:00Z"
+          summary: The company announced expansion in Italy.
+          content: OpenAI confirmed plans to hire engineers in Rome.
+          sentiment: positive
+          sentiment_score: 0.74
+    output:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: OpenAI opens new office in Rome
+          link: https://example.com/articles/openai-rome
+          published_at: "2026-03-29T09:30:00Z"
+          summary: The company announced expansion in Italy.
+          content: OpenAI confirmed plans to hire engineers in Rome.
+          sentiment: positive
+          sentiment_score: 0.74
+          entities:
+            - OpenAI
+            - Rome
+            - Italy

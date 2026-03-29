@@ -21,27 +21,34 @@ public class InputMapper {
         for (Map.Entry<String, String> entry : mapping.entrySet()) {
             String targetField = entry.getKey();
             String sourceExpr = entry.getValue();
-            JsonNode resolved = resolveExpression(sourceExpr, state);
+            JsonNode resolved = resolveExpression(sourceExpr, initialInput, state);
             output.set(targetField, resolved == null ? mapper.nullNode() : resolved);
         }
         return output;
     }
 
-    private JsonNode resolveExpression(String expression, PipelineState state) {
+    private JsonNode resolveExpression(String expression, JsonNode initialInput, PipelineState state) {
         if (expression == null || !expression.startsWith("${") || !expression.endsWith("}")) {
             return mapper.valueToTree(expression);
         }
         String path = expression.substring(2, expression.length() - 1);
         String[] parts = path.split("\\.");
-        if (parts.length < 4 || !"steps".equals(parts[0]) || !"output".equals(parts[2])) {
-            return mapper.nullNode();
+        if (parts.length >= 4 && "steps".equals(parts[0]) && "output".equals(parts[2])) {
+            JsonNode current = state.getStepOutput(parts[1]);
+            for (int i = 3; i < parts.length; i++) {
+                if (current == null) {
+                    return mapper.nullNode();
+                }
+                current = current.get(parts[i]);
+            }
+            return current;
         }
-        JsonNode current = state.getStepOutput(parts[1]);
-        for (int i = 3; i < parts.length; i++) {
+        JsonNode current = initialInput;
+        for (String part : parts) {
             if (current == null) {
                 return mapper.nullNode();
             }
-            current = current.get(parts[i]);
+            current = current.get(part);
         }
         return current;
     }

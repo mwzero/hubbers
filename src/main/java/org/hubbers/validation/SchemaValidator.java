@@ -35,6 +35,7 @@ public class SchemaValidator {
             case "number" -> value.isNumber();
             case "boolean" -> value.isBoolean();
             case "object" -> value.isObject();
+            case "array" -> value.isArray();
             default -> true;
         };
     }

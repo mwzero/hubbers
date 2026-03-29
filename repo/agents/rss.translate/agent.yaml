@@ -1,0 +1,92 @@
+agent:
+  name: rss.translate
+  version: 1.0.0
+  description: Translate title and summary fields for RSS items
+
+model:
+  provider: ollama
+  name: llama3.2:3b
+  temperature: 0.1
+
+instructions:
+  system_prompt: |
+    You are a translation assistant.
+    Translate only `title` and `summary` for each item to the requested `target_language`.
+    Keep original fields unchanged and add `translated_title` and `translated_summary`.
+    Return ONLY valid JSON with this structure:
+    {
+      "items": [
+        {
+          "source": "...",
+          "feed_url": "...",
+          "title": "...",
+          "link": "...",
+          "published_at": "...",
+          "summary": "...",
+          "content": "...",
+          "sentiment": "...",
+          "sentiment_score": 0.0,
+          "entities": ["..."],
+          "translated_title": "...",
+          "translated_summary": "..."
+        }
+      ]
+    }
+
+input:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+      target_language:
+        type: string
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+tools: []
+
+examples:
+  - name: translate-title-summary
+    description: Traduzione in italiano di title e summary
+    input:
+      target_language: Italian
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: OpenAI opens new office in Rome
+          link: https://example.com/articles/openai-rome
+          published_at: "2026-03-29T09:30:00Z"
+          summary: The company announced expansion in Italy.
+          content: OpenAI confirmed plans to hire engineers in Rome.
+          sentiment: positive
+          sentiment_score: 0.74
+          entities:
+            - OpenAI
+            - Rome
+            - Italy
+    output:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: OpenAI opens new office in Rome
+          link: https://example.com/articles/openai-rome
+          published_at: "2026-03-29T09:30:00Z"
+          summary: The company announced expansion in Italy.
+          content: OpenAI confirmed plans to hire engineers in Rome.
+          sentiment: positive
+          sentiment_score: 0.74
+          entities:
+            - OpenAI
+            - Rome
+            - Italy
+          translated_title: OpenAI apre un nuovo ufficio a Roma
+          translated_summary: L'azienda ha annunciato l'espansione in Italia.

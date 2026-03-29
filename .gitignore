@@ -31,3 +31,5 @@ replay_pid*
 **/*.settings
 **/*.bin
 **/*/target
+.DS_Store
+/target

@@ -1,6 +1,7 @@
 package org.hubbers.manifest.agent;
 
 import org.hubbers.manifest.common.Metadata;
+import org.hubbers.manifest.common.ExampleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ public class AgentManifest {
     private InputDefinition input;
     private OutputDefinition output;
     private List<ToolReference> tools = new ArrayList<>();
+    private List<ExampleDefinition> examples = new ArrayList<>();
 
     public Metadata getAgent() { return agent; }
     public void setAgent(Metadata agent) { this.agent = agent; }
@@ -25,4 +27,6 @@ public class AgentManifest {
     public void setOutput(OutputDefinition output) { this.output = output; }
     public List<ToolReference> getTools() { return tools; }
     public void setTools(List<ToolReference> tools) { this.tools = tools; }
+    public List<ExampleDefinition> getExamples() { return examples; }
+    public void setExamples(List<ExampleDefinition> examples) { this.examples = examples; }
 }

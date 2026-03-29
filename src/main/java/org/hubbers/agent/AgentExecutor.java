@@ -2,7 +2,6 @@ package org.hubbers.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.execution.ExecutionMetadata;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
@@ -43,8 +42,12 @@ public class AgentExecutor {
         ModelProvider provider = modelProviderRegistry.get(manifest.getModel().getProvider());
         ModelResponse modelResponse = provider.generate(request);
 
-        ObjectNode output = mapper.createObjectNode();
-        output.put("summary", modelResponse.getContent());
+        JsonNode output;
+        try {
+            output = mapper.readTree(modelResponse.getContent());
+        } catch (Exception e) {
+            return RunResult.failed("Model output is not valid JSON: " + e.getMessage());
+        }
         ValidationResult outputValidation = schemaValidator.validate(output, manifest.getOutput().getSchema());
         if (!outputValidation.isValid()) {
             return RunResult.failed(String.join(", ", outputValidation.getErrors()));
