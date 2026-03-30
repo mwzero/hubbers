@@ -37,6 +37,8 @@ public class ManifestValidator {
                 && !"vector.lucene.enrich".equals(manifest.getType())
                 && !"vector.lucene.upsert".equals(manifest.getType())
                 && !"vector.lucene.search".equals(manifest.getType())
+                && !"lucene.kv".equals(manifest.getType())
+                && !"browser.pinchtab".equals(manifest.getType())
                 && !"csv.write".equals(manifest.getType())
                 && !"csv.read".equals(manifest.getType())) {
             result.addError("Invalid tool type: " + manifest.getType());

@@ -15,9 +15,11 @@ import org.hubbers.tool.DockerToolDriver;
 import org.hubbers.tool.HttpToolDriver;
 import org.hubbers.tool.CsvReadToolDriver;
 import org.hubbers.tool.CsvWriteToolDriver;
+import org.hubbers.tool.LuceneKvToolDriver;
 import org.hubbers.tool.LuceneVectorContextToolDriver;
 import org.hubbers.tool.LuceneVectorSearchToolDriver;
 import org.hubbers.tool.LuceneVectorUpsertToolDriver;
+import org.hubbers.tool.PinchtabBrowserToolDriver;
 import org.hubbers.tool.RssToolDriver;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.util.JacksonFactory;
@@ -52,6 +54,8 @@ public class Bootstrap {
                 new LuceneVectorContextToolDriver(jsonMapper),
                 new LuceneVectorUpsertToolDriver(jsonMapper),
                 new LuceneVectorSearchToolDriver(jsonMapper),
+                new LuceneKvToolDriver(jsonMapper),
+                new PinchtabBrowserToolDriver(httpClient, jsonMapper),
                 new CsvWriteToolDriver(jsonMapper),
                 new CsvReadToolDriver(jsonMapper)
         ), schemaValidator);

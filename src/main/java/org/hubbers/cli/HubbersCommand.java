@@ -70,7 +70,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class AgentRun implements Callable<Integer> {
         @CommandLine.ParentCommand AgentCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) File input;
+        @CommandLine.Option(names = "--input", required = true) String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.AGENT); }
     }
 
@@ -84,7 +84,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class ToolRun implements Callable<Integer> {
         @CommandLine.ParentCommand ToolCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) File input;
+        @CommandLine.Option(names = "--input", required = true) String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.TOOL); }
     }
 
@@ -98,7 +98,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class PipelineRun implements Callable<Integer> {
         @CommandLine.ParentCommand PipelineCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) File input;
+        @CommandLine.Option(names = "--input", required = true) String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.PIPELINE); }
     }
 
@@ -125,10 +125,20 @@ public class HubbersCommand implements Callable<Integer> {
 
     private enum Mode { AGENT, TOOL, PIPELINE }
 
-    private static Integer run(RuntimeFacade facade, String name, File inputFile, Mode mode) {
+    private static Integer run(RuntimeFacade facade, String name, String inputSource, Mode mode) {
         ObjectMapper mapper = JacksonFactory.jsonMapper();
         try {
-            JsonNode input = mapper.readTree(Files.readString(inputFile.toPath()));
+            // Check if input is a file or direct JSON
+            JsonNode input;
+            File inputFile = new File(inputSource);
+            if (inputFile.exists() && inputFile.isFile()) {
+                // Input is a file path
+                input = mapper.readTree(Files.readString(inputFile.toPath()));
+            } else {
+                // Input is direct JSON string
+                input = mapper.readTree(inputSource);
+            }
+            
             RunResult result = switch (mode) {
                 case AGENT -> facade.runAgent(name, input);
                 case TOOL -> facade.runTool(name, input);

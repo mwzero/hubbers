@@ -1,0 +1,43 @@
+pipeline:
+  name: browser.web.scrape
+  version: 1.0.0
+  description: Web scraping pipeline using Pinchtab browser automation
+
+steps:
+  - id: navigate
+    tool: browser.pinchtab
+    input_mapping:
+      action: navigate
+      profile: ${profile}
+      url: ${url}
+
+  - id: snapshot
+    tool: browser.pinchtab
+    input_mapping:
+      action: snapshot
+      profile: ${profile}
+      filter: interactive
+
+  - id: extract_text
+    tool: browser.pinchtab
+    input_mapping:
+      action: extract_text
+      profile: ${profile}
+
+  - id: summarize
+    agent: text.summarizer
+    input_mapping:
+      text: ${steps.extract_text.output.text}
+
+examples:
+  - name: scrape-and-summarize
+    description: Navigate to a website, extract text, and summarize content
+    input:
+      url: https://example.com
+      profile: default
+    output:
+      summary: |
+        Il sito Example Domain è un dominio di esempio utilizzato
+        per scopi illustrativi nella documentazione. Può essere
+        utilizzato liberamente senza necessità di coordinamento
+        o permessi specifici.

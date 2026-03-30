@@ -1,0 +1,204 @@
+tool:
+  name: browser.pinchtab
+  version: 1.0.0
+  description: Browser automation and web scraping using Pinchtab HTTP API
+
+type: browser.pinchtab
+
+config:
+  pinchtab_url: http://localhost:9867
+  profiles:
+    default:
+      name: default
+      description: Default browser profile
+      mode: headless
+    authenticated:
+      name: work-profile
+      description: Authenticated work session
+      mode: headed
+
+input:
+  schema:
+    type: object
+    properties:
+      action:
+        type: string
+        required: true
+      profile:
+        type: string
+        required: false
+      mode:
+        type: string
+        required: false
+        description: Browser mode - "headed" (visible) or "headless" (background)
+      url:
+        type: string
+        required: false
+      ref:
+        type: string
+        required: false
+      text:
+        type: string
+        required: false
+      key:
+        type: string
+        required: false
+      filter:
+        type: string
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      success:
+        type: boolean
+        required: true
+      action:
+        type: string
+        required: true
+      profile:
+        type: string
+        required: false
+      snapshot:
+        type: object
+        required: false
+      text:
+        type: string
+        required: false
+      screenshot:
+        type: string
+        required: false
+      url:
+        type: string
+        required: false
+      ref:
+        type: string
+        required: false
+      key:
+        type: string
+        required: false
+      message:
+        type: string
+        required: false
+
+examples:
+  - name: navigate-to-website
+    description: Open a URL in the browser
+    input:
+      action: navigate
+      profile: default
+      url: https://example.com
+    output:
+      success: true
+      action: navigate
+      profile: default
+      url: https://example.com
+
+  - name: navigate-with-visible-browser
+    description: Open URL with visible browser window (headed mode)
+    input:
+      action: navigate
+      profile: default
+      mode: headed
+      url: https://example.com
+    output:
+      success: true
+      action: navigate
+      profile: default
+      url: https://example.com
+
+  - name: get-page-snapshot
+    description: Get interactive elements from the current page
+    input:
+      action: snapshot
+      profile: default
+      filter: interactive
+    output:
+      success: true
+      action: snapshot
+      profile: default
+      snapshot:
+        url: https://example.com
+        title: Example Domain
+        elements:
+          - ref: e1
+            tag: a
+            text: More information...
+            href: https://www.iana.org/domains/example
+
+  - name: click-element
+    description: Click on an element by its reference
+    input:
+      action: click
+      profile: default
+      ref: e5
+    output:
+      success: true
+      action: click
+      profile: default
+      ref: e5
+
+  - name: fill-input-field
+    description: Fill a text input field
+    input:
+      action: fill
+      profile: default
+      ref: e3
+      text: user@example.com
+    output:
+      success: true
+      action: fill
+      profile: default
+      ref: e3
+
+  - name: press-enter-key
+    description: Press Enter key on an element
+    input:
+      action: press
+      profile: default
+      ref: e7
+      key: Enter
+    output:
+      success: true
+      action: press
+      profile: default
+      ref: e7
+      key: Enter
+
+  - name: extract-page-text
+    description: Extract all text content from the page
+    input:
+      action: extract_text
+      profile: default
+    output:
+      success: true
+      action: extract_text
+      profile: default
+      text: |
+        Example Domain
+        This domain is for use in illustrative examples in documents.
+        You may use this domain in literature without prior coordination or asking for permission.
+        More information...
+
+  - name: close-session
+    description: Close browser session and free resources
+    input:
+      action: close
+      profile: default
+    output:
+      success: true
+      action: close
+      profile: default
+
+  - name: web-scraping-workflow
+    description: Complete workflow - navigate, snapshot, extract text
+    input:
+      action: navigate
+      profile: default
+      url: https://news.ycombinator.com
+    output:
+      success: true
+      action: navigate
+      profile: default
+      url: https://news.ycombinator.com

@@ -1,0 +1,144 @@
+tool:
+  name: lucene.kv
+  version: 1.0.0
+  description: Key-value store using Lucene as NoSQL document database
+
+type: lucene.kv
+
+config:
+  index_path: ./datasets/lucene/kv-store
+
+input:
+  schema:
+    type: object
+    properties:
+      operation:
+        type: string
+        required: true
+      key:
+        type: string
+        required: false
+      value:
+        type: object
+        required: false
+      items:
+        type: array
+        required: false
+      index_path:
+        type: string
+        required: false
+      limit:
+        type: number
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      success:
+        type: boolean
+        required: true
+      operation:
+        type: string
+        required: true
+      key:
+        type: string
+        required: false
+      value:
+        type: object
+        required: false
+      keys:
+        type: array
+        required: false
+      count:
+        type: number
+        required: false
+      error:
+        type: string
+        required: false
+
+examples:
+  - name: put-single-record
+    description: Store a single document with a key
+    input:
+      operation: put
+      key: user:1001
+      value:
+        name: Mario Rossi
+        email: mario.rossi@example.com
+        age: 35
+        active: true
+    output:
+      success: true
+      operation: put
+      key: user:1001
+      value:
+        name: Mario Rossi
+        email: mario.rossi@example.com
+        age: 35
+        active: true
+
+  - name: get-record
+    description: Retrieve a document by key
+    input:
+      operation: get
+      key: user:1001
+    output:
+      success: true
+      operation: get
+      key: user:1001
+      value:
+        name: Mario Rossi
+        email: mario.rossi@example.com
+        age: 35
+        active: true
+
+  - name: delete-record
+    description: Delete a document by key
+    input:
+      operation: delete
+      key: user:1001
+    output:
+      success: true
+      operation: delete
+      key: user:1001
+
+  - name: batch-put-records
+    description: Store multiple documents in a single operation
+    input:
+      operation: batch_put
+      items:
+        - key: product:2001
+          value:
+            name: Laptop
+            price: 899.99
+            stock: 15
+        - key: product:2002
+          value:
+            name: Mouse
+            price: 25.50
+            stock: 150
+        - key: product:2003
+          value:
+            name: Keyboard
+            price: 75.00
+            stock: 50
+    output:
+      success: true
+      operation: batch_put
+      count: 3
+
+  - name: list-all-keys
+    description: List all keys in the store with optional limit
+    input:
+      operation: list_keys
+      limit: 10
+    output:
+      success: true
+      operation: list_keys
+      keys:
+        - user:1001
+        - product:2001
+        - product:2002
+        - product:2003
+      count: 4

@@ -67,6 +67,7 @@ public class RssToolDriver implements ToolDriver {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(feedUrl))
                     .header("Accept", "application/rss+xml, application/xml, text/xml")
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Hubbers/1.0")
                     .GET()
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());

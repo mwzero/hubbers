@@ -1,0 +1,62 @@
+pipeline:
+  name: lucene.kv.demo
+  version: 1.0.0
+  description: Demo pipeline for Lucene key-value store operations
+
+steps:
+  - id: batch_put
+    tool: lucene.kv
+    input_mapping:
+      operation: batch_put
+      items: ${items}
+      index_path: ${index_path}
+
+  - id: list_keys
+    tool: lucene.kv
+    input_mapping:
+      operation: list_keys
+      index_path: ${index_path}
+      limit: ${limit}
+
+  - id: get_first
+    tool: lucene.kv
+    input_mapping:
+      operation: get
+      key: ${get_key}
+      index_path: ${index_path}
+
+examples:
+  - name: store-and-retrieve-users
+    description: Store user records, list keys, and retrieve a specific user
+    input:
+      index_path: ./datasets/lucene/demo-kv-store
+      items:
+        - key: user:1001
+          value:
+            name: Mario Rossi
+            email: mario.rossi@example.com
+            role: admin
+            active: true
+        - key: user:1002
+          value:
+            name: Laura Bianchi
+            email: laura.bianchi@example.com
+            role: developer
+            active: true
+        - key: user:1003
+          value:
+            name: Giovanni Verdi
+            email: giovanni.verdi@example.com
+            role: manager
+            active: false
+      limit: 10
+      get_key: user:1001
+    output:
+      success: true
+      operation: get
+      key: user:1001
+      value:
+        name: Mario Rossi
+        email: mario.rossi@example.com
+        role: admin
+        active: true

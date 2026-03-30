@@ -1,0 +1,16 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "application\\.yaml"
+      },
+      {
+        "pattern": "logback\\.xml"
+      },
+      {
+        "pattern": "web/.*"
+      }
+    ]
+  },
+  "bundles": []
+}
