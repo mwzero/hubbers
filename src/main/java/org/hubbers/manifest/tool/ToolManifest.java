@@ -1,6 +1,5 @@
 package org.hubbers.manifest.tool;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hubbers.manifest.agent.InputDefinition;
 import org.hubbers.manifest.agent.OutputDefinition;
 import org.hubbers.manifest.common.ExampleDefinition;
