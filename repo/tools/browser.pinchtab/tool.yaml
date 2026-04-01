@@ -23,12 +23,16 @@ input:
     properties:
       action:
         type: string
+        enum: [navigate, snapshot, click, fill, press, extract_text, close]
         required: true
+        description: Action to perform with the browser
       profile:
         type: string
         required: false
+        description: Browser profile to use (from config.profiles)
       mode:
         type: string
+        enum: [headed, headless]
         required: false
         description: Browser mode - "headed" (visible) or "headless" (background)
       url:

@@ -66,6 +66,17 @@ public class Bootstrap {
                 new ProcessManageToolDriver(jsonMapper)
         ), schemaValidator);
 
+        // Agentic capabilities (tool calling + memory)
+        var conversationMemory = new org.hubbers.agent.memory.InMemoryConversationStore();
+        var agenticExecutor = new org.hubbers.agent.AgenticExecutor(
+                modelRegistry, 
+                toolExecutor,
+                repository, 
+                schemaValidator, 
+                conversationMemory, 
+                jsonMapper
+        );
+
         var pipelineExecutor = new PipelineExecutor(repository, agentExecutor, toolExecutor, new InputMapper(jsonMapper));
 
         return new RuntimeFacade(repository, agentExecutor, toolExecutor, pipelineExecutor, new ManifestValidator());

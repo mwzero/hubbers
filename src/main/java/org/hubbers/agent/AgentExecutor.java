@@ -11,8 +11,11 @@ import org.hubbers.model.ModelRequest;
 import org.hubbers.model.ModelResponse;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AgentExecutor {
+    private static final Logger log = LoggerFactory.getLogger(AgentExecutor.class);
     private final ModelProviderRegistry modelProviderRegistry;
     private final AgentPromptBuilder promptBuilder;
     private final SchemaValidator schemaValidator;
@@ -29,6 +32,8 @@ public class AgentExecutor {
     }
 
     public RunResult execute(AgentManifest manifest, JsonNode input) {
+        log.debug("Executing agent: {}", manifest.getAgent().getName());
+        
         ValidationResult inputValidation = schemaValidator.validate(input, manifest.getInput().getSchema());
         if (!inputValidation.isValid()) {
             return RunResult.failed(String.join(", ", inputValidation.getErrors()));
@@ -40,7 +45,11 @@ public class AgentExecutor {
 
         ModelRequest request = promptBuilder.build(context);
         ModelProvider provider = modelProviderRegistry.get(manifest.getModel().getProvider());
+        
+        log.debug("Calling LLM: provider={}, model={}", 
+            manifest.getModel().getProvider(), manifest.getModel().getName());
         ModelResponse modelResponse = provider.generate(request);
+        log.debug("LLM response received: latencyMs={}", modelResponse.getLatencyMs());
 
         JsonNode output;
         try {

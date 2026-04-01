@@ -4,15 +4,27 @@ agent:
   description: Summarize text in Italian
 
 model:
-  provider: openai
-  name: gpt-4.1-mini
-  temperature: 0.2
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.1
 
 instructions:
   system_prompt: |
-    Riassumi il testo in italiano in massimo 5 punti.
-    Restituisci SOLO JSON valido nel formato:
-    {"summary":"..."}
+    Sei un assistente che riassume testi in italiano.
+    Rispondi ESCLUSIVAMENTE con JSON valido, senza spiegazioni o ragionamenti.
+    
+    Formato richiesto:
+    {"summary": "il tuo riassunto qui"}
+    
+    Regole:
+    - Massimo 3-5 frasi
+    - Solo italiano
+    - Solo JSON, niente altro testo
+    - Non usare "thinking" o spiegazioni
+    
+    Esempio:
+    Input: "L'AI sta cambiando il lavoro. Le aziende automatizzano task."
+    Output: {"summary": "L'intelligenza artificiale trasforma il mondo del lavoro attraverso l'automazione di compiti ripetitivi nelle aziende."}
 
 input:
   schema:
