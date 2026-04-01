@@ -1,0 +1,18 @@
+{
+  "model": "qwen3:4b",
+  "stream": false,
+  "format": "json",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Rispondi ORA in JSON. Salta ogni ragionamento. Scrivi solo il risultato finale nel formato: {\"summary\": \"...\"}"
+    },
+    {
+      "role": "user",
+      "content": "L'intelligenza artificiale sta cambiando il modo in cui lavoriamo. Le aziende la usano per automatizzare task ripetitivi e migliorare la qualità."
+    }
+  ],
+  "options": {
+    "temperature": 0.1
+  }
+}
