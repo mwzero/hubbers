@@ -1,0 +1,102 @@
+tool:
+  name: process.manage
+  version: 1.0.0
+  description: Manage system processes (list, info, kill)
+
+type: process.manage
+
+config:
+  max_process_list: 1000
+
+input:
+  schema:
+    type: object
+    properties:
+      operation:
+        type: string
+        required: true
+      pid:
+        type: number
+        required: false
+      namePattern:
+        type: string
+        required: false
+      force:
+        type: boolean
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      success:
+        type: boolean
+        required: true
+      message:
+        type: string
+        required: false
+      processes:
+        type: array
+        required: false
+      info:
+        type: object
+        required: false
+
+examples:
+  - name: list-all-processes
+    description: List all running processes
+    input:
+      operation: list
+    output:
+      success: true
+      processes:
+        - pid: 1234
+          command: "java"
+          user: "john"
+        - pid: 5678
+          command: "chrome.exe"
+          user: "john"
+
+  - name: filter-java-processes
+    description: List processes matching pattern
+    input:
+      operation: list
+      namePattern: "java"
+    output:
+      success: true
+      processes:
+        - pid: 1234
+          command: "java"
+          user: "john"
+
+  - name: process-info
+    description: Get detailed information about a process
+    input:
+      operation: info
+      pid: 1234
+    output:
+      success: true
+      info:
+        pid: 1234
+        command: "java -jar hubbers.jar"
+        startTime: "2026-04-01T08:00:00Z"
+        user: "john"
+
+  - name: kill-process
+    description: Terminate a process gracefully
+    input:
+      operation: kill
+      pid: 5678
+    output:
+      success: true
+      message: "Process 5678 terminated"
+
+  - name: force-kill-process
+    description: Forcefully terminate a process
+    input:
+      operation: kill
+      pid: 5678
+      force: true
+    output:
+      success: true
+      message: "Process 5678 forcefully terminated"

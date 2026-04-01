@@ -1,0 +1,51 @@
+pipeline:
+  name: system.report
+  version: 1.0.0
+  description: Generate a system report with Java version, process list, and disk info
+
+steps:
+  - id: java_version
+    tool: shell.exec
+    input_mapping:
+      command: java
+      args:
+        - "-version"
+      timeoutSeconds: 10
+
+  - id: list_java_processes
+    tool: process.manage
+    input_mapping:
+      operation: list
+      namePattern: java
+
+  - id: disk_info
+    tool: shell.exec
+    input_mapping:
+      command: ${disk_command}
+      timeoutSeconds: 30
+
+  - id: write_report
+    tool: file.ops
+    input_mapping:
+      operation: write
+      path: ${report_path}
+      content: "System Report\n=============\n\nJava Version:\n${steps.java_version.output.stderr}\n\nJava Processes: ${steps.list_java_processes.output.processes}\n\nDisk Info:\n${steps.disk_info.output.stdout}"
+
+examples:
+  - name: generate-system-report-windows
+    description: Generate system report on Windows
+    input:
+      disk_command: "wmic logicaldisk get size,freespace,caption"
+      report_path: ./output/system-report.txt
+    output:
+      success: true
+      message: "File written successfully"
+
+  - name: generate-system-report-linux
+    description: Generate system report on Linux
+    input:
+      disk_command: "df -h"
+      report_path: ./output/system-report.txt
+    output:
+      success: true
+      message: "File written successfully"

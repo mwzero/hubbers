@@ -1,0 +1,37 @@
+pipeline:
+  name: file.backup
+  version: 1.0.0
+  description: Backup files by copying them to a backup directory
+
+steps:
+  - id: create_backup_dir
+    tool: file.ops
+    input_mapping:
+      operation: mkdir
+      path: ${backup_dir}
+
+  - id: list_source_files
+    tool: file.ops
+    input_mapping:
+      operation: list
+      path: ${source_dir}
+      pattern: ${file_pattern}
+
+  - id: copy_file
+    tool: file.ops
+    input_mapping:
+      operation: copy
+      path: ${source_dir}/${file_name}
+      destination: ${backup_dir}/${file_name}
+
+examples:
+  - name: backup-datasets
+    description: Backup CSV files from datasets directory
+    input:
+      source_dir: ./datasets
+      backup_dir: ./backup/datasets
+      file_pattern: ".*\\.csv"
+      file_name: cities_coordinates.csv
+    output:
+      success: true
+      message: "File copied successfully"

@@ -12,6 +12,7 @@ import org.hubbers.model.OpenAiModelProvider;
 import org.hubbers.pipeline.InputMapper;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.DockerToolDriver;
+import org.hubbers.tool.FileOpsToolDriver;
 import org.hubbers.tool.HttpToolDriver;
 import org.hubbers.tool.CsvReadToolDriver;
 import org.hubbers.tool.CsvWriteToolDriver;
@@ -20,7 +21,9 @@ import org.hubbers.tool.LuceneVectorContextToolDriver;
 import org.hubbers.tool.LuceneVectorSearchToolDriver;
 import org.hubbers.tool.LuceneVectorUpsertToolDriver;
 import org.hubbers.tool.PinchtabBrowserToolDriver;
+import org.hubbers.tool.ProcessManageToolDriver;
 import org.hubbers.tool.RssToolDriver;
+import org.hubbers.tool.ShellExecToolDriver;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
@@ -57,7 +60,10 @@ public class Bootstrap {
                 new LuceneKvToolDriver(jsonMapper),
                 new PinchtabBrowserToolDriver(httpClient, jsonMapper),
                 new CsvWriteToolDriver(jsonMapper),
-                new CsvReadToolDriver(jsonMapper)
+                new CsvReadToolDriver(jsonMapper),
+                new FileOpsToolDriver(jsonMapper),
+                new ShellExecToolDriver(jsonMapper),
+                new ProcessManageToolDriver(jsonMapper)
         ), schemaValidator);
 
         var pipelineExecutor = new PipelineExecutor(repository, agentExecutor, toolExecutor, new InputMapper(jsonMapper));

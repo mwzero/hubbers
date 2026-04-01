@@ -1,0 +1,106 @@
+tool:
+  name: file.ops
+  version: 1.0.0
+  description: Perform file system operations (read, write, copy, move, delete, list, mkdir, exists, info)
+
+type: file.ops
+
+config:
+  default_encoding: UTF-8
+
+input:
+  schema:
+    type: object
+    properties:
+      operation:
+        type: string
+        required: true
+      path:
+        type: string
+        required: true
+      content:
+        type: string
+        required: false
+      destination:
+        type: string
+        required: false
+      pattern:
+        type: string
+        required: false
+      recursive:
+        type: boolean
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      success:
+        type: boolean
+        required: true
+      message:
+        type: string
+        required: false
+      content:
+        type: string
+        required: false
+      items:
+        type: array
+        required: false
+      info:
+        type: object
+        required: false
+
+examples:
+  - name: read-file
+    description: Read content from a text file
+    input:
+      operation: read
+      path: ./datasets/cities_coordinates.csv
+    output:
+      success: true
+      content: "city,latitude,longitude\nRome,41.9028,12.4964"
+
+  - name: write-file
+    description: Write content to a file
+    input:
+      operation: write
+      path: ./output/result.txt
+      content: "Hello World"
+    output:
+      success: true
+      message: "File written successfully"
+
+  - name: list-directory
+    description: List files in a directory
+    input:
+      operation: list
+      path: ./datasets
+    output:
+      success: true
+      items:
+        - cities_coordinates.csv
+        - rss-sentiment.csv
+
+  - name: copy-file
+    description: Copy a file to another location
+    input:
+      operation: copy
+      path: ./datasets/cities_coordinates.csv
+      destination: ./backup/cities_coordinates.csv
+    output:
+      success: true
+      message: "File copied successfully"
+
+  - name: file-info
+    description: Get information about a file
+    input:
+      operation: info
+      path: ./datasets/cities_coordinates.csv
+    output:
+      success: true
+      info:
+        size: 1024
+        lastModified: "2026-03-15T10:30:00Z"
+        isDirectory: false
+        isFile: true

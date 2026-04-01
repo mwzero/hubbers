@@ -1,0 +1,87 @@
+tool:
+  name: shell.exec
+  version: 1.0.0
+  description: Execute shell commands with timeout, environment variables, and working directory control
+
+type: shell.exec
+
+config:
+  default_timeout_seconds: 60
+  max_timeout_seconds: 300
+
+input:
+  schema:
+    type: object
+    properties:
+      command:
+        type: string
+        required: true
+      args:
+        type: array
+        required: false
+      workingDir:
+        type: string
+        required: false
+      env:
+        type: object
+        required: false
+      timeoutSeconds:
+        type: number
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      exitCode:
+        type: number
+        required: true
+      stdout:
+        type: string
+        required: true
+      stderr:
+        type: string
+        required: true
+      timedOut:
+        type: boolean
+        required: true
+
+examples:
+  - name: echo-message
+    description: Execute echo command
+    input:
+      command: echo
+      args:
+        - "Hello World"
+    output:
+      exitCode: 0
+      stdout: "Hello World\n"
+      stderr: ""
+      timedOut: false
+
+  - name: list-directory
+    description: List directory contents (Windows)
+    input:
+      command: dir
+      workingDir: "C:\\temp"
+    output:
+      exitCode: 0
+      stdout: "Volume in drive C...\n Directory of C:\\temp\n..."
+      stderr: ""
+      timedOut: false
+
+  - name: maven-clean
+    description: Run Maven clean with custom environment
+    input:
+      command: mvn
+      args:
+        - clean
+      workingDir: "./project"
+      env:
+        MAVEN_OPTS: "-Xmx512m"
+      timeoutSeconds: 120
+    output:
+      exitCode: 0
+      stdout: "[INFO] BUILD SUCCESS\n"
+      stderr: ""
+      timedOut: false
