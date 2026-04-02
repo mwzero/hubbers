@@ -13,6 +13,7 @@ import com.firecrawl.models.MapOptions;
 import com.firecrawl.models.ScrapeOptions;
 import com.firecrawl.models.SearchData;
 import com.firecrawl.models.SearchOptions;
+import org.hubbers.config.AppConfig;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.util.ArrayList;
@@ -20,9 +21,11 @@ import java.util.List;
 
 public class FirecrawlToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
+    private final AppConfig appConfig;
 
-    public FirecrawlToolDriver(ObjectMapper mapper) {
+    public FirecrawlToolDriver(ObjectMapper mapper, AppConfig appConfig) {
         this.mapper = mapper;
+        this.appConfig = appConfig;
     }
 
     @Override
@@ -118,10 +121,21 @@ public class FirecrawlToolDriver implements ToolDriver {
     }
 
     private FirecrawlClient createClient(ToolManifest manifest) {
+        // Priority: 1. manifest config, 2. application.yaml, 3. environment
         String apiKey = config(manifest, "api_key");
+        
+        if (apiKey == null || apiKey.isBlank()) {
+            // Try application.yaml
+            if (appConfig != null && appConfig.getTools() != null) {
+                apiKey = appConfig.getTools().get("firecrawl", "api_key");
+            }
+        }
+        
         if (apiKey != null && !apiKey.isBlank()) {
             return FirecrawlClient.builder().apiKey(apiKey).build();
         }
+        
+        // Fallback to environment variable
         return FirecrawlClient.fromEnv();
     }
 

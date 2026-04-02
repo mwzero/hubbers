@@ -8,3 +8,7 @@ openai:
 ollama:
   baseUrl: http://localhost:11434
   defaultModel: llama3.2:3b
+
+tools:
+  firecrawl:
+    api_key: ${FIRECRAWL_API_KEY}

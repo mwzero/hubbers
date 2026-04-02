@@ -1,0 +1,807 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< org.hubbers:hubbers >-------------------------
+[INFO] Building hubbers 0.1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ hubbers ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ hubbers ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ hubbers ---
+[INFO] skip non existing resourceDirectory C:\mwzero\src\hubbers\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ hubbers ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ hubbers ---
+[WARNING]  Parameter 'systemProperties' is deprecated: Use systemPropertyVariables instead.
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ hubbers ---
+[INFO] 
+[INFO] --- shade:3.5.3:shade (default) @ hubbers ---
+[INFO] Including info.picocli:picocli:jar:4.7.6 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-databind:jar:2.17.2 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-annotations:jar:2.17.2 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.core:jackson-core:jar:2.17.2 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:jar:2.17.2 in the shaded jar.
+[INFO] Including org.yaml:snakeyaml:jar:2.2 in the shaded jar.
+[INFO] Including org.slf4j:slf4j-api:jar:2.0.16 in the shaded jar.
+[INFO] Including ch.qos.logback:logback-classic:jar:1.5.8 in the shaded jar.
+[INFO] Including ch.qos.logback:logback-core:jar:1.5.8 in the shaded jar.
+[INFO] Including io.javalin:javalin-bundle:jar:5.6.3 in the shaded jar.
+[INFO] Including io.javalin:javalin:jar:5.6.3 in the shaded jar.
+[INFO] Including org.jetbrains:annotations:jar:24.0.1 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:jar:5.0.2 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-http:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-webapp:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-servlet:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-security:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-xml:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-jetty-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-jetty-common:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-core-common:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-servlet:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-core-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.websocket:websocket-jetty-api:jar:11.0.17 in the shaded jar.
+[INFO] Including io.javalin:javalin-testtools:jar:5.6.3 in the shaded jar.
+[INFO] Including io.javalin:javalin-micrometer:jar:5.6.3 in the shaded jar.
+[INFO] Including io.micrometer:micrometer-core:jar:1.10.1 in the shaded jar.
+[INFO] Including io.micrometer:micrometer-commons:jar:1.10.1 in the shaded jar.
+[INFO] Including io.micrometer:micrometer-observation:jar:1.10.1 in the shaded jar.
+[INFO] Including org.hdrhistogram:HdrHistogram:jar:2.1.12 in the shaded jar.
+[INFO] Including org.latencyutils:LatencyUtils:jar:2.0.3 in the shaded jar.
+[INFO] Including io.micrometer:micrometer-jetty11:jar:1.10.1 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.module:jackson-module-kotlin:jar:2.15.0 in the shaded jar.
+[INFO] Including org.jetbrains.kotlin:kotlin-reflect:jar:1.5.32 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.datatype:jackson-datatype-jsr310:jar:2.15.0 in the shaded jar.
+[INFO] Including com.aayushatharva.brotli4j:brotli4j:jar:1.11.0 in the shaded jar.
+[INFO] Including com.aayushatharva.brotli4j:service:jar:1.11.0 in the shaded jar.
+[INFO] Including com.aayushatharva.brotli4j:native-windows-x86_64:jar:1.11.0 in the shaded jar.
+[INFO] Including org.eclipse.jetty.http2:http2-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.http2:http2-common:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty.http2:http2-hpack:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-alpn-conscrypt-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.conscrypt:conscrypt-openjdk-uber:jar:2.5.2 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-alpn-server:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-io:jar:11.0.17 in the shaded jar.
+[INFO] Including org.eclipse.jetty:jetty-util:jar:11.0.17 in the shaded jar.
+[INFO] Including org.jetbrains.kotlin:kotlin-stdlib-jdk8:jar:1.8.21 in the shaded jar.
+[INFO] Including org.jetbrains.kotlin:kotlin-stdlib:jar:1.8.21 in the shaded jar.
+[INFO] Including org.jetbrains.kotlin:kotlin-stdlib-common:jar:1.8.21 in the shaded jar.
+[INFO] Including org.jetbrains.kotlin:kotlin-stdlib-jdk7:jar:1.8.21 in the shaded jar.
+[INFO] Including org.apache.lucene:lucene-core:jar:9.11.1 in the shaded jar.
+[INFO] Including org.apache.lucene:lucene-analysis-common:jar:9.11.1 in the shaded jar.
+[INFO] Including com.firecrawl:firecrawl-java:jar:1.1.1 in the shaded jar.
+[INFO] Including com.squareup.okhttp3:okhttp:jar:4.12.0 in the shaded jar.
+[INFO] Including com.squareup.okio:okio:jar:3.6.0 in the shaded jar.
+[INFO] Including com.squareup.okio:okio-jvm:jar:3.6.0 in the shaded jar.
+[INFO] Including com.fasterxml.jackson.datatype:jackson-datatype-jdk8:jar:2.17.2 in the shaded jar.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] Discovered module-info.class. Shading will break its strong encapsulation.
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-annotations-2.17.2.jar define 75 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.core/jackson-annotations/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.core/jackson-annotations/pom.xml
+[WARNING]   - com.fasterxml.jackson.annotation.JacksonAnnotation
+[WARNING]   - com.fasterxml.jackson.annotation.JacksonAnnotationValue
+[WARNING]   - com.fasterxml.jackson.annotation.JacksonAnnotationsInside
+[WARNING]   - com.fasterxml.jackson.annotation.JacksonInject
+[WARNING]   - com.fasterxml.jackson.annotation.JacksonInject$Value
+[WARNING]   - com.fasterxml.jackson.annotation.JsonAlias
+[WARNING]   - com.fasterxml.jackson.annotation.JsonAnyGetter
+[WARNING]   - com.fasterxml.jackson.annotation.JsonAnySetter
+[WARNING]   - 65 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-xml-11.0.17.jar define 21 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-xml/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-xml/pom.xml
+[WARNING]   - org.eclipse.jetty.xml.ConfigurationProcessor
+[WARNING]   - org.eclipse.jetty.xml.ConfigurationProcessorFactory
+[WARNING]   - org.eclipse.jetty.xml.XmlAppendable
+[WARNING]   - org.eclipse.jetty.xml.XmlConfiguration
+[WARNING]   - org.eclipse.jetty.xml.XmlConfiguration$ConfigurationParser
+[WARNING]   - org.eclipse.jetty.xml.XmlConfiguration$JettyXmlConfiguration
+[WARNING]   - org.eclipse.jetty.xml.XmlConfiguration$JettyXmlConfiguration$Args
+[WARNING]   - org.eclipse.jetty.xml.XmlConfiguration$JettyXmlConfiguration$AttrOrElementNode
+[WARNING]   - 11 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, okio-3.6.0.jar define 44 overlapping resources: 
+[WARNING]   - okio/ArrayIndexOutOfBoundsException.kotlin_metadata
+[WARNING]   - okio/Base64Kt.kotlin_metadata
+[WARNING]   - okio/BlackholeSink.kotlin_metadata
+[WARNING]   - okio/Buffer.kotlin_metadata
+[WARNING]   - okio/BufferedSink.kotlin_metadata
+[WARNING]   - okio/BufferedSource.kotlin_metadata
+[WARNING]   - okio/ByteString.kotlin_metadata
+[WARNING]   - okio/Closeable.kotlin_metadata
+[WARNING]   - okio/CommonPlatformKt.kotlin_metadata
+[WARNING]   - okio/EOFException.kotlin_metadata
+[WARNING]   - 34 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-security-11.0.17.jar define 64 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-security/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-security/pom.xml
+[WARNING]   - org.eclipse.jetty.security.AbstractLoginService
+[WARNING]   - org.eclipse.jetty.security.AbstractUserAuthentication
+[WARNING]   - org.eclipse.jetty.security.Authenticator
+[WARNING]   - org.eclipse.jetty.security.Authenticator$AuthConfiguration
+[WARNING]   - org.eclipse.jetty.security.Authenticator$Factory
+[WARNING]   - org.eclipse.jetty.security.ConfigurableSpnegoLoginService
+[WARNING]   - org.eclipse.jetty.security.ConfigurableSpnegoLoginService$GSSContextHolder
+[WARNING]   - org.eclipse.jetty.security.ConfigurableSpnegoLoginService$SpnegoConfiguration
+[WARNING]   - 54 more...
+[WARNING] http2-hpack-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar define 19 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-hpack/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-hpack/pom.xml
+[WARNING]   - org.eclipse.jetty.http2.hpack.AuthorityHttpField
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackContext
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackContext$1
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackContext$DynamicTable
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackContext$Entry
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackContext$StaticEntry
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackDecoder
+[WARNING]   - org.eclipse.jetty.http2.hpack.HpackDecoder$1
+[WARNING]   - 9 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-jakarta-servlet-api-5.0.2.jar define 204 overlapping classes and resources: 
+[WARNING]   - META-INF/LICENSE.md
+[WARNING]   - META-INF/NOTICE.md
+[WARNING]   - jakarta.servlet.AsyncContext
+[WARNING]   - jakarta.servlet.AsyncEvent
+[WARNING]   - jakarta.servlet.AsyncListener
+[WARNING]   - jakarta.servlet.DispatcherType
+[WARNING]   - jakarta.servlet.Filter
+[WARNING]   - jakarta.servlet.FilterChain
+[WARNING]   - jakarta.servlet.FilterConfig
+[WARNING]   - jakarta.servlet.FilterRegistration
+[WARNING]   - 194 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, service-1.11.0.jar define 3 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/service/pom.properties
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/service/pom.xml
+[WARNING]   - com.aayushatharva.brotli4j.service.BrotliNativeProvider
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-databind-2.17.2.jar define 786 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml
+[WARNING]   - com.fasterxml.jackson.databind.AbstractTypeResolver
+[WARNING]   - com.fasterxml.jackson.databind.AnnotationIntrospector
+[WARNING]   - com.fasterxml.jackson.databind.AnnotationIntrospector$ReferenceProperty
+[WARNING]   - com.fasterxml.jackson.databind.AnnotationIntrospector$ReferenceProperty$Type
+[WARNING]   - com.fasterxml.jackson.databind.AnnotationIntrospector$XmlExtensions
+[WARNING]   - com.fasterxml.jackson.databind.BeanDescription
+[WARNING]   - com.fasterxml.jackson.databind.BeanProperty
+[WARNING]   - com.fasterxml.jackson.databind.BeanProperty$Bogus
+[WARNING]   - 776 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-annotations-2.17.2.jar, jackson-core-2.17.2.jar, jackson-databind-2.17.2.jar, jackson-dataformat-yaml-2.17.2.jar, jackson-datatype-jdk8-2.17.2.jar, jackson-datatype-jsr310-2.15.0.jar, jackson-module-kotlin-2.15.0.jar, micrometer-commons-1.10.1.jar, micrometer-core-1.10.1.jar, micrometer-jetty11-1.10.1.jar, micrometer-observation-1.10.1.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/NOTICE
+[WARNING] brotli4j-1.11.0.jar, hubbers-0.1.0-SNAPSHOT.jar define 34 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/brotli4j/pom.properties
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/brotli4j/pom.xml
+[WARNING]   - com.aayushatharva.brotli4j.Brotli4jLoader
+[WARNING]   - com.aayushatharva.brotli4j.BrotliNativeProvider
+[WARNING]   - com.aayushatharva.brotli4j.common.BrotliCommon
+[WARNING]   - com.aayushatharva.brotli4j.common.CommonJNI
+[WARNING]   - com.aayushatharva.brotli4j.common.annotations.Internal
+[WARNING]   - com.aayushatharva.brotli4j.common.annotations.Local
+[WARNING]   - com.aayushatharva.brotli4j.common.annotations.Upstream
+[WARNING]   - com.aayushatharva.brotli4j.decoder.BrotliDecoderChannel
+[WARNING]   - 24 more...
+[WARNING] LatencyUtils-2.0.3.jar, hubbers-0.1.0-SNAPSHOT.jar define 24 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.latencyutils/LatencyUtils/pom.properties
+[WARNING]   - META-INF/maven/org.latencyutils/LatencyUtils/pom.xml
+[WARNING]   - org.LatencyUtils.IntervalEstimator
+[WARNING]   - org.LatencyUtils.LatencyStats
+[WARNING]   - org.LatencyUtils.LatencyStats$Builder
+[WARNING]   - org.LatencyUtils.LatencyStats$PauseTracker
+[WARNING]   - org.LatencyUtils.MovingAverageIntervalEstimator
+[WARNING]   - org.LatencyUtils.PauseDetector
+[WARNING]   - org.LatencyUtils.PauseDetector$1
+[WARNING]   - org.LatencyUtils.PauseDetector$ChangeListenersRequest
+[WARNING]   - 14 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, kotlin-stdlib-1.8.21.jar define 958 overlapping classes and resources: 
+[WARNING]   - META-INF/kotlin-stdlib-jdk7.kotlin_module
+[WARNING]   - META-INF/kotlin-stdlib-jdk8.kotlin_module
+[WARNING]   - META-INF/kotlin-stdlib.kotlin_module
+[WARNING]   - kotlin.ArrayIntrinsicsKt
+[WARNING]   - kotlin.BuilderInference
+[WARNING]   - kotlin.CharCodeJVMKt
+[WARNING]   - kotlin.CharCodeKt
+[WARNING]   - kotlin.CompareToKt
+[WARNING]   - kotlin.ContextFunctionTypeParams
+[WARNING]   - kotlin.DeepRecursiveFunction
+[WARNING]   - 948 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, lucene-analysis-common-9.11.1.jar define 673 overlapping classes and resources: 
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicAnalyzer
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicAnalyzer$DefaultSetHolder
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicNormalizationFilter
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicNormalizationFilterFactory
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicNormalizer
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicStemFilter
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicStemFilterFactory
+[WARNING]   - org.apache.lucene.analysis.ar.ArabicStemmer
+[WARNING]   - org.apache.lucene.analysis.bg.BulgarianAnalyzer
+[WARNING]   - org.apache.lucene.analysis.bg.BulgarianAnalyzer$DefaultSetHolder
+[WARNING]   - 663 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, snakeyaml-2.2.jar define 233 overlapping classes and resources: 
+[WARNING]   - META-INF.versions.9.org.yaml.snakeyaml.internal.Logger
+[WARNING]   - META-INF.versions.9.org.yaml.snakeyaml.internal.Logger$Level
+[WARNING]   - META-INF/maven/org.yaml/snakeyaml/pom.properties
+[WARNING]   - META-INF/maven/org.yaml/snakeyaml/pom.xml
+[WARNING]   - org.yaml.snakeyaml.DumperOptions
+[WARNING]   - org.yaml.snakeyaml.DumperOptions$FlowStyle
+[WARNING]   - org.yaml.snakeyaml.DumperOptions$LineBreak
+[WARNING]   - org.yaml.snakeyaml.DumperOptions$NonPrintableStyle
+[WARNING]   - org.yaml.snakeyaml.DumperOptions$ScalarStyle
+[WARNING]   - org.yaml.snakeyaml.DumperOptions$Version
+[WARNING]   - 223 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-core-common-11.0.17.jar define 105 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-core-common/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-core-common/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.core.AbstractExtension
+[WARNING]   - org.eclipse.jetty.websocket.core.Behavior
+[WARNING]   - org.eclipse.jetty.websocket.core.CloseStatus
+[WARNING]   - org.eclipse.jetty.websocket.core.CloseStatus$CloseFrame
+[WARNING]   - org.eclipse.jetty.websocket.core.CloseStatus$Supplier
+[WARNING]   - org.eclipse.jetty.websocket.core.Configuration
+[WARNING]   - org.eclipse.jetty.websocket.core.Configuration$ConfigurationCustomizer
+[WARNING]   - org.eclipse.jetty.websocket.core.Configuration$Customizer
+[WARNING]   - 95 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-alpn-server-11.0.17.jar define 4 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-alpn-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-alpn-server/pom.xml
+[WARNING]   - org.eclipse.jetty.alpn.server.ALPNServerConnection
+[WARNING]   - org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-alpn-conscrypt-server-11.0.17.jar define 4 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-alpn-conscrypt-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-alpn-conscrypt-server/pom.xml
+[WARNING]   - org.eclipse.jetty.alpn.conscrypt.server.ConscryptServerALPNProcessor
+[WARNING]   - org.eclipse.jetty.alpn.conscrypt.server.ConscryptServerALPNProcessor$ALPNCallback
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-datatype-jdk8-2.17.2.jar define 24 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/pom.xml
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.BaseScalarOptionalDeserializer
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.DoubleStreamSerializer
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.IntStreamSerializer
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.Jdk8BeanSerializerModifier
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.Jdk8Deserializers
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.Jdk8OptionalBeanPropertyWriter
+[WARNING]   - com.fasterxml.jackson.datatype.jdk8.Jdk8Serializers
+[WARNING]   - 14 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, slf4j-api-2.0.16.jar define 57 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.slf4j/slf4j-api/pom.properties
+[WARNING]   - META-INF/maven/org.slf4j/slf4j-api/pom.xml
+[WARNING]   - org.slf4j.ILoggerFactory
+[WARNING]   - org.slf4j.IMarkerFactory
+[WARNING]   - org.slf4j.Logger
+[WARNING]   - org.slf4j.LoggerFactory
+[WARNING]   - org.slf4j.LoggerFactoryFriend
+[WARNING]   - org.slf4j.MDC
+[WARNING]   - org.slf4j.MDC$1
+[WARNING]   - org.slf4j.MDC$MDCCloseable
+[WARNING]   - 47 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, logback-core-1.5.8.jar define 472 overlapping classes and resources: 
+[WARNING]   - META-INF.versions.21.ch.qos.logback.core.property.ConsoleCharsetPropertyDefiner
+[WARNING]   - META-INF.versions.21.ch.qos.logback.core.util.ExecutorServiceUtil
+[WARNING]   - META-INF.versions.21.ch.qos.logback.core.util.ExecutorServiceUtil$1
+[WARNING]   - META-INF/maven/ch.qos.logback/logback-core/pom.properties
+[WARNING]   - META-INF/maven/ch.qos.logback/logback-core/pom.xml
+[WARNING]   - ch.qos.logback.core.Appender
+[WARNING]   - ch.qos.logback.core.AppenderBase
+[WARNING]   - ch.qos.logback.core.AsyncAppenderBase
+[WARNING]   - ch.qos.logback.core.AsyncAppenderBase$Worker
+[WARNING]   - ch.qos.logback.core.BasicStatusManager
+[WARNING]   - 462 more...
+[WARNING] http2-common-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar define 141 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-common/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-common/pom.xml
+[WARNING]   - org.eclipse.jetty.http2.AbstractFlowControlStrategy
+[WARNING]   - org.eclipse.jetty.http2.BufferingFlowControlStrategy
+[WARNING]   - org.eclipse.jetty.http2.CloseState
+[WARNING]   - org.eclipse.jetty.http2.CloseState$Event
+[WARNING]   - org.eclipse.jetty.http2.ErrorCode
+[WARNING]   - org.eclipse.jetty.http2.ErrorCode$Codes
+[WARNING]   - org.eclipse.jetty.http2.Flags
+[WARNING]   - org.eclipse.jetty.http2.FlowControlStrategy
+[WARNING]   - 131 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, micrometer-core-1.10.1.jar define 469 overlapping classes and resources: 
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.DefaultHttpClientObservationConvention
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientContext
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationConvention
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation$1
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation$LowCardinalityKeys
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation$LowCardinalityKeys$1
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation$LowCardinalityKeys$2
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.HttpClientObservationDocumentation$LowCardinalityKeys$3
+[WARNING]   - META-INF.versions.11.io.micrometer.core.instrument.binder.jdk.MicrometerHttpClient
+[WARNING]   - 459 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, native-windows-x86_64-1.11.0.jar define 4 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/native-windows-x86_64/pom.properties
+[WARNING]   - META-INF/maven/com.aayushatharva.brotli4j/native-windows-x86_64/pom.xml
+[WARNING]   - com.aayushatharva.brotli4j.windows.x86_64.NativeLoader
+[WARNING]   - lib/windows-x86_64/brotli.dll
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-module-kotlin-2.15.0.jar define 90 overlapping classes and resources: 
+[WARNING]   - META-INF/jackson-module-kotlin.kotlin_module
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.module/jackson-module-kotlin/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.module/jackson-module-kotlin/pom.xml
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ClosedRangeMixin
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ConstructorValueCreator
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ExtensionsKt
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ExtensionsKt$convertValue$$inlined$jacksonTypeRef$1
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ExtensionsKt$jacksonObjectMapper$1
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ExtensionsKt$jacksonTypeRef$1
+[WARNING]   - com.fasterxml.jackson.module.kotlin.ExtensionsKt$jsonMapper$1
+[WARNING]   - 80 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, lucene-core-9.11.1.jar define 2503 overlapping classes: 
+[WARNING]   - META-INF.versions.19.org.apache.lucene.store.MemorySegmentIndexInput
+[WARNING]   - META-INF.versions.19.org.apache.lucene.store.MemorySegmentIndexInput$MultiSegmentImpl
+[WARNING]   - META-INF.versions.19.org.apache.lucene.store.MemorySegmentIndexInput$SingleSegmentImpl
+[WARNING]   - META-INF.versions.19.org.apache.lucene.store.MemorySegmentIndexInputProvider
+[WARNING]   - META-INF.versions.20.org.apache.lucene.internal.vectorization.PanamaVectorUtilSupport
+[WARNING]   - META-INF.versions.20.org.apache.lucene.internal.vectorization.PanamaVectorizationProvider
+[WARNING]   - META-INF.versions.20.org.apache.lucene.store.MemorySegmentIndexInput
+[WARNING]   - META-INF.versions.20.org.apache.lucene.store.MemorySegmentIndexInput$MultiSegmentImpl
+[WARNING]   - META-INF.versions.20.org.apache.lucene.store.MemorySegmentIndexInput$SingleSegmentImpl
+[WARNING]   - META-INF.versions.20.org.apache.lucene.store.MemorySegmentIndexInputProvider
+[WARNING]   - 2493 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-server-11.0.17.jar define 364 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-server/pom.xml
+[WARNING]   - jetty-dir.css
+[WARNING]   - org.eclipse.jetty.server.AbstractConnectionFactory
+[WARNING]   - org.eclipse.jetty.server.AbstractConnector
+[WARNING]   - org.eclipse.jetty.server.AbstractConnector$1
+[WARNING]   - org.eclipse.jetty.server.AbstractConnector$2
+[WARNING]   - org.eclipse.jetty.server.AbstractConnector$Acceptor
+[WARNING]   - org.eclipse.jetty.server.AbstractNetworkConnector
+[WARNING]   - org.eclipse.jetty.server.AcceptRateLimit
+[WARNING]   - 354 more...
+[WARNING] annotations-24.0.1.jar, brotli4j-1.11.0.jar, hubbers-0.1.0-SNAPSHOT.jar, jackson-core-2.17.2.jar, jackson-databind-2.17.2.jar, jackson-dataformat-yaml-2.17.2.jar, jackson-datatype-jdk8-2.17.2.jar, jackson-datatype-jsr310-2.15.0.jar, jackson-module-kotlin-2.15.0.jar, kotlin-reflect-1.5.32.jar, kotlin-stdlib-1.8.21.jar, kotlin-stdlib-jdk7-1.8.21.jar, kotlin-stdlib-jdk8-1.8.21.jar, native-windows-x86_64-1.11.0.jar, picocli-4.7.6.jar, service-1.11.0.jar, slf4j-api-2.0.16.jar, snakeyaml-2.2.jar define 1 overlapping classes: 
+[WARNING]   - META-INF.versions.9.module-info
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-core-2.17.2.jar define 222 overlapping classes and resources: 
+[WARNING]   - META-INF.versions.11.com.fasterxml.jackson.core.io.doubleparser.BigSignificand
+[WARNING]   - META-INF.versions.11.com.fasterxml.jackson.core.io.doubleparser.FastDoubleSwar
+[WARNING]   - META-INF.versions.11.com.fasterxml.jackson.core.io.doubleparser.FastIntegerMath
+[WARNING]   - META-INF.versions.17.com.fasterxml.jackson.core.io.doubleparser.FastDoubleSwar
+[WARNING]   - META-INF.versions.17.com.fasterxml.jackson.core.io.doubleparser.FastIntegerMath
+[WARNING]   - META-INF.versions.21.com.fasterxml.jackson.core.io.doubleparser.FastDoubleSwar
+[WARNING]   - META-INF.versions.21.com.fasterxml.jackson.core.io.doubleparser.FastIntegerMath
+[WARNING]   - META-INF/FastDoubleParser-LICENSE
+[WARNING]   - META-INF/FastDoubleParser-NOTICE
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.core/jackson-core/pom.properties
+[WARNING]   - 212 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-servlet-11.0.17.jar define 75 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-servlet/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-servlet/pom.xml
+[WARNING]   - org.eclipse.jetty.servlet.BaseHolder
+[WARNING]   - org.eclipse.jetty.servlet.BaseHolder$Wrapped
+[WARNING]   - org.eclipse.jetty.servlet.DecoratingListener
+[WARNING]   - org.eclipse.jetty.servlet.DecoratingListener$DynamicDecorator
+[WARNING]   - org.eclipse.jetty.servlet.DefaultServlet
+[WARNING]   - org.eclipse.jetty.servlet.ErrorPageErrorHandler
+[WARNING]   - org.eclipse.jetty.servlet.ErrorPageErrorHandler$1
+[WARNING]   - org.eclipse.jetty.servlet.ErrorPageErrorHandler$ErrorCodeRange
+[WARNING]   - 65 more...
+[WARNING] http2-common-11.0.17.jar, http2-hpack-11.0.17.jar, http2-server-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar, jetty-alpn-conscrypt-server-11.0.17.jar, jetty-alpn-server-11.0.17.jar, jetty-http-11.0.17.jar, jetty-io-11.0.17.jar, jetty-security-11.0.17.jar, jetty-server-11.0.17.jar, jetty-servlet-11.0.17.jar, jetty-util-11.0.17.jar, jetty-webapp-11.0.17.jar, jetty-xml-11.0.17.jar, lucene-analysis-common-9.11.1.jar, lucene-core-9.11.1.jar, websocket-core-common-11.0.17.jar, websocket-core-server-11.0.17.jar, websocket-jetty-api-11.0.17.jar, websocket-jetty-common-11.0.17.jar, websocket-jetty-server-11.0.17.jar, websocket-servlet-11.0.17.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/NOTICE.txt
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, micrometer-commons-1.10.1.jar define 30 overlapping class and resource: 
+[WARNING]   - META-INF/micrometer-commons.properties
+[WARNING]   - io.micrometer.common.ImmutableKeyValue
+[WARNING]   - io.micrometer.common.KeyValue
+[WARNING]   - io.micrometer.common.KeyValues
+[WARNING]   - io.micrometer.common.KeyValues$1
+[WARNING]   - io.micrometer.common.KeyValues$ArrayIterator
+[WARNING]   - io.micrometer.common.ValidatedKeyValue
+[WARNING]   - io.micrometer.common.docs.KeyName
+[WARNING]   - io.micrometer.common.docs.package-info
+[WARNING]   - io.micrometer.common.lang.NonNull
+[WARNING]   - 20 more...
+[WARNING] HdrHistogram-2.1.12.jar, hubbers-0.1.0-SNAPSHOT.jar define 98 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.hdrhistogram/HdrHistogram/pom.properties
+[WARNING]   - META-INF/maven/org.hdrhistogram/HdrHistogram/pom.xml
+[WARNING]   - org.HdrHistogram.AbstractHistogram
+[WARNING]   - org.HdrHistogram.AbstractHistogram$1
+[WARNING]   - org.HdrHistogram.AbstractHistogram$AllValues
+[WARNING]   - org.HdrHistogram.AbstractHistogram$LinearBucketValues
+[WARNING]   - org.HdrHistogram.AbstractHistogram$LogarithmicBucketValues
+[WARNING]   - org.HdrHistogram.AbstractHistogram$Percentiles
+[WARNING]   - org.HdrHistogram.AbstractHistogram$RecordedValues
+[WARNING]   - org.HdrHistogram.AbstractHistogramBase
+[WARNING]   - 88 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, micrometer-observation-1.10.1.jar define 55 overlapping class and resource: 
+[WARNING]   - META-INF/micrometer-observation.properties
+[WARNING]   - io.micrometer.observation.GlobalObservationConvention
+[WARNING]   - io.micrometer.observation.KeyValuesConvention
+[WARNING]   - io.micrometer.observation.NoopObservation
+[WARNING]   - io.micrometer.observation.NoopObservation$NoopScope
+[WARNING]   - io.micrometer.observation.NoopObservationConfig
+[WARNING]   - io.micrometer.observation.NoopObservationConvention
+[WARNING]   - io.micrometer.observation.NoopObservationRegistry
+[WARNING]   - io.micrometer.observation.Observation
+[WARNING]   - io.micrometer.observation.Observation$CheckedCallable
+[WARNING]   - 45 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, micrometer-jetty11-1.10.1.jar define 5 overlapping class and resource: 
+[WARNING]   - META-INF/micrometer-jetty11.properties
+[WARNING]   - io.micrometer.jetty11.TimedHandler
+[WARNING]   - io.micrometer.jetty11.TimedHandler$1
+[WARNING]   - io.micrometer.jetty11.TimedHandler$2
+[WARNING]   - io.micrometer.jetty11.package-info
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, logback-classic-1.5.8.jar define 199 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/ch.qos.logback/logback-classic/pom.properties
+[WARNING]   - META-INF/maven/ch.qos.logback/logback-classic/pom.xml
+[WARNING]   - ch.qos.logback.classic.AsyncAppender
+[WARNING]   - ch.qos.logback.classic.BasicConfigurator
+[WARNING]   - ch.qos.logback.classic.ClassicConstants
+[WARNING]   - ch.qos.logback.classic.Level
+[WARNING]   - ch.qos.logback.classic.Logger
+[WARNING]   - ch.qos.logback.classic.LoggerContext
+[WARNING]   - ch.qos.logback.classic.PatternLayout
+[WARNING]   - ch.qos.logback.classic.ViewStatusMessagesServlet
+[WARNING]   - 189 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, okio-jvm-3.6.0.jar define 107 overlapping classes: 
+[WARNING]   - okio.-Base64
+[WARNING]   - okio.-DeflaterSinkExtensions
+[WARNING]   - okio.-DeprecatedOkio
+[WARNING]   - okio.-DeprecatedUpgrade
+[WARNING]   - okio.-DeprecatedUtf8
+[WARNING]   - okio.-GzipSinkExtensions
+[WARNING]   - okio.-GzipSourceExtensions
+[WARNING]   - okio.-InflaterSourceExtensions
+[WARNING]   - okio.-SegmentedByteString
+[WARNING]   - okio.AsyncTimeout
+[WARNING]   - 97 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, picocli-4.7.6.jar define 227 overlapping classes: 
+[WARNING]   - picocli.AutoComplete
+[WARNING]   - picocli.AutoComplete$1
+[WARNING]   - picocli.AutoComplete$2
+[WARNING]   - picocli.AutoComplete$App
+[WARNING]   - picocli.AutoComplete$Bashify
+[WARNING]   - picocli.AutoComplete$BooleanArgFilter
+[WARNING]   - picocli.AutoComplete$CommandDescriptor
+[WARNING]   - picocli.AutoComplete$Function
+[WARNING]   - picocli.AutoComplete$GenerateCompletion
+[WARNING]   - picocli.AutoComplete$NullFunction
+[WARNING]   - 217 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-datatype-jsr310-2.15.0.jar define 60 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/pom.xml
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.DecimalUtils
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.JSR310Module
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.JSR310Module$1
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.JavaTimeModule$1
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.PackageVersion
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.deser.DurationDeserializer
+[WARNING]   - com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer
+[WARNING]   - 50 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jackson-dataformat-yaml-2.17.2.jar define 22 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/pom.properties
+[WARNING]   - META-INF/maven/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/pom.xml
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.JacksonYAMLParseException
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.PackageVersion
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.UTF8Reader
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.UTF8Writer
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.YAMLFactoryBuilder
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+[WARNING]   - com.fasterxml.jackson.dataformat.yaml.YAMLGenerator$Feature
+[WARNING]   - 12 more...
+[WARNING] firecrawl-java-1.1.1.jar, hubbers-0.1.0-SNAPSHOT.jar define 41 overlapping classes: 
+[WARNING]   - com.firecrawl.client.FirecrawlClient
+[WARNING]   - com.firecrawl.client.FirecrawlClient$Builder
+[WARNING]   - com.firecrawl.client.FirecrawlHttpClient
+[WARNING]   - com.firecrawl.errors.AuthenticationException
+[WARNING]   - com.firecrawl.errors.FirecrawlException
+[WARNING]   - com.firecrawl.errors.JobTimeoutException
+[WARNING]   - com.firecrawl.errors.RateLimitException
+[WARNING]   - com.firecrawl.models.AgentOptions
+[WARNING]   - com.firecrawl.models.AgentOptions$Builder
+[WARNING]   - com.firecrawl.models.AgentResponse
+[WARNING]   - 31 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, okhttp-4.12.0.jar define 321 overlapping classes and resources: 
+[WARNING]   - META-INF/okhttp.kotlin_module
+[WARNING]   - META-INF/proguard/okhttp3.pro
+[WARNING]   - okhttp3.Address
+[WARNING]   - okhttp3.Authenticator
+[WARNING]   - okhttp3.Authenticator$Companion
+[WARNING]   - okhttp3.Authenticator$Companion$AuthenticatorNone
+[WARNING]   - okhttp3.Cache
+[WARNING]   - okhttp3.Cache$CacheResponseBody
+[WARNING]   - okhttp3.Cache$CacheResponseBody$1
+[WARNING]   - okhttp3.Cache$Companion
+[WARNING]   - 311 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-webapp-11.0.17.jar define 62 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-webapp/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-webapp/pom.xml
+[WARNING]   - org.eclipse.jetty.webapp.AbsoluteOrdering
+[WARNING]   - org.eclipse.jetty.webapp.AbstractConfiguration
+[WARNING]   - org.eclipse.jetty.webapp.CachingWebAppClassLoader
+[WARNING]   - org.eclipse.jetty.webapp.ClassMatcher
+[WARNING]   - org.eclipse.jetty.webapp.ClassMatcher$ByClass
+[WARNING]   - org.eclipse.jetty.webapp.ClassMatcher$ByLocation
+[WARNING]   - org.eclipse.jetty.webapp.ClassMatcher$ByLocationOrModule
+[WARNING]   - org.eclipse.jetty.webapp.ClassMatcher$ByModule
+[WARNING]   - 52 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, lucene-analysis-common-9.11.1.jar, lucene-core-9.11.1.jar, slf4j-api-2.0.16.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/LICENSE.txt
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-core-server-11.0.17.jar define 27 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-core-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-core-server/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.core.server.FrameHandlerFactory
+[WARNING]   - org.eclipse.jetty.websocket.core.server.Handshaker
+[WARNING]   - org.eclipse.jetty.websocket.core.server.ServerUpgradeRequest
+[WARNING]   - org.eclipse.jetty.websocket.core.server.ServerUpgradeResponse
+[WARNING]   - org.eclipse.jetty.websocket.core.server.WebSocketCreator
+[WARNING]   - org.eclipse.jetty.websocket.core.server.WebSocketMappings
+[WARNING]   - org.eclipse.jetty.websocket.core.server.WebSocketNegotiation
+[WARNING]   - org.eclipse.jetty.websocket.core.server.WebSocketNegotiation$1
+[WARNING]   - 17 more...
+[WARNING] http2-common-11.0.17.jar, http2-hpack-11.0.17.jar, http2-server-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar, jackson-annotations-2.17.2.jar, jackson-core-2.17.2.jar, jackson-databind-2.17.2.jar, jackson-dataformat-yaml-2.17.2.jar, jackson-datatype-jdk8-2.17.2.jar, jackson-datatype-jsr310-2.15.0.jar, jackson-module-kotlin-2.15.0.jar, javalin-5.6.3.jar, javalin-bundle-5.6.3.jar, javalin-micrometer-5.6.3.jar, javalin-testtools-5.6.3.jar, jetty-alpn-conscrypt-server-11.0.17.jar, jetty-alpn-server-11.0.17.jar, jetty-http-11.0.17.jar, jetty-io-11.0.17.jar, jetty-security-11.0.17.jar, jetty-server-11.0.17.jar, jetty-servlet-11.0.17.jar, jetty-util-11.0.17.jar, jetty-webapp-11.0.17.jar, jetty-xml-11.0.17.jar, micrometer-commons-1.10.1.jar, micrometer-core-1.10.1.jar, micrometer-jetty11-1.10.1.jar, micrometer-observation-1.10.1.jar, websocket-core-common-11.0.17.jar, websocket-core-server-11.0.17.jar, websocket-jetty-api-11.0.17.jar, websocket-jetty-common-11.0.17.jar, websocket-jetty-server-11.0.17.jar, websocket-servlet-11.0.17.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/LICENSE
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-jetty-api-11.0.17.jar define 44 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-api/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-api/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.api.BatchMode
+[WARNING]   - org.eclipse.jetty.websocket.api.CloseStatus
+[WARNING]   - org.eclipse.jetty.websocket.api.ExtensionConfig
+[WARNING]   - org.eclipse.jetty.websocket.api.ExtensionConfig$Parser
+[WARNING]   - org.eclipse.jetty.websocket.api.Frame
+[WARNING]   - org.eclipse.jetty.websocket.api.Frame$Type
+[WARNING]   - org.eclipse.jetty.websocket.api.RemoteEndpoint
+[WARNING]   - org.eclipse.jetty.websocket.api.Session
+[WARNING]   - 34 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, javalin-testtools-5.6.3.jar define 11 overlapping classes and resources: 
+[WARNING]   - META-INF/javalin-testtools.kotlin_module
+[WARNING]   - META-INF/maven/io.javalin/javalin-testtools/pom.properties
+[WARNING]   - META-INF/maven/io.javalin/javalin-testtools/pom.xml
+[WARNING]   - io.javalin.testtools.DefaultTestConfig
+[WARNING]   - io.javalin.testtools.HttpClient
+[WARNING]   - io.javalin.testtools.HttpClient$Companion
+[WARNING]   - io.javalin.testtools.JavalinTest
+[WARNING]   - io.javalin.testtools.TestCase
+[WARNING]   - io.javalin.testtools.TestConfig
+[WARNING]   - io.javalin.testtools.TestTool
+[WARNING]   - 1 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-jetty-common-11.0.17.jar define 15 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-common/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-common/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.common.ExtensionConfigParser
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyExtensionConfig
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrame
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrameHandler
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrameHandler$1
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrameHandler$2
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrameHandler$SuspendState
+[WARNING]   - org.eclipse.jetty.websocket.common.JettyWebSocketFrameHandlerFactory
+[WARNING]   - 5 more...
+[WARNING] conscrypt-openjdk-uber-2.5.2.jar, hubbers-0.1.0-SNAPSHOT.jar define 321 overlapping classes and resources: 
+[WARNING]   - META-INF/native/conscrypt_openjdk_jni-windows-x86.dll
+[WARNING]   - META-INF/native/conscrypt_openjdk_jni-windows-x86_64.dll
+[WARNING]   - META-INF/native/libconscrypt_openjdk_jni-linux-x86_64.so
+[WARNING]   - META-INF/native/libconscrypt_openjdk_jni-osx-x86_64.dylib
+[WARNING]   - org.conscrypt.AbstractConscryptEngine
+[WARNING]   - org.conscrypt.AbstractConscryptSocket
+[WARNING]   - org.conscrypt.AbstractConscryptSocket$1
+[WARNING]   - org.conscrypt.AbstractSessionContext
+[WARNING]   - org.conscrypt.AbstractSessionContext$1
+[WARNING]   - org.conscrypt.AbstractSessionContext$2
+[WARNING]   - 311 more...
+[WARNING] http2-server-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar define 25 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.http2/http2-server/pom.xml
+[WARNING]   - org.eclipse.jetty.http2.server.AbstractHTTP2ServerConnectionFactory
+[WARNING]   - org.eclipse.jetty.http2.server.AbstractHTTP2ServerConnectionFactory$HTTP2SessionContainer
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2ServerConnection
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2ServerConnection$ServerHttpChannelOverHTTP2
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory$HTTPServerSessionListener
+[WARNING]   - org.eclipse.jetty.http2.server.HTTP2ServerSession
+[WARNING]   - 15 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-http-11.0.17.jar define 137 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-http/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-http/pom.xml
+[WARNING]   - org.eclipse.jetty.http.BadMessageException
+[WARNING]   - org.eclipse.jetty.http.ComplianceViolation
+[WARNING]   - org.eclipse.jetty.http.ComplianceViolation$Listener
+[WARNING]   - org.eclipse.jetty.http.ComplianceViolation$Mode
+[WARNING]   - org.eclipse.jetty.http.CompressedContentFormat
+[WARNING]   - org.eclipse.jetty.http.CookieCompliance
+[WARNING]   - org.eclipse.jetty.http.CookieCompliance$Violation
+[WARNING]   - org.eclipse.jetty.http.CookieCutter
+[WARNING]   - 127 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, kotlin-reflect-1.5.32.jar define 1864 overlapping classes and resources: 
+[WARNING]   - META-INF.versions.9.kotlin.reflect.jvm.internal.impl.serialization.deserialization.builtins.BuiltInsResourceLoader
+[WARNING]   - META-INF/com.android.tools/proguard/kotlin-reflect.pro
+[WARNING]   - META-INF/com.android.tools/r8-from-1.6.0/kotlin-reflect.pro
+[WARNING]   - META-INF/com.android.tools/r8-upto-1.6.0/kotlin-reflect.pro
+[WARNING]   - META-INF/compiler.common.jvm.kotlin_module
+[WARNING]   - META-INF/compiler.common.kotlin_module
+[WARNING]   - META-INF/descriptors.jvm.kotlin_module
+[WARNING]   - META-INF/descriptors.kotlin_module
+[WARNING]   - META-INF/descriptors.runtime.kotlin_module
+[WARNING]   - META-INF/deserialization.common.jvm.kotlin_module
+[WARNING]   - 1854 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, javalin-5.6.3.jar define 418 overlapping classes and resources: 
+[WARNING]   - META-INF/javalin.kotlin_module
+[WARNING]   - META-INF/maven/io.javalin/javalin/pom.properties
+[WARNING]   - META-INF/maven/io.javalin/javalin/pom.xml
+[WARNING]   - io.javalin.Javalin
+[WARNING]   - io.javalin.apibuilder.ApiBuilder
+[WARNING]   - io.javalin.apibuilder.CrudHandler
+[WARNING]   - io.javalin.apibuilder.EndpointGroup
+[WARNING]   - io.javalin.compression.Brotli
+[WARNING]   - io.javalin.compression.CompressedOutputStream
+[WARNING]   - io.javalin.compression.CompressedStreamKt
+[WARNING]   - 408 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-servlet-11.0.17.jar define 4 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-servlet/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-servlet/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.servlet.WebSocketUpgradeFilter
+[WARNING]   - org.eclipse.jetty.websocket.servlet.WebSocketUpgradeFilter$1
+[WARNING] HdrHistogram-2.1.12.jar, LatencyUtils-2.0.3.jar, annotations-24.0.1.jar, brotli4j-1.11.0.jar, conscrypt-openjdk-uber-2.5.2.jar, firecrawl-java-1.1.1.jar, http2-common-11.0.17.jar, http2-hpack-11.0.17.jar, http2-server-11.0.17.jar, hubbers-0.1.0-SNAPSHOT.jar, jackson-annotations-2.17.2.jar, jackson-core-2.17.2.jar, jackson-databind-2.17.2.jar, jackson-dataformat-yaml-2.17.2.jar, jackson-datatype-jdk8-2.17.2.jar, jackson-datatype-jsr310-2.15.0.jar, jackson-module-kotlin-2.15.0.jar, javalin-5.6.3.jar, javalin-bundle-5.6.3.jar, javalin-micrometer-5.6.3.jar, javalin-testtools-5.6.3.jar, jetty-alpn-conscrypt-server-11.0.17.jar, jetty-alpn-server-11.0.17.jar, jetty-http-11.0.17.jar, jetty-io-11.0.17.jar, jetty-jakarta-servlet-api-5.0.2.jar, jetty-security-11.0.17.jar, jetty-server-11.0.17.jar, jetty-servlet-11.0.17.jar, jetty-util-11.0.17.jar, jetty-webapp-11.0.17.jar, jetty-xml-11.0.17.jar, kotlin-reflect-1.5.32.jar, kotlin-stdlib-1.8.21.jar, kotlin-stdlib-common-1.8.21.jar, kotlin-stdlib-jdk7-1.8.21.jar, kotlin-stdlib-jdk8-1.8.21.jar, logback-classic-1.5.8.jar, logback-core-1.5.8.jar, lucene-analysis-common-9.11.1.jar, lucene-core-9.11.1.jar, micrometer-commons-1.10.1.jar, micrometer-core-1.10.1.jar, micrometer-jetty11-1.10.1.jar, micrometer-observation-1.10.1.jar, native-windows-x86_64-1.11.0.jar, okhttp-4.12.0.jar, okio-3.6.0.jar, okio-jvm-3.6.0.jar, picocli-4.7.6.jar, service-1.11.0.jar, slf4j-api-2.0.16.jar, snakeyaml-2.2.jar, websocket-core-common-11.0.17.jar, websocket-core-server-11.0.17.jar, websocket-jetty-api-11.0.17.jar, websocket-jetty-common-11.0.17.jar, websocket-jetty-server-11.0.17.jar, websocket-servlet-11.0.17.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, javalin-micrometer-5.6.3.jar define 11 overlapping classes and resources: 
+[WARNING]   - META-INF/javalin-micrometer.kotlin_module
+[WARNING]   - META-INF/maven/io.javalin/javalin-micrometer/pom.properties
+[WARNING]   - META-INF/maven/io.javalin/javalin-micrometer/pom.xml
+[WARNING]   - io.javalin.micrometer.MicrometerConfig
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin$Companion
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin$apply$1$1
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin$apply$1$1$getTags$uri$1
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin$apply$1$1$getTags$uri$2
+[WARNING]   - io.javalin.micrometer.MicrometerPlugin$apply$1$1$getTags$uri$3
+[WARNING]   - 1 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-util-11.0.17.jar define 318 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-util/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-util/pom.xml
+[WARNING]   - org.eclipse.jetty.util.AbstractTrie
+[WARNING]   - org.eclipse.jetty.util.ArrayTernaryTrie
+[WARNING]   - org.eclipse.jetty.util.ArrayTernaryTrie$Growing
+[WARNING]   - org.eclipse.jetty.util.ArrayTrie
+[WARNING]   - org.eclipse.jetty.util.ArrayTrie$Node
+[WARNING]   - org.eclipse.jetty.util.ArrayUtil
+[WARNING]   - org.eclipse.jetty.util.AsciiLowerCaseSet
+[WARNING]   - org.eclipse.jetty.util.AtomicBiInteger
+[WARNING]   - 308 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, okio-3.6.0.jar, okio-jvm-3.6.0.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/okio.kotlin_module
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, websocket-jetty-server-11.0.17.jar define 17 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-server/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty.websocket/websocket-jetty-server/pom.xml
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketCreator
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer$1
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketServlet
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketServlet$CustomizedWebSocketServletFactory
+[WARNING]   - org.eclipse.jetty.websocket.server.JettyWebSocketServlet$WrappedJettyCreator
+[WARNING]   - 7 more...
+[WARNING] annotations-24.0.1.jar, hubbers-0.1.0-SNAPSHOT.jar define 59 overlapping classes: 
+[WARNING]   - org.intellij.lang.annotations.Flow
+[WARNING]   - org.intellij.lang.annotations.Identifier
+[WARNING]   - org.intellij.lang.annotations.JdkConstants
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$AdjustableOrientation
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$BoxLayoutAxis
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$CalendarMonth
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$CursorType
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$FlowLayoutAlignment
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$FontStyle
+[WARNING]   - org.intellij.lang.annotations.JdkConstants$HorizontalAlignment
+[WARNING]   - 49 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, jetty-io-11.0.17.jar define 122 overlapping classes and resources: 
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-io/pom.properties
+[WARNING]   - META-INF/maven/org.eclipse.jetty/jetty-io/pom.xml
+[WARNING]   - org.eclipse.jetty.io.AbstractByteBufferPool
+[WARNING]   - org.eclipse.jetty.io.AbstractByteBufferPool$Bucket
+[WARNING]   - org.eclipse.jetty.io.AbstractConnection
+[WARNING]   - org.eclipse.jetty.io.AbstractConnection$1
+[WARNING]   - org.eclipse.jetty.io.AbstractConnection$ReadCallback
+[WARNING]   - org.eclipse.jetty.io.AbstractEndPoint
+[WARNING]   - org.eclipse.jetty.io.AbstractEndPoint$1
+[WARNING]   - org.eclipse.jetty.io.AbstractEndPoint$2
+[WARNING]   - 112 more...
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, javalin-bundle-5.6.3.jar define 3 overlapping resources: 
+[WARNING]   - META-INF/maven/io.javalin/javalin-bundle/pom.properties
+[WARNING]   - META-INF/maven/io.javalin/javalin-bundle/pom.xml
+[WARNING]   - logback.xml
+[WARNING] hubbers-0.1.0-SNAPSHOT.jar, kotlin-stdlib-common-1.8.21.jar define 355 overlapping resources: 
+[WARNING]   - META-INF/kotlin-stdlib-common.kotlin_module
+[WARNING]   - kotlin/ArithmeticException.kotlin_metadata
+[WARNING]   - kotlin/AssertionError.kotlin_metadata
+[WARNING]   - kotlin/AutoCloseable.kotlin_metadata
+[WARNING]   - kotlin/AutoCloseableKt.kotlin_metadata
+[WARNING]   - kotlin/BuilderInference.kotlin_metadata
+[WARNING]   - kotlin/CharCodeKt.kotlin_metadata
+[WARNING]   - kotlin/ClassCastException.kotlin_metadata
+[WARNING]   - kotlin/Comparator.kotlin_metadata
+[WARNING]   - kotlin/CompareToKt.kotlin_metadata
+[WARNING]   - 345 more...
+[WARNING] maven-shade-plugin has detected that some files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the file is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Replacing original artifact with shaded artifact.
+[INFO] Replacing C:\mwzero\src\hubbers\target\hubbers-0.1.0-SNAPSHOT.jar with C:\mwzero\src\hubbers\target\hubbers-0.1.0-SNAPSHOT-shaded.jar
+[INFO] 
+[INFO] --- native:0.10.1:compile-no-fork (build-native) @ hubbers ---
+[INFO] Found GraalVM installation from JAVA_HOME variable.
+[WARNING] Properties file at 'jar:file:///C:/mwzero/src/hubbers/target/hubbers-0.1.0-SNAPSHOT.jar!/META-INF/native-image/io.micrometer/micrometer-core/native-image.properties' does not match the recommended 'META-INF/native-image/org.hubbers/hubbers/native-image.properties' layout.
+[INFO] [graalvm reachability metadata repository for com.fasterxml.jackson.core:jackson-databind:2.17.2]: Configuration directory not found. Trying latest version.
+[INFO] [graalvm reachability metadata repository for com.fasterxml.jackson.core:jackson-databind:2.17.2]: Configuration directory is com.fasterxml.jackson.core\jackson-databind\2.15.2
+[INFO] [graalvm reachability metadata repository for ch.qos.logback:logback-classic:1.5.8]: Configuration directory not found. Trying latest version.
+[INFO] [graalvm reachability metadata repository for ch.qos.logback:logback-classic:1.5.8]: Configuration directory is ch.qos.logback\logback-classic\1.4.9
+[INFO] [graalvm reachability metadata repository for org.eclipse.jetty:jetty-server:11.0.17]: Configuration directory is org.eclipse.jetty\jetty-server\11.0.12
+[INFO] [graalvm reachability metadata repository for org.hdrhistogram:HdrHistogram:2.1.12]: Configuration directory is org.hdrhistogram\HdrHistogram\2.1.12
+[INFO] [graalvm reachability metadata repository for org.jetbrains.kotlin:kotlin-reflect:1.5.32]: Configuration directory not found. Trying latest version.
+[INFO] [graalvm reachability metadata repository for org.jetbrains.kotlin:kotlin-reflect:1.5.32]: Configuration directory is org.jetbrains.kotlin\kotlin-reflect\1.7.10
+[INFO] [graalvm reachability metadata repository for org.jetbrains.kotlin:kotlin-stdlib:1.8.21]: Configuration directory not found. Trying latest version.
+[INFO] [graalvm reachability metadata repository for org.jetbrains.kotlin:kotlin-stdlib:1.8.21]: Configuration directory is org.jetbrains.kotlin\kotlin-stdlib\1.7.10
+[INFO] Executing: C:\mwzero\res\graalvm-jdk-25.0.2+10.1\bin\native-image.cmd @target\tmp\native-image-14687828504235129222.args org.hubbers.Main
+Apply jar:file:///C:/mwzero/src/hubbers/target/hubbers-0.1.0-SNAPSHOT.jar!/META-INF/native-image/io.micrometer/micrometer-core/native-image.properties
+Apply jar:file:///C:/mwzero/src/hubbers/target/hubbers-0.1.0-SNAPSHOT.jar!/META-INF/native-image/io.micrometer/micrometer-core/reflect-config.json
+Apply jar:file:///C:/mwzero/src/hubbers/target/hubbers-0.1.0-SNAPSHOT.jar!/META-INF/native-image/reflect-config.json
+Apply jar:file:///C:/mwzero/src/hubbers/target/hubbers-0.1.0-SNAPSHOT.jar!/META-INF/native-image/resource-config.json
+Apply jar:file:///C:/Users/fn6maufarina/.m2/repository/io/micrometer/micrometer-core/1.10.1/micrometer-core-1.10.1.jar!/META-INF/native-image/io.micrometer/micrometer-core/native-image.properties
+Apply jar:file:///C:/Users/fn6maufarina/.m2/repository/io/micrometer/micrometer-core/1.10.1/micrometer-core-1.10.1.jar!/META-INF/native-image/io.micrometer/micrometer-core/reflect-config.json
+Warning: The option '-H:ReflectionConfigurationResources=META-INF/native-image/io.micrometer/micrometer-core/reflect-config.json' is experimental and must be enabled via '-H:+UnlockExperimentalVMOptions' in the future.
+Warning: Please re-evaluate whether any experimental option is required, and either remove or unlock it. The build output lists all active experimental options, including where they come from and possible alternatives. If you think an experimental option should be considered as stable, please file an issue.
+Apply jar:file:///C:/mwzero/res/graalvm-jdk-25.0.2+10.1/lib/svm/library-support.jar!/META-INF/native-image/com.oracle.svm/thirdparty/native-image.properties
+Apply jar:file:///C:/mwzero/res/graalvm-jdk-25.0.2+10.1/lib/svm/library-support.jar!/META-INF/native-image/com.oracle.svm/polyglot/native-image.properties
+mvn : Error: Failed to find a suitable version of Visual Studio with 
+'vswhere.exe'.
+In riga:1 car:129
++ ... nv:PATH"; cd C:\mwzero\src\hubbers; mvn -Pnative package 2>&1 | Out-F ...
++                                         ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error: Failed t... 'vswhere.exe'. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Please make sure that Visual Studio 2022 version 17.6.0 or later is installed 
+on your system. You can download it at 
+https://visualstudio.microsoft.com/downloads/. If this error persists, please 
+try and run GraalVM Native Image in an x64 Native Tools Command Prompt or file 
+a ticket.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.781 s
+[INFO] Finished at: 2026-04-02T14:49:01+02:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.graalvm.buildtools:native-maven-plugin:0.10.1:compile-no-fork (build-native) on project hubbers: Execution of C:\mwzero\res\graalvm-jdk-25.0.2+10.1\bin\native-image.cmd @target\tmp\native-image-14687828504235129222.args org.hubbers.Main returned non-zero result -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

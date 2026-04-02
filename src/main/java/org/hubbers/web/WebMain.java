@@ -3,6 +3,7 @@ package org.hubbers.web;
 import org.hubbers.app.Bootstrap;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
+import org.hubbers.config.LogbackConfigurator;
 import org.hubbers.validation.ManifestValidator;
 
 import java.nio.file.Path;
@@ -11,9 +12,11 @@ public class WebMain {
     private static final int DEFAULT_PORT = 7070;
 
     public static void main(String[] args) {
+        String repoPath = resolveRepoPath();
+        LogbackConfigurator.configure(repoPath);
         int port = resolvePort(args);
-        var appConfig = new ConfigLoader().load();
-        RuntimeFacade facade = Bootstrap.createRuntimeFacade();
+        var appConfig = new ConfigLoader(repoPath).load();
+        RuntimeFacade facade = Bootstrap.createRuntimeFacade(repoPath);
 
         ManifestFileService manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
         new WebServer(facade, manifestFileService, new ManifestValidator()).start(port);
@@ -30,5 +33,13 @@ public class WebMain {
             return Integer.parseInt(envPort);
         }
         return DEFAULT_PORT;
+    }
+
+    private static String resolveRepoPath() {
+        String envRepo = System.getenv("HUBBERS_REPO");
+        if (envRepo != null && !envRepo.isBlank()) {
+            return envRepo;
+        }
+        return "repo";
     }
 }

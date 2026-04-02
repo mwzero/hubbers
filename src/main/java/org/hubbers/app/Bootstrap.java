@@ -35,7 +35,11 @@ import java.util.List;
 public class Bootstrap {
 
     public static RuntimeFacade createRuntimeFacade() {
-        var config = new ConfigLoader().load();
+        return createRuntimeFacade("repo");
+    }
+
+    public static RuntimeFacade createRuntimeFacade(String repoPath) {
+        var config = new ConfigLoader(repoPath).load();
         var jsonMapper = JacksonFactory.jsonMapper();
         var httpClient = HttpClient.newHttpClient();
 
@@ -51,7 +55,7 @@ public class Bootstrap {
                 new HttpToolDriver(httpClient, jsonMapper),
                 new DockerToolDriver(jsonMapper),
                 new RssToolDriver(httpClient, jsonMapper),
-                new FirecrawlToolDriver(jsonMapper),
+                new FirecrawlToolDriver(jsonMapper, config),
                 new LuceneVectorContextToolDriver(jsonMapper),
                 new LuceneVectorUpsertToolDriver(jsonMapper),
                 new LuceneVectorSearchToolDriver(jsonMapper),

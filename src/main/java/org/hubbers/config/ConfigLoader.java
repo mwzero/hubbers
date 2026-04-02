@@ -4,21 +4,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hubbers.util.JacksonFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ConfigLoader {
     private final ObjectMapper yamlMapper = JacksonFactory.yamlMapper();
+    private final String repoPath;
+
+    public ConfigLoader() {
+        this("repo");
+    }
+
+    public ConfigLoader(String repoPath) {
+        this.repoPath = repoPath;
+    }
 
     public AppConfig load() {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("application.yaml")) {
-            if (is == null) {
-                throw new IllegalStateException("application.yaml not found");
-            }
-            AppConfig appConfig = yamlMapper.readValue(is, AppConfig.class);
+        Path configPath = Paths.get(repoPath, "application.yaml");
+        
+        if (!Files.exists(configPath)) {
+            throw new IllegalStateException("application.yaml not found at: " + configPath.toAbsolutePath());
+        }
+        
+        try {
+            AppConfig appConfig = yamlMapper.readValue(configPath.toFile(), AppConfig.class);
+            // Override repoRoot with the actual repo path used
+            appConfig.setRepoRoot(repoPath);
             resolveEnv(appConfig);
             return appConfig;
         } catch (IOException e) {
-            throw new IllegalStateException("Cannot load application config", e);
+            throw new IllegalStateException("Cannot load application config from " + configPath, e);
         }
     }
 
@@ -33,6 +49,12 @@ public class ConfigLoader {
             OllamaConfig ollama = appConfig.getOllama();
             ollama.setBaseUrl(resolveValue(ollama.getBaseUrl()));
             ollama.setDefaultModel(resolveValue(ollama.getDefaultModel()));
+        }
+        if (appConfig.getTools() != null) {
+            ToolsConfig toolsConfig = appConfig.getTools();
+            toolsConfig.getTools().forEach((toolType, config) -> {
+                config.replaceAll((key, value) -> resolveValue(value));
+            });
         }
     }
 

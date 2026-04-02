@@ -1,6 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Set GraalVM JAVA_HOME
+set JAVA_HOME=C:\mwzero\res\graalvm-jdk-25.0.2+10.1
+set PATH=%JAVA_HOME%\bin;%PATH%
+
 echo =========================================
 echo Hubbers Native Build Script
 echo =========================================

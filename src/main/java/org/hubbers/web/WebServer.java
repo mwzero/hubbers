@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
@@ -37,7 +40,15 @@ public class WebServer {
     }
 
     public Javalin start(int port) {
-        Javalin app = Javalin.create(config -> config.showJavalinBanner = false);
+        Javalin app = Javalin.create(config -> {
+            
+            config.jetty.server(() -> {
+                    QueuedThreadPool threadPool = new QueuedThreadPool();
+                    return new Server(threadPool);
+            });
+
+            config.showJavalinBanner = false;
+        });
 
         app.exception(IllegalArgumentException.class, (e, ctx) -> writeError(ctx, 400, e.getMessage()));
         app.exception(IllegalStateException.class, (e, ctx) -> writeError(ctx, 500, e.getMessage()));

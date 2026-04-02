@@ -1,5 +1,25 @@
 [
   {
+  "name": "org.hubbers.config.AppConfig",
+  "allDeclaredConstructors": true,
+  "allDeclaredFields": true
+  },
+  {
+  "name": "org.hubbers.config.OpenAiConfig",
+  "allDeclaredConstructors": true,
+  "allDeclaredFields": true
+  },
+  {
+  "name": "org.hubbers.config.OllamaConfig",
+  "allDeclaredConstructors": true,
+  "allDeclaredFields": true
+  },
+  {
+  "name": "org.hubbers.config.ToolsConfig",
+  "allDeclaredConstructors": true,
+  "allDeclaredFields": true
+  },
+  {
     "name": "org.hubbers.cli.HubbersCommand",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,

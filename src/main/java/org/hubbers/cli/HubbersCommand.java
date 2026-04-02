@@ -19,11 +19,40 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "hubbers", mixinStandardHelpOptions = true,
-        subcommands = {HubbersCommand.ListCommand.class, HubbersCommand.AgentCommand.class,
-                HubbersCommand.ToolCommand.class, HubbersCommand.PipelineCommand.class,
-                HubbersCommand.WebCommand.class})
+
+@CommandLine.Command(
+    name = "hubbers",
+    description = "Hubbers CLI",
+    subcommands = {
+        HubbersCommand.ListCommand.class,
+        HubbersCommand.AgentCommand.class,
+        HubbersCommand.ToolCommand.class,
+        HubbersCommand.PipelineCommand.class,
+        HubbersCommand.WebCommand.class
+    }
+)
 public class HubbersCommand implements Callable<Integer> {
+
+    @CommandLine.Option(
+        names = {"-h", "--help"},
+        usageHelp = true,
+        description = "Mostra questo messaggio di aiuto"
+    )
+    boolean helpRequested;
+
+    @CommandLine.Option(
+        names = {"-V", "--version"},
+        versionHelp = true,
+        description = "Mostra la versione"
+    )
+    boolean versionRequested;
+
+    @CommandLine.Option(
+        names = "--repo",
+        description = "Path to the repository folder (default: repo)"
+    )
+    String repoPath = "repo";
+
     final RuntimeFacade runtimeFacade;
 
     public HubbersCommand(RuntimeFacade runtimeFacade) {
@@ -35,6 +64,7 @@ public class HubbersCommand implements Callable<Integer> {
         CommandLine.usage(this, System.out);
         return 0;
     }
+
 
     @CommandLine.Command(name = "list", subcommands = {ListAgents.class, ListTools.class, ListPipelines.class})
     static class ListCommand implements Callable<Integer> {
@@ -109,7 +139,7 @@ public class HubbersCommand implements Callable<Integer> {
 
         @Override
         public Integer call() {
-            var appConfig = new ConfigLoader().load();
+            var appConfig = new ConfigLoader(root.repoPath).load();
             var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
             new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator()).start(port);
             System.out.println("Hubbers Web UI available at http://localhost:" + port);
