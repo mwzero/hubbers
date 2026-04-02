@@ -3,57 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hubbers Studio</title>
+  <title>Hubbers Dev Workspace</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>Hubbers Studio</h1>
-    <div id="status" class="status">Checking API...</div>
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <h1>Hubbers Dev Workspace</h1>
+    </div>
+    <div id="status" class="status">Connecting...</div>
   </header>
 
-  <main class="layout">
-    <aside class="panel left">
-      <h2>Repository</h2>
-      <div class="group">
-        <h3>Agents</h3>
-        <ul id="agents-list"></ul>
-      </div>
-      <div class="group">
-        <h3>Tools</h3>
-        <ul id="tools-list"></ul>
-      </div>
-      <div class="group">
-        <h3>Pipelines</h3>
-        <ul id="pipelines-list"></ul>
-      </div>
+  <main class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-title">Repo</div>
+      <div id="repo-tree" class="repo-tree" aria-label="Repository tree"></div>
     </aside>
 
-    <section class="panel center">
+    <section class="editor-panel">
       <div class="section-header">
-        <h2 id="editor-title">Manifest</h2>
+        <div>
+          <h2 id="editor-title">No file selected</h2>
+          <div id="editor-subtitle" class="editor-subtitle">Select a YAML artifact from the Repo tree.</div>
+        </div>
         <div class="actions">
           <button id="validate-btn" type="button">Validate</button>
           <button id="save-btn" type="button">Save</button>
         </div>
       </div>
-      <textarea id="manifest-editor" spellcheck="false" placeholder="Select an artifact..."></textarea>
-      
+
+      <div class="tabbar">
+        <button id="tab-editor" class="tab active" type="button">YAML Editor</button>
+        <button id="tab-pipeline" class="tab" type="button">Pipeline Designer</button>
+      </div>
+
+      <div id="editor-view" class="view active">
+        <textarea id="manifest-editor" spellcheck="false" placeholder="Select an artifact to edit..."></textarea>
+      </div>
+
+      <div id="pipeline-view" class="view">
+        <div class="pipeline-toolbar">
+          <button id="pipeline-add-step" type="button">+ Add Step</button>
+          <button id="pipeline-sync" type="button">Apply visual changes to YAML</button>
+        </div>
+        <div id="pipeline-canvas" class="pipeline-canvas"></div>
+      </div>
     </section>
 
-    <section class="panel right">
+    <section class="runner-panel">
       <div class="section-header">
-        <h2>Runner</h2>
+        <h2>Run & Logs</h2>
         <button id="run-btn" type="button">Run</button>
       </div>
+
       <label for="run-input">Input JSON</label>
       <textarea id="run-input" spellcheck="false">{}</textarea>
-      <label for="run-output">Output</label>
-      <pre id="run-output" class="messages"></pre>
+
+      <label for="run-output">Execution logs / output</label>
+      <pre id="run-output" class="logs"></pre>
     </section>
   </main>
-  <div id="editor-messages" class="notification-bar" aria-live="polite"></div>
 
+  <div id="editor-messages" class="notification-bar" aria-live="polite"></div>
   <script src="/app.js"></script>
 </body>
 </html>
