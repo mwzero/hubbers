@@ -18,6 +18,7 @@ It transforms a simple repository into an executable system:
   Support for:
   - HTTP APIs  
   - Docker-based tools  
+  - Firecrawl web scraping/search/crawl  
 
 - **Pipeline orchestration**  
   Compose agents and tools into sequential workflows.
@@ -224,6 +225,13 @@ hubbers tool run browser.pinchtab --input "{\"action\":\"snapshot\",\"filter\":\
 
 # Browser automation - extract text
 hubbers tool run browser.pinchtab --input "{\"action\":\"extract_text\"}"
+
+
+# Firecrawl - scrape a page (requires FIRECRAWL_API_KEY)
+hubbers tool run web.firecrawl --input "{\"action\":\"scrape\",\"url\":\"https://example.com\",\"formats\":[\"markdown\"]}"
+
+# Firecrawl - search the web
+hubbers tool run web.firecrawl --input "{\"action\":\"search\",\"query\":\"AI agents Java SDK\",\"limit\":5}"
 ```
 
 ### Run Pipeline
