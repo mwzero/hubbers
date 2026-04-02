@@ -1,7 +1,5 @@
 package org.hubbers.app;
 
-import org.hubbers.agent.AgentExecutor;
-import org.hubbers.agent.AgentPromptBuilder;
 import org.hubbers.artifact.ArtifactScanner;
 import org.hubbers.artifact.LocalArtifactRepository;
 import org.hubbers.config.OllamaConfig;
@@ -49,8 +47,6 @@ public class Bootstrap {
         ));
 
         var schemaValidator = new SchemaValidator();
-        var agentExecutor = new AgentExecutor(modelRegistry, new AgentPromptBuilder(), schemaValidator, jsonMapper);
-
         var toolExecutor = new ToolExecutor(List.of(
                 new HttpToolDriver(httpClient, jsonMapper),
                 new DockerToolDriver(jsonMapper),
@@ -79,8 +75,8 @@ public class Bootstrap {
                 jsonMapper
         );
 
-        var pipelineExecutor = new PipelineExecutor(repository, agentExecutor, toolExecutor, new InputMapper(jsonMapper));
+        var pipelineExecutor = new PipelineExecutor(repository, agenticExecutor, toolExecutor, new InputMapper(jsonMapper));
 
-        return new RuntimeFacade(repository, agentExecutor, toolExecutor, pipelineExecutor, new ManifestValidator());
+        return new RuntimeFacade(repository, agenticExecutor, toolExecutor, pipelineExecutor, new ManifestValidator());
     }
 }
