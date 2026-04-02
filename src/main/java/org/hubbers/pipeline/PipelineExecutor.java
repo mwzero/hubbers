@@ -1,7 +1,7 @@
 package org.hubbers.pipeline;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.agent.AgentExecutor;
+import org.hubbers.agent.AgenticExecutor;
 import org.hubbers.artifact.ArtifactRepository;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.pipeline.PipelineManifest;
@@ -13,12 +13,12 @@ import org.slf4j.LoggerFactory;
 public class PipelineExecutor {
     private static final Logger log = LoggerFactory.getLogger(PipelineExecutor.class);
     private final ArtifactRepository artifactRepository;
-    private final AgentExecutor agentExecutor;
+    private final AgenticExecutor agentExecutor;
     private final ToolExecutor toolExecutor;
     private final InputMapper inputMapper;
 
     public PipelineExecutor(ArtifactRepository artifactRepository,
-                            AgentExecutor agentExecutor,
+                            AgenticExecutor agentExecutor,
                             ToolExecutor toolExecutor,
                             InputMapper inputMapper) {
         this.artifactRepository = artifactRepository;
@@ -46,7 +46,7 @@ public class PipelineExecutor {
             if (step.getTool() != null && !step.getTool().isBlank()) {
                 stepResult = toolExecutor.execute(artifactRepository.loadTool(step.getTool()), stepInput);
             } else {
-                stepResult = agentExecutor.execute(artifactRepository.loadAgent(step.getAgent()), stepInput);
+                stepResult = agentExecutor.execute(artifactRepository.loadAgent(step.getAgent()), stepInput, null);
             }
             
             if (stepResult.getStatus() != org.hubbers.execution.ExecutionStatus.SUCCESS) {

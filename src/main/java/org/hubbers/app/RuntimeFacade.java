@@ -1,7 +1,7 @@
 package org.hubbers.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.agent.AgentExecutor;
+import org.hubbers.agent.AgenticExecutor;
 import org.hubbers.artifact.ArtifactRepository;
 import org.hubbers.execution.RunResult;
 import org.hubbers.pipeline.PipelineExecutor;
@@ -12,13 +12,13 @@ import java.util.List;
 
 public class RuntimeFacade {
     private final ArtifactRepository artifactRepository;
-    private final AgentExecutor agentExecutor;
+    private final AgenticExecutor agentExecutor;
     private final ToolExecutor toolExecutor;
     private final PipelineExecutor pipelineExecutor;
     private final ManifestValidator manifestValidator;
 
     public RuntimeFacade(ArtifactRepository artifactRepository,
-                         AgentExecutor agentExecutor,
+                         AgenticExecutor agentExecutor,
                          ToolExecutor toolExecutor,
                          PipelineExecutor pipelineExecutor,
                          ManifestValidator manifestValidator) {
@@ -33,7 +33,7 @@ public class RuntimeFacade {
         var manifest = artifactRepository.loadAgent(name);
         var validation = manifestValidator.validateAgent(manifest);
         if (!validation.isValid()) return RunResult.failed(String.join(", ", validation.getErrors()));
-        return agentExecutor.execute(manifest, input);
+        return agentExecutor.execute(manifest, input, null);
     }
 
     public RunResult runTool(String name, JsonNode input) {
