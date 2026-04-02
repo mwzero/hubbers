@@ -13,6 +13,7 @@ import org.hubbers.pipeline.InputMapper;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.DockerToolDriver;
 import org.hubbers.tool.FileOpsToolDriver;
+import org.hubbers.tool.FirecrawlToolDriver;
 import org.hubbers.tool.HttpToolDriver;
 import org.hubbers.tool.CsvReadToolDriver;
 import org.hubbers.tool.CsvWriteToolDriver;
@@ -54,6 +55,7 @@ public class Bootstrap {
                 new HttpToolDriver(httpClient, jsonMapper),
                 new DockerToolDriver(jsonMapper),
                 new RssToolDriver(httpClient, jsonMapper),
+                new FirecrawlToolDriver(jsonMapper),
                 new LuceneVectorContextToolDriver(jsonMapper),
                 new LuceneVectorUpsertToolDriver(jsonMapper),
                 new LuceneVectorSearchToolDriver(jsonMapper),
