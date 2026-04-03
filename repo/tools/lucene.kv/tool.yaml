@@ -5,6 +5,52 @@ tool:
 
 type: lucene.kv
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Lucene Key-Value Store Configuration"
+    description: "Configure key-value store operations on Lucene index"
+    fields:
+      - name: operation
+        type: select
+        label: "Operation Type"
+        required: true
+        defaultValue: "get"
+        options:
+          - label: "Put (Store)"
+            value: "put"
+          - label: "Get (Retrieve)"
+            value: "get"
+          - label: "Delete (Remove)"
+            value: "delete"
+          - label: "List All Keys"
+            value: "list"
+          - label: "Count Records"
+            value: "count"
+          - label: "Search"
+            value: "search"
+      
+      - name: key
+        type: text
+        label: "Record Key"
+        placeholder: "user:1001"
+        required: false
+      
+      - name: index_path
+        type: text
+        label: "Index Path"
+        placeholder: "./datasets/lucene/kv-store"
+        required: false
+        defaultValue: "./datasets/lucene/kv-store"
+      
+      - name: limit
+        type: number
+        label: "Max Results"
+        min: 1
+        max: 1000
+        defaultValue: 100
+        required: false
+
 config:
   index_path: ./datasets/lucene/kv-store
 

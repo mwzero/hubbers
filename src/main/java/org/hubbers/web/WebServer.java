@@ -57,6 +57,13 @@ public class WebServer {
         app.get("/", ctx -> serveStatic(ctx, "index.html", "text/html; charset=utf-8"));
         app.get("/app.js", ctx -> serveStatic(ctx, "app.js", "application/javascript; charset=utf-8"));
         app.get("/styles.css", ctx -> serveStatic(ctx, "styles.css", "text/css; charset=utf-8"));
+        
+        // Serve all files from assets folder statically
+        app.get("/assets/*", ctx -> {
+            String path = ctx.path().substring(1); // Remove leading slash
+            String contentType = getContentType(path);
+            serveStatic(ctx, path, contentType);
+        });
 
         app.get("/api/health", ctx -> ctx.json(Map.of("status", "ok")));
         app.get("/api/agents", ctx -> ctx.json(Map.of("items", runtimeFacade.listAgents())));
@@ -398,6 +405,23 @@ public class WebServer {
         } catch (IOException e) {
             writeError(ctx, 500, "Cannot serve static file: " + fileName);
         }
+    }
+    
+    private String getContentType(String path) {
+        if (path.endsWith(".html")) return "text/html; charset=utf-8";
+        if (path.endsWith(".js")) return "application/javascript; charset=utf-8";
+        if (path.endsWith(".css")) return "text/css; charset=utf-8";
+        if (path.endsWith(".json")) return "application/json; charset=utf-8";
+        if (path.endsWith(".png")) return "image/png";
+        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+        if (path.endsWith(".gif")) return "image/gif";
+        if (path.endsWith(".svg")) return "image/svg+xml";
+        if (path.endsWith(".ico")) return "image/x-icon";
+        if (path.endsWith(".woff")) return "font/woff";
+        if (path.endsWith(".woff2")) return "font/woff2";
+        if (path.endsWith(".ttf")) return "font/ttf";
+        if (path.endsWith(".eot")) return "application/vnd.ms-fontobject";
+        return "application/octet-stream";
     }
 
     private void writeError(Context ctx, int status, String message) {

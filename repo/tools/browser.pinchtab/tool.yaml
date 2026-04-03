@@ -5,6 +5,85 @@ tool:
 
 type: browser.pinchtab
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Browser Automation Configuration"
+    description: "Configure browser automation parameters for web scraping or interaction"
+    fields:
+      - name: action
+        type: select
+        label: "Browser Action"
+        required: true
+        defaultValue: "navigate"
+        options:
+          - label: "Navigate to URL"
+            value: "navigate"
+          - label: "Take Snapshot"
+            value: "snapshot"
+          - label: "Click Element"
+            value: "click"
+          - label: "Fill Form Field"
+            value: "fill"
+          - label: "Press Key"
+            value: "press"
+          - label: "Extract Text"
+            value: "extract_text"
+          - label: "Close Browser"
+            value: "close"
+      
+      - name: url
+        type: text
+        label: "Target URL"
+        placeholder: "https://example.com"
+        required: false
+      
+      - name: mode
+        type: select
+        label: "Browser Mode"
+        required: false
+        defaultValue: "headless"
+        options:
+          - label: "Headless (background)"
+            value: "headless"
+          - label: "Headed (visible)"
+            value: "headed"
+      
+      - name: profile
+        type: select
+        label: "Browser Profile"
+        required: false
+        defaultValue: "default"
+        options:
+          - label: "Default Profile"
+            value: "default"
+          - label: "Authenticated Profile"
+            value: "authenticated"
+      
+      - name: ref
+        type: text
+        label: "Element Reference/Selector"
+        placeholder: "CSS selector or element ID"
+        required: false
+      
+      - name: text
+        type: text
+        label: "Text to Fill"
+        placeholder: "Enter text for form fields"
+        required: false
+      
+      - name: key
+        type: text
+        label: "Key to Press"
+        placeholder: "Enter, Tab, Escape, etc."
+        required: false
+      
+      - name: filter
+        type: text
+        label: "Text Filter/Pattern"
+        placeholder: "Filter extracted text"
+        required: false
+
 config:
   pinchtab_url: http://localhost:9867
   profiles:

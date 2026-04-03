@@ -5,6 +5,36 @@ tool:
 
 type: vector.lucene.search
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Vector Search Configuration"
+    description: "Configure vector similarity search parameters"
+    fields:
+      - name: index_path
+        type: text
+        label: "Vector Index Path"
+        placeholder: "./datasets/lucene/rss-sentiment-index"
+        required: false
+        defaultValue: "./datasets/lucene/rss-sentiment-index"
+      
+      - name: top_k
+        type: number
+        label: "Number of Results"
+        min: 1
+        max: 20
+        defaultValue: 3
+        required: false
+      
+      - name: similarity_threshold
+        type: slider
+        label: "Minimum Similarity Score"
+        min: 0
+        max: 1
+        step: 0.05
+        defaultValue: 0.7
+        required: false
+
 config:
   index_path: ./datasets/lucene/rss-sentiment-index
   top_k: 3

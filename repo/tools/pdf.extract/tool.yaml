@@ -5,6 +5,29 @@ tool:
 
 type: docker
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "PDF Text Extraction Configuration"
+    description: "Specify the PDF file to extract text from"
+    fields:
+      - name: file_path
+        type: text
+        label: "PDF File Path"
+        placeholder: "/tmp/document.pdf"
+        required: true
+      
+      - name: extract_metadata
+        type: checkbox
+        label: "Extract metadata (author, title, etc.)"
+        defaultValue: false
+      
+      - name: page_range
+        type: text
+        label: "Page Range (optional)"
+        placeholder: "1-10 or leave empty for all pages"
+        required: false
+
 config:
   image: myorg/pdf-extract:1.0.0
 

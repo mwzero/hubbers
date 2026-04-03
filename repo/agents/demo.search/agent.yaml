@@ -5,7 +5,7 @@ agent:
 
 model:
   provider: ollama
-  name: llama3.2:3b
+  name: qwen3:4b
   temperature: 0.7
 
 instructions:

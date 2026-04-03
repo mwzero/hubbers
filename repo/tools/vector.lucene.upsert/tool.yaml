@@ -5,6 +5,37 @@ tool:
 
 type: vector.lucene.upsert
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Vector Upsert Configuration"
+    description: "Configure vector index upsert parameters"
+    fields:
+      - name: index_path
+        type: text
+        label: "Vector Index Path"
+        placeholder: "./datasets/lucene/rss-sentiment-index"
+        required: false
+        defaultValue: "./datasets/lucene/rss-sentiment-index"
+      
+      - name: batch_size
+        type: number
+        label: "Batch Size"
+        min: 1
+        max: 1000
+        defaultValue: 100
+        required: false
+      
+      - name: create_if_missing
+        type: checkbox
+        label: "Create index if it doesn't exist"
+        defaultValue: true
+      
+      - name: optimize_after
+        type: checkbox
+        label: "Optimize index after upsert"
+        defaultValue: false
+
 config:
   index_path: ./datasets/lucene/rss-sentiment-index
 

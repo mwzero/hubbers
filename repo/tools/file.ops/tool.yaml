@@ -5,6 +5,66 @@ tool:
 
 type: file.ops
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "File Operations Configuration"
+    description: "Configure file system operation parameters"
+    fields:
+      - name: operation
+        type: select
+        label: "Operation Type"
+        required: true
+        defaultValue: "read"
+        options:
+          - label: "Read File"
+            value: "read"
+          - label: "Write File"
+            value: "write"
+          - label: "Copy File"
+            value: "copy"
+          - label: "Move/Rename File"
+            value: "move"
+          - label: "Delete File"
+            value: "delete"
+          - label: "List Directory"
+            value: "list"
+          - label: "Create Directory"
+            value: "mkdir"
+          - label: "Check Exists"
+            value: "exists"
+          - label: "File Info"
+            value: "info"
+      
+      - name: path
+        type: text
+        label: "File/Directory Path"
+        placeholder: "./datasets/file.txt"
+        required: true
+      
+      - name: content
+        type: textarea
+        label: "Content to Write"
+        placeholder: "Enter file content..."
+        required: false
+      
+      - name: destination
+        type: text
+        label: "Destination Path"
+        placeholder: "./backup/file.txt"
+        required: false
+      
+      - name: pattern
+        type: text
+        label: "File Pattern/Filter"
+        placeholder: "*.csv"
+        required: false
+      
+      - name: recursive
+        type: checkbox
+        label: "Recursive operation"
+        defaultValue: false
+
 config:
   default_encoding: UTF-8
 

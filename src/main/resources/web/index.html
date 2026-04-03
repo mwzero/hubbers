@@ -1,106 +1,27 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hubbers Dev Workspace</title>
-  <link rel="stylesheet" href="/styles.css" />
-</head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-dot"></span>
-      <h1>Hubbers Dev Workspace</h1>
-    </div>
-    <div id="status" class="status">Connecting...</div>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Lovable App</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
 
-  <main class="workspace">
-    <aside class="sidebar">
-      <div class="sidebar-title">Repo</div>
-      <div id="repo-tree" class="repo-tree" aria-label="Repository tree"></div>
-    </aside>
+    <!-- TODO: Update og:title to match your application name -->
+    <meta property="og:title" content="Lovable App" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <section class="editor-panel">
-      <div class="section-header">
-        <div>
-          <h2 id="editor-title">No file selected</h2>
-          <div id="editor-subtitle" class="editor-subtitle">Select a YAML artifact from the Repo tree.</div>
-        </div>
-        <div class="actions">
-          <button id="validate-btn" type="button">Validate</button>
-          <button id="save-btn" type="button">Save</button>
-        </div>
-      </div>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <script type="module" crossorigin src="/assets/index-BjsLlQ_L.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-sHD8mtz-.css">
+  </head>
 
-      <div class="tabbar">
-        <button id="tab-editor" class="tab active" type="button">YAML Editor</button>
-        <button id="tab-pipeline" class="tab" type="button">Pipeline Designer</button>
-        <button id="tab-executions" class="tab" type="button">Executions</button>
-      </div>
-
-      <div id="editor-view" class="view active">
-        <textarea id="manifest-editor" spellcheck="false" placeholder="Select an artifact to edit..."></textarea>
-      </div>
-
-      <div id="pipeline-view" class="view">
-        <div class="pipeline-toolbar">
-          <button id="pipeline-add-step" type="button">+ Add Step</button>
-          <button id="pipeline-sync" type="button">Apply visual changes to YAML</button>
-        </div>
-        <div id="pipeline-canvas" class="pipeline-canvas"></div>
-      </div>
-
-      <div id="executions-view" class="view">
-        <div class="executions-toolbar">
-          <button id="executions-refresh" type="button">↻ Refresh</button>
-          <select id="executions-filter-status">
-            <option value="">All Statuses</option>
-            <option value="SUCCESS">Success</option>
-            <option value="FAILED">Failed</option>
-            <option value="RUNNING">Running</option>
-            <option value="PAUSED">Paused</option>
-          </select>
-          <select id="executions-filter-type">
-            <option value="">All Types</option>
-            <option value="agent">Agents</option>
-            <option value="tool">Tools</option>
-            <option value="pipeline">Pipelines</option>
-          </select>
-        </div>
-        <div id="executions-list" class="executions-list"></div>
-        <div id="execution-detail" class="execution-detail" style="display: none;">
-          <div class="execution-detail-header">
-            <button id="execution-back" type="button">← Back to list</button>
-            <h3 id="execution-id-title"></h3>
-          </div>
-          <div class="execution-detail-tabs">
-            <button class="detail-tab active" data-tab="metadata">Metadata</button>
-            <button class="detail-tab" data-tab="log">Log</button>
-            <button class="detail-tab" data-tab="input">Input</button>
-            <button class="detail-tab" data-tab="output">Output</button>
-            <button class="detail-tab" data-tab="steps">Steps</button>
-          </div>
-          <div id="execution-detail-content" class="execution-detail-content"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="runner-panel">
-      <div class="section-header">
-        <h2>Run & Logs</h2>
-        <button id="run-btn" type="button">Run</button>
-      </div>
-
-      <label for="run-input">Input JSON</label>
-      <textarea id="run-input" spellcheck="false">{}</textarea>
-
-      <label for="run-output">Execution logs / output</label>
-      <pre id="run-output" class="logs"></pre>
-    </section>
-  </main>
-
-  <div id="editor-messages" class="notification-bar" aria-live="polite"></div>
-  <script src="/app.js"></script>
-</body>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

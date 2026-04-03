@@ -5,6 +5,42 @@ tool:
 
 type: process.manage
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Process Management Configuration"
+    description: "Configure system process management operations"
+    fields:
+      - name: operation
+        type: select
+        label: "Operation Type"
+        required: true
+        defaultValue: "list"
+        options:
+          - label: "List Processes"
+            value: "list"
+          - label: "Process Info"
+            value: "info"
+          - label: "Kill Process"
+            value: "kill"
+      
+      - name: pid
+        type: number
+        label: "Process ID (PID)"
+        placeholder: "1234"
+        required: false
+      
+      - name: namePattern
+        type: text
+        label: "Process Name Pattern"
+        placeholder: "java, chrome, etc."
+        required: false
+      
+      - name: force
+        type: checkbox
+        label: "Force kill (SIGKILL)"
+        defaultValue: false
+
 config:
   max_process_list: 1000
 

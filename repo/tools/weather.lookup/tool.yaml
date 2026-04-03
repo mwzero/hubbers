@@ -5,6 +5,36 @@ tool:
 
 type: http
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Weather Lookup Configuration"
+    description: "Enter the city to get weather information"
+    fields:
+      - name: city
+        type: text
+        label: "City Name"
+        placeholder: "Rome, London, New York..."
+        required: true
+      
+      - name: units
+        type: select
+        label: "Temperature Units"
+        required: false
+        defaultValue: "celsius"
+        options:
+          - label: "Celsius (°C)"
+            value: "celsius"
+          - label: "Fahrenheit (°F)"
+            value: "fahrenheit"
+          - label: "Kelvin (K)"
+            value: "kelvin"
+      
+      - name: include_forecast
+        type: checkbox
+        label: "Include 5-day forecast"
+        defaultValue: false
+
 config:
   base_url: https://example.com/api/weather
   method: POST

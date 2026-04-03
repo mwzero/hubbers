@@ -5,6 +5,24 @@ tool:
 
 type: csv.write
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "CSV Write Configuration"
+    description: "Specify the output file path for writing CSV data"
+    fields:
+      - name: file_path
+        type: text
+        label: "Output CSV File Path"
+        placeholder: "./datasets/output.csv"
+        required: true
+        defaultValue: "./datasets/rss-sentiment.csv"
+      
+      - name: overwrite
+        type: checkbox
+        label: "Overwrite existing file"
+        defaultValue: true
+
 config:
   default_file_path: ./datasets/rss-sentiment.csv
 

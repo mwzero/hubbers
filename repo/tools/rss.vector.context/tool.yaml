@@ -5,6 +5,32 @@ tool:
 
 type: vector.lucene.enrich
 
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "RSS Vector Context Configuration"
+    description: "Configure context enrichment parameters for RSS items"
+    fields:
+      - name: index_path
+        type: text
+        label: "Vector Index Path"
+        placeholder: "./datasets/lucene/rss-sentiment-index"
+        required: false
+        defaultValue: "./datasets/lucene/rss-sentiment-index"
+      
+      - name: top_k
+        type: number
+        label: "Number of Similar Items"
+        min: 1
+        max: 10
+        defaultValue: 3
+        required: false
+      
+      - name: include_metadata
+        type: checkbox
+        label: "Include similarity scores"
+        defaultValue: true
+
 config:
   index_path: ./datasets/lucene/rss-sentiment-index
   top_k: 3
