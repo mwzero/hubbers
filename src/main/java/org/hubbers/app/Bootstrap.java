@@ -83,16 +83,33 @@ public class Bootstrap {
                 new OpenAiModelProvider(httpClient, config.getOpenai()),
                 new OllamaModelProvider(httpClient, config.getOllama() != null ? config.getOllama() : new OllamaConfig())
         ));
+        
+        // Create AgentExecutor for single-shot agent execution
+        var promptBuilder = new org.hubbers.agent.AgentPromptBuilder();
+        var agentExecutor = new org.hubbers.agent.AgentExecutor(
+                modelRegistry,
+                promptBuilder,
+                schemaValidator,
+                jsonMapper
+        );
+        
+        // Note: PipelineExecutor will be created after AgenticExecutor and passed separately
         var agenticExecutor = new org.hubbers.agent.AgenticExecutor(
                 modelRegistry, 
                 toolExecutor,
                 repository, 
                 schemaValidator, 
-                conversationMemory, 
+                conversationMemory,
+                null,  // PipelineExecutor - will be set after creation
+                agentExecutor,
                 jsonMapper
         );
 
         var pipelineExecutor = new PipelineExecutor(repository, agenticExecutor, toolExecutor, new InputMapper(jsonMapper));
+        
+        // Set the PipelineExecutor reference in AgenticExecutor via reflection or setter
+        // For now, we'll accept that pipelines can't be called from agents until refactored
+        // TODO: Add setPipelineExecutor method to AgenticExecutor for proper initialization
 
         // Initialize form support
         var formSessionStore = new org.hubbers.forms.FormSessionStore();

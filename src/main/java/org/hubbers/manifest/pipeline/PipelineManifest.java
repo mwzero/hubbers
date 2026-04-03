@@ -2,6 +2,8 @@ package org.hubbers.manifest.pipeline;
 
 import lombok.Data;
 import org.hubbers.forms.FormTrigger;
+import org.hubbers.manifest.agent.InputDefinition;
+import org.hubbers.manifest.agent.OutputDefinition;
 import org.hubbers.manifest.common.Metadata;
 import org.hubbers.manifest.common.ExampleDefinition;
 
@@ -14,4 +16,9 @@ public class PipelineManifest {
     private List<PipelineStep> steps = new ArrayList<>();
     private List<ExampleDefinition> examples = new ArrayList<>();
     private FormTrigger forms;
+    
+    // Optional input/output definitions for better LLM understanding
+    // If not specified, can be derived from examples or first/last steps
+    private InputDefinition input;
+    private OutputDefinition output;
 }

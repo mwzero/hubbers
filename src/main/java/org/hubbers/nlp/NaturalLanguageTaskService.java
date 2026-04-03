@@ -3,12 +3,15 @@ package org.hubbers.nlp;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.hubbers.agent.ArtifactCatalogInjector;
 import org.hubbers.agent.ToolCatalogInjector;
 import org.hubbers.app.ArtifactRepository;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
+import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +30,14 @@ public class NaturalLanguageTaskService {
 
     private final RuntimeFacade runtimeFacade;
     private final ArtifactRepository repository;
-    private final ToolCatalogInjector toolInjector;
+    private final ArtifactCatalogInjector artifactCatalogInjector;
     private final ObjectMapper mapper;
 
     public NaturalLanguageTaskService(RuntimeFacade runtimeFacade,
                                      ObjectMapper mapper) {
         this.runtimeFacade = runtimeFacade;
         this.repository = runtimeFacade.getArtifactRepository();
-        this.toolInjector = new ToolCatalogInjector();
+        this.artifactCatalogInjector = new ArtifactCatalogInjector();
         this.mapper = mapper;
     }
 
@@ -88,10 +91,37 @@ public class NaturalLanguageTaskService {
                 .filter(tool -> tool != null)
                 .toList();
             
-            logger.info("Loaded {} tools for task execution", allTools.size());
+            // Load all available agents
+            List<AgentManifest> allAgents = repository.listAgents().stream()
+                .map(name -> {
+                    try {
+                        return repository.loadAgent(name);
+                    } catch (Exception e) {
+                        logger.warn("Failed to load agent {}: {}", name, e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(a -> a != null)
+                .toList();
             
-            // Inject all tools into agent
-            toolInjector.injectTools(agent, allTools);
+            // Load all available pipelines
+            List<PipelineManifest> allPipelines = repository.listPipelines().stream()
+                .map(name -> {
+                    try {
+                        return repository.loadPipeline(name);
+                    } catch (Exception e) {
+                        logger.warn("Failed to load pipeline {}: {}", name, e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(p -> p != null)
+                .toList();
+            
+            logger.info("Loaded {} tools, {} agents, {} pipelines for task execution", 
+                allTools.size(), allAgents.size(), allPipelines.size());
+            
+            // Inject all artifacts into agent
+            artifactCatalogInjector.injectAllArtifacts(agent, allTools, allAgents, allPipelines);
             
             // Build input JSON
             ObjectNode input = mapper.createObjectNode();
@@ -154,9 +184,21 @@ public class NaturalLanguageTaskService {
     }
 
     /**
-     * Gets available tools count for informational purposes.
+     * Gets available artifacts count for informational purposes.
      */
     public int getAvailableToolsCount() {
         return repository.listTools().size();
+    }
+    
+    public int getAvailableAgentsCount() {
+        return repository.listAgents().size();
+    }
+    
+    public int getAvailablePipelinesCount() {
+        return repository.listPipelines().size();
+    }
+    
+    public int getTotalArtifactsCount() {
+        return getAvailableToolsCount() + getAvailableAgentsCount() + getAvailablePipelinesCount();
     }
 }

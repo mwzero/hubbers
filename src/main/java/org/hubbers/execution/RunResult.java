@@ -2,6 +2,7 @@ package org.hubbers.execution;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+
 public class RunResult {
     private String executionId;
     private ExecutionStatus status;

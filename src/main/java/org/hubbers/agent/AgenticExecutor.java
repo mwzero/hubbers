@@ -9,8 +9,10 @@ import org.hubbers.execution.ExecutionMetadata;
 import org.hubbers.execution.RunResult;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.manifest.agent.AgentManifest;
+import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.model.*;
+import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;
@@ -34,7 +36,9 @@ public class AgenticExecutor {
     private final SchemaValidator schemaValidator;
     private final ConversationMemory conversationMemory;
     private final ObjectMapper mapper;
-    private final ToolToFunctionConverter functionConverter;
+    private final ArtifactToFunctionConverter artifactConverter;
+    private final PipelineExecutor pipelineExecutor;
+    private final AgentExecutor agentExecutor;
     
     private static final int DEFAULT_MAX_ITERATIONS = 10;
     private static final long DEFAULT_TIMEOUT_MS = 60000;
@@ -44,14 +48,18 @@ public class AgenticExecutor {
                           ArtifactRepository repository,
                           SchemaValidator schemaValidator,
                           ConversationMemory conversationMemory,
+                          PipelineExecutor pipelineExecutor,
+                          AgentExecutor agentExecutor,
                           ObjectMapper mapper) {
         this.modelProviderRegistry = modelProviderRegistry;
         this.toolExecutor = toolExecutor;
         this.repository = repository;
         this.schemaValidator = schemaValidator;
         this.conversationMemory = conversationMemory;
+        this.pipelineExecutor = pipelineExecutor;
+        this.agentExecutor = agentExecutor;
         this.mapper = mapper;
-        this.functionConverter = new ToolToFunctionConverter(mapper);
+        this.artifactConverter = new ArtifactToFunctionConverter(mapper);
     }
 
     /**
@@ -160,14 +168,43 @@ public class AgenticExecutor {
     }
 
     private RunResult executeFunctionCall(FunctionCall functionCall) {
+        String artifactName = functionCall.getName();
+        JsonNode arguments = functionCall.getArguments();
+        
         try {
-            // Load tool manifest by function name
-            ToolManifest toolManifest = repository.loadTool(functionCall.getName());
-            // Execute the tool with function arguments
-            return toolExecutor.execute(toolManifest, functionCall.getArguments());
+            // Try loading as tool first
+            ToolManifest tool = repository.loadTool(artifactName);
+            if (tool != null) {
+                return toolExecutor.execute(tool, arguments);
+            }
+            
+            // Try loading as agent
+            AgentManifest agent = repository.loadAgent(artifactName);
+            if (agent != null) {
+                if (agentExecutor != null) {
+                    // Execute agent in single-shot mode (no nested conversation)
+                    return agentExecutor.execute(agent, arguments);
+                } else {
+                    return RunResult.failed("Agent execution not available: AgentExecutor not initialized");
+                }
+            }
+            
+            // Try loading as pipeline
+            PipelineManifest pipeline = repository.loadPipeline(artifactName);
+            if (pipeline != null) {
+                if (pipelineExecutor != null) {
+                    return pipelineExecutor.execute(pipeline, arguments);
+                } else {
+                    return RunResult.failed("Pipeline execution not available: PipelineExecutor not initialized");
+                }
+            }
+            
+            // Artifact not found in any repository
+            return RunResult.failed("Artifact not found: " + artifactName);
+            
         } catch (Exception e) {
             ObjectNode errorOutput = mapper.createObjectNode();
-            errorOutput.put("error", "Tool execution failed: " + e.getMessage());
+            errorOutput.put("error", "Artifact execution failed: " + e.getMessage());
             return RunResult.failed(e.getMessage());
         }
     }
@@ -175,19 +212,38 @@ public class AgenticExecutor {
     private List<FunctionDefinition> buildFunctionDefinitions(AgentManifest manifest) {
         List<FunctionDefinition> definitions = new ArrayList<>();
         
-        // Check if agent specifies tools in config
+        // Check if agent specifies artifacts (tools/agents/pipelines) in config
         Object toolsConfig = manifest.getConfig() != null ? manifest.getConfig().get("tools") : null;
         if (toolsConfig instanceof List) {
             @SuppressWarnings("unchecked")
-            List<String> toolNames = (List<String>) toolsConfig;
+            List<String> artifactNames = (List<String>) toolsConfig;
             
-            for (String toolName : toolNames) {
+            for (String artifactName : artifactNames) {
                 try {
-                    ToolManifest toolManifest = repository.loadTool(toolName);
-                    FunctionDefinition definition = functionConverter.convert(toolManifest);
-                    definitions.add(definition);
+                    // Try loading as tool
+                    ToolManifest tool = repository.loadTool(artifactName);
+                    if (tool != null) {
+                        FunctionDefinition definition = artifactConverter.convertTool(tool);
+                        definitions.add(definition);
+                        continue;
+                    }
+                    
+                    // Try loading as agent
+                    AgentManifest agent = repository.loadAgent(artifactName);
+                    if (agent != null) {
+                        FunctionDefinition definition = artifactConverter.convertAgent(agent);
+                        definitions.add(definition);
+                        continue;
+                    }
+                    
+                    // Try loading as pipeline
+                    PipelineManifest pipeline = repository.loadPipeline(artifactName);
+                    if (pipeline != null) {
+                        FunctionDefinition definition = artifactConverter.convertPipeline(pipeline);
+                        definitions.add(definition);
+                    }
                 } catch (Exception e) {
-                    // Tool not found, skip
+                    // Artifact not found or error loading, skip
                 }
             }
         }
