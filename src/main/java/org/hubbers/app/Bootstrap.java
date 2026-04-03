@@ -1,9 +1,10 @@
 package org.hubbers.app;
 
-import org.hubbers.artifact.ArtifactScanner;
-import org.hubbers.artifact.LocalArtifactRepository;
 import org.hubbers.config.OllamaConfig;
 import org.hubbers.config.ConfigLoader;
+import org.hubbers.config.AppConfig;
+import org.hubbers.config.ExecutionsConfig;
+import org.hubbers.execution.ExecutionStorageService;
 import org.hubbers.model.ModelProviderRegistry;
 import org.hubbers.model.OllamaModelProvider;
 import org.hubbers.model.OpenAiModelProvider;
@@ -39,16 +40,21 @@ public class Bootstrap {
     }
 
     public static RuntimeFacade createRuntimeFacade(String repoPath) {
-        var config = new ConfigLoader(repoPath).load();
+
+        // Load configuration application.yaml
+        AppConfig config = new ConfigLoader(repoPath).load();
+        
+        // Initialize execution storage
+        ExecutionsConfig executionsConfig = config.getExecutions();
+        String executionsPath = executionsConfig != null ? executionsConfig.getPath() : "./executions";
+        ExecutionStorageService executionStorage = new ExecutionStorageService(executionsPath, repoPath);
+
+
         var jsonMapper = JacksonFactory.jsonMapper();
         var httpClient = HttpClient.newHttpClient();
 
-        var repository = new LocalArtifactRepository(Path.of(config.getRepoRoot()), new ArtifactScanner());
-
-        var modelRegistry = new ModelProviderRegistry(List.of(
-                new OpenAiModelProvider(httpClient, config.getOpenai()),
-                new OllamaModelProvider(httpClient, config.getOllama() != null ? config.getOllama() : new OllamaConfig())
-        ));
+        var repository = new ArtifactRepository(Path.of(config.getRepoRoot()));
+        
 
         var schemaValidator = new SchemaValidator();
         var toolExecutor = new ToolExecutor(List.of(
@@ -70,6 +76,10 @@ public class Bootstrap {
 
         // Agentic capabilities (tool calling + memory)
         var conversationMemory = new org.hubbers.agent.memory.InMemoryConversationStore();
+        var modelRegistry = new ModelProviderRegistry(List.of(
+                new OpenAiModelProvider(httpClient, config.getOpenai()),
+                new OllamaModelProvider(httpClient, config.getOllama() != null ? config.getOllama() : new OllamaConfig())
+        ));
         var agenticExecutor = new org.hubbers.agent.AgenticExecutor(
                 modelRegistry, 
                 toolExecutor,
@@ -81,6 +91,10 @@ public class Bootstrap {
 
         var pipelineExecutor = new PipelineExecutor(repository, agenticExecutor, toolExecutor, new InputMapper(jsonMapper));
 
-        return new RuntimeFacade(repository, agenticExecutor, toolExecutor, pipelineExecutor, new ManifestValidator());
+        // Initialize form support
+        var formSessionStore = new org.hubbers.forms.FormSessionStore();
+        var juiFormService = new org.hubbers.forms.JuiFormService(formSessionStore);
+
+        return new RuntimeFacade(repository, agenticExecutor, toolExecutor, pipelineExecutor, new ManifestValidator(), executionStorage, juiFormService);
     }
 }

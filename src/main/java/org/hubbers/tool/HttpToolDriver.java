@@ -2,6 +2,7 @@ package org.hubbers.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.io.IOException;
@@ -10,14 +11,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+@RequiredArgsConstructor
 public class HttpToolDriver implements ToolDriver {
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
-
-    public HttpToolDriver(HttpClient httpClient, ObjectMapper mapper) {
-        this.httpClient = httpClient;
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

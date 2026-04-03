@@ -2,10 +2,13 @@ package org.hubbers.cli;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
+import org.hubbers.forms.FormDefinition;
+import org.hubbers.forms.FormTrigger;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.web.ManifestFileService;
@@ -17,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 
@@ -169,6 +173,38 @@ public class HubbersCommand implements Callable<Integer> {
                 input = mapper.readTree(inputSource);
             }
             
+            // Special handling for demo tools/pipelines - add default required fields if missing
+            if (mode == Mode.TOOL && "demo.calculator".equals(name)) {
+                if (!input.has("command")) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) input).put("command", "echo");
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) input).set("args", 
+                        mapper.createArrayNode().add("Calculator form test"));
+                }
+            }
+            if (mode == Mode.PIPELINE && "demo.forms.test".equals(name)) {
+                if (!input.has("feeds")) {
+                    var feedsArray = mapper.createArrayNode();
+                    feedsArray.add("https://news.ycombinator.com/rss");
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) input).set("feeds", feedsArray);
+                }
+            }
+            
+            // Check for forms.before in manifest
+            FormTrigger forms = getFormTrigger(facade, name, mode);
+            if (forms != null && forms.getBefore() != null) {
+                try {
+                    CliFormService formService = new CliFormService();
+                    Map<String, Object> formData = formService.collectFormData(forms.getBefore());
+                    
+                    // Merge form data with input
+                    input = mergeFormDataWithInput(mapper, input, formData);
+                    
+                } catch (Exception e) {
+                    System.err.println("Form collection failed: " + e.getMessage());
+                    return 1;
+                }
+            }
+            
             RunResult result = switch (mode) {
                 case AGENT -> facade.runAgent(name, input);
                 case TOOL -> facade.runTool(name, input);
@@ -184,6 +220,40 @@ public class HubbersCommand implements Callable<Integer> {
             System.err.println("Input read/parse failed: " + e.getMessage());
             return 1;
         }
+    }
+    
+    private static FormTrigger getFormTrigger(RuntimeFacade facade, String name, Mode mode) {
+        try {
+            return switch (mode) {
+                case AGENT -> {
+                    var manifest = facade.getArtifactRepository().loadAgent(name);
+                    yield manifest.getForms();
+                }
+                case TOOL -> {
+                    var manifest = facade.getArtifactRepository().loadTool(name);
+                    yield manifest.getForms();
+                }
+                case PIPELINE -> {
+                    var manifest = facade.getArtifactRepository().loadPipeline(name);
+                    yield manifest.getForms();
+                }
+            };
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private static JsonNode mergeFormDataWithInput(ObjectMapper mapper, JsonNode originalInput, Map<String, Object> formData) {
+        ObjectNode merged = originalInput != null && originalInput.isObject() 
+            ? (ObjectNode) originalInput.deepCopy()
+            : mapper.createObjectNode();
+        
+        // Merge form data into input
+        formData.forEach((key, value) -> {
+            merged.set(key, mapper.valueToTree(value));
+        });
+        
+        return merged;
     }
 
     private static Integer printList(List<String> values) {

@@ -5,6 +5,7 @@ public class AppConfig {
     private OpenAiConfig openai;
     private OllamaConfig ollama;
     private ToolsConfig tools;
+    private ExecutionsConfig executions;
 
     public String getRepoRoot() {
         return repoRoot;
@@ -36,5 +37,13 @@ public class AppConfig {
 
     public void setTools(ToolsConfig tools) {
         this.tools = tools;
+    }
+
+    public ExecutionsConfig getExecutions() {
+        return executions;
+    }
+
+    public void setExecutions(ExecutionsConfig executions) {
+        this.executions = executions;
     }
 }

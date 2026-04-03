@@ -1,0 +1,4 @@
+{
+  "command": "echo",
+  "args": ["Form data will be added here by the CLI form prompts"]
+}

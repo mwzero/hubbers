@@ -1,0 +1,122 @@
+tool:
+  name: demo.calculator
+  version: 1.0.0
+  description: Demo calculator tool with form for testing human-in-the-loop parameter collection
+
+type: shell.exec
+
+# Form displayed BEFORE tool execution
+forms:
+  before:
+    title: "Calculator Input"
+    description: "Enter the calculation parameters. Results will be computed and returned."
+    fields:
+      - name: operand1
+        type: number
+        label: "First Number"
+        placeholder: "0"
+        required: true
+        defaultValue: 0
+      
+      - name: operator
+        type: select
+        label: "Operation"
+        required: true
+        defaultValue: "add"
+        options:
+          - label: "+ Addition"
+            value: "add"
+          - label: "- Subtraction"
+            value: "subtract"
+          - label: "× Multiplication"
+            value: "multiply"
+          - label: "÷ Division"
+            value: "divide"
+          - label: "^ Power"
+            value: "power"
+      
+      - name: operand2
+        type: number
+        label: "Second Number"
+        placeholder: "0"
+        required: true
+        defaultValue: 0
+      
+      - name: precision
+        type: slider
+        label: "Decimal Precision"
+        min: 0
+        max: 10
+        step: 1
+        defaultValue: 2
+      
+      - name: showSteps
+        type: checkbox
+        label: "Show calculation steps"
+        defaultValue: false
+
+config:
+  default_timeout_seconds: 30
+
+input:
+  schema:
+    type: object
+    properties:
+      command:
+        type: string
+        description: Command to execute (defaults to "echo" for demo)
+        default: echo
+      args:
+        type: array
+        description: Command arguments
+      operand1:
+        type: number
+        description: First operand (from form)
+      operator:
+        type: string
+        description: Operation to perform (from form)
+      operand2:
+        type: number
+        description: Second operand (from form)
+      precision:
+        type: integer
+        description: Number of decimal places (from form)
+      showSteps:
+        type: boolean
+        description: Whether to show calculation steps (from form)
+
+output:
+  schema:
+    type: object
+    properties:
+      exitCode:
+        type: number
+        description: Command exit code
+      stdout:
+        type: string
+        description: Calculation output
+      stderr:
+        type: string
+        description: Error output
+      timedOut:
+        type: boolean
+        description: Whether command timed out
+
+examples:
+  - name: simple-echo
+    description: Echo the calculator form inputs
+    input:
+      command: echo
+      args:
+        - "Calculator demo - Operands: 10 and 5, Operation: add"
+      operand1: 10
+      operator: add
+      operand2: 5
+      precision: 2
+      showSteps: false
+    output:
+      exitCode: 0
+      stdout: "Calculator demo - Operands: 10 and 5, Operation: add\n"
+      stderr: ""
+      timedOut: false
+

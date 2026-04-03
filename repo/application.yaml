@@ -12,3 +12,8 @@ ollama:
 tools:
   firecrawl:
     api_key: ${FIRECRAWL_API_KEY}
+
+executions:
+  path: ./executions
+  retentionDays: 30
+  maxConcurrent: 10

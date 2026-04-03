@@ -232,3 +232,402 @@ label { color: var(--ink-soft); font-size: 12px; }
   .workspace { grid-template-columns: 250px 1fr; }
   .runner-panel { grid-column: span 2; border-top: 1px solid var(--border); }
 }
+
+/* Executions view styles */
+.executions-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.executions-toolbar select {
+  border: 1px solid var(--border);
+  background: #1b2235;
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.executions-toolbar select:hover {
+  border-color: var(--accent);
+}
+
+.executions-list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.executions-empty {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+.execution-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #161f33;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.execution-card:hover {
+  border-color: var(--accent);
+  background: #1a2538;
+}
+
+.execution-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.execution-id {
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.execution-status {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-success {
+  background: #1a3d2a;
+  color: var(--accent-2);
+  border: 1px solid #2d5f42;
+}
+
+.badge-failed {
+  background: #3d1a1a;
+  color: var(--danger);
+  border: 1px solid #5f2d2d;
+}
+
+.badge-running {
+  background: #1a2e3d;
+  color: var(--accent);
+  border: 1px solid #2d4d5f;
+}
+
+.badge-paused {
+  background: #3d3d1a;
+  color: #ffd966;
+  border: 1px solid #5f5f2d;
+}
+
+.execution-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.execution-info {
+  font-size: 13px;
+}
+
+.execution-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-family: "JetBrains Mono", "Consolas", monospace;
+}
+
+.execution-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.execution-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.execution-detail-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  color: var(--accent);
+}
+
+.execution-detail-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-tab {
+  background: #1b2235;
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.detail-tab.active {
+  border-color: var(--accent);
+  color: #def5ff;
+}
+
+.execution-detail-content {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0f1422;
+  padding: 12px;
+}
+
+.detail-json,
+.detail-log {
+  margin: 0;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+  font-size: 12px;
+  color: #d8def3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.detail-log {
+  line-height: 1.5;
+}
+
+.execution-detail-empty {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step-card {
+  border: 1px solid #31415e;
+  border-radius: 8px;
+  padding: 10px;
+  background: #161f33;
+}
+
+.step-header {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.step-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.step-actions button {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.execution-error {
+  color: var(--danger);
+  font-size: 12px;
+  padding: 12px;
+}
+
+.loading {
+  color: var(--ink-soft);
+  font-size: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Modal styles for step details */
+.step-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 800px;
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.modal-header button {
+  background: transparent;
+  border: none;
+  color: var(--ink-soft);
+  font-size: 18px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.modal-header button:hover {
+  color: var(--ink);
+}
+
+.modal-content pre {
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+  padding: 16px;
+}
+
+/* Form modal styles */
+.form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+}
+
+.form-modal-content {
+  max-width: 600px;
+  max-height: 85vh;
+}
+
+.form-description {
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.form-field input[type="text"],
+.form-field input[type="number"],
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #0f1422;
+  color: var(--ink);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-field textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+}
+
+.form-field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-field-checkbox input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.form-field-checkbox label {
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.form-actions .btn-primary {
+  background: linear-gradient(180deg, #1a7fb1, #16688f);
+  border-color: #2a88b8;
+  color: #eaf8ff;
+}
+
+.form-empty {
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}

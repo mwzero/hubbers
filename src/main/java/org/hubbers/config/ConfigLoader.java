@@ -56,6 +56,10 @@ public class ConfigLoader {
                 config.replaceAll((key, value) -> resolveValue(value));
             });
         }
+        if (appConfig.getExecutions() != null) {
+            ExecutionsConfig executions = appConfig.getExecutions();
+            executions.setPath(resolveValue(executions.getPath()));
+        }
     }
 
     private String resolveValue(String value) {

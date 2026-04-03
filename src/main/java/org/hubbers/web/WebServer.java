@@ -99,9 +99,224 @@ public class WebServer {
             ManifestType type = ManifestType.fromPath(ctx.pathParam("type"));
             String name = ctx.pathParam("name");
             JsonNode input = parseInput(ctx);
+            
+            // Check if manifest has a "before" form
+            var formTrigger = getFormTrigger(type, name);
+            if (formTrigger != null && formTrigger.getBefore() != null) {
+                // Create form session instead of running immediately
+                var formSession = runtimeFacade.getFormService().createFormSession(
+                    null, // execution ID will be created after form submission
+                    type.name().toLowerCase(),
+                    name,
+                    formTrigger.getBefore(),
+                    org.hubbers.forms.FormStage.BEFORE,
+                    input
+                );
+                
+                ctx.status(202); // Accepted - awaiting form input
+                ctx.json(Map.of(
+                    "requiresForm", true,
+                    "formSessionId", formSession.getSessionId(),
+                    "form", runtimeFacade.getFormService().toFrontendFormat(formTrigger.getBefore())
+                ));
+                return;
+            }
+            
+            // No form required, execute normally
             RunResult result = run(type, name, input);
             ctx.status(result.getStatus() == ExecutionStatus.SUCCESS ? 200 : 400);
             ctx.json(toRunPayload(result));
+        });
+
+        // Submit form and execute
+        app.post("/api/forms/{sessionId}/submit", ctx -> {
+            String sessionId = ctx.pathParam("sessionId");
+            var formDataMap = jsonMapper.readValue(ctx.body(), Map.class);
+            
+            var session = runtimeFacade.getFormService().submitForm(sessionId, formDataMap);
+            
+            // Merge form data with original input and execute
+            var mergedInput = runtimeFacade.getFormService().mergeFormDataWithInput(
+                session.getOriginalInput(), 
+                session.getFormData()
+            );
+            
+            RunResult result = run(
+                ManifestType.fromPath(session.getArtifactType()),
+                session.getArtifactName(),
+                mergedInput
+            );
+            
+            ctx.status(result.getStatus() == ExecutionStatus.SUCCESS ? 200 : 400);
+            ctx.json(toRunPayload(result));
+        });
+
+        // Get form session details
+        app.get("/api/forms/{sessionId}", ctx -> {
+            String sessionId = ctx.pathParam("sessionId");
+            var session = runtimeFacade.getFormService().getSession(sessionId);
+            if (session == null) {
+                writeError(ctx, 404, "Form session not found");
+                return;
+            }
+            ctx.json(session);
+        });
+
+        // Cancel form session
+        app.delete("/api/forms/{sessionId}", ctx -> {
+            String sessionId = ctx.pathParam("sessionId");
+            runtimeFacade.getFormService().cancelSession(sessionId);
+            ctx.json(Map.of("cancelled", true));
+        });
+
+        // Execution history endpoints
+        app.get("/api/executions", ctx -> {
+            try {
+                var executions = runtimeFacade.getExecutionStorage().listExecutions();
+                var executionList = executions.stream()
+                    .map(executionId -> {
+                        try {
+                            String metadataJson = runtimeFacade.getExecutionStorage().readFile(executionId, "execution-metadata.json");
+                            return jsonMapper.readTree(metadataJson);
+                        } catch (IOException e) {
+                            return null;
+                        }
+                    })
+                    .filter(metadata -> metadata != null)
+                    .toList();
+                
+                ctx.json(Map.of("items", executionList));
+            } catch (IOException e) {
+                writeError(ctx, 500, "Failed to list executions: " + e.getMessage());
+            }
+        });
+
+        app.get("/api/executions/{execution_id}", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            try {
+                String metadataJson = runtimeFacade.getExecutionStorage().readFile(executionId, "execution-metadata.json");
+                JsonNode metadata = jsonMapper.readTree(metadataJson);
+                ctx.json(metadata);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Execution not found: " + executionId);
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/log", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            try {
+                String log = runtimeFacade.getExecutionStorage().readFile(executionId, "execution-log.txt");
+                ctx.contentType("text/plain; charset=utf-8").result(log);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Log not found for execution: " + executionId);
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/input", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            try {
+                String inputJson = runtimeFacade.getExecutionStorage().readFile(executionId, "input.json");
+                JsonNode input = jsonMapper.readTree(inputJson);
+                ctx.json(input);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Input not found for execution: " + executionId);
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/output", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            try {
+                String outputJson = runtimeFacade.getExecutionStorage().readFile(executionId, "output.json");
+                JsonNode output = jsonMapper.readTree(outputJson);
+                ctx.json(output);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Output not found for execution: " + executionId);
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/steps", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            try {
+                var executionPath = runtimeFacade.getExecutionStorage().getExecutionPath(executionId);
+                var stepsPath = executionPath.resolve("steps");
+                
+                if (!java.nio.file.Files.exists(stepsPath)) {
+                    ctx.json(Map.of("items", java.util.List.of()));
+                    return;
+                }
+                
+                var stepDirs = java.nio.file.Files.list(stepsPath)
+                    .filter(java.nio.file.Files::isDirectory)
+                    .sorted()
+                    .map(path -> {
+                        String stepName = path.getFileName().toString();
+                        Map<String, Object> stepInfo = new LinkedHashMap<>();
+                        stepInfo.put("name", stepName);
+                        stepInfo.put("path", "steps/" + stepName);
+                        
+                        // Try to read step metadata if available
+                        try {
+                            String stepInputPath = executionId + "/steps/" + stepName;
+                            String inputJson = runtimeFacade.getExecutionStorage().readFile(stepInputPath, "input.json");
+                            stepInfo.put("hasInput", true);
+                        } catch (IOException e) {
+                            stepInfo.put("hasInput", false);
+                        }
+                        
+                        try {
+                            String stepOutputPath = executionId + "/steps/" + stepName;
+                            String outputJson = runtimeFacade.getExecutionStorage().readFile(stepOutputPath, "output.json");
+                            stepInfo.put("hasOutput", true);
+                        } catch (IOException e) {
+                            stepInfo.put("hasOutput", false);
+                        }
+                        
+                        return stepInfo;
+                    })
+                    .toList();
+                
+                ctx.json(Map.of("items", stepDirs));
+            } catch (IOException e) {
+                writeError(ctx, 500, "Failed to list steps: " + e.getMessage());
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/steps/{step_name}/log", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            String stepName = ctx.pathParam("step_name");
+            try {
+                String stepPath = executionId + "/steps/" + stepName;
+                String log = runtimeFacade.getExecutionStorage().readFile(stepPath, "execution-log.txt");
+                ctx.contentType("text/plain; charset=utf-8").result(log);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Step log not found");
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/steps/{step_name}/input", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            String stepName = ctx.pathParam("step_name");
+            try {
+                String stepPath = executionId + "/steps/" + stepName;
+                String inputJson = runtimeFacade.getExecutionStorage().readFile(stepPath, "input.json");
+                JsonNode input = jsonMapper.readTree(inputJson);
+                ctx.json(input);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Step input not found");
+            }
+        });
+
+        app.get("/api/executions/{execution_id}/steps/{step_name}/output", ctx -> {
+            String executionId = ctx.pathParam("execution_id");
+            String stepName = ctx.pathParam("step_name");
+            try {
+                String stepPath = executionId + "/steps/" + stepName;
+                String outputJson = runtimeFacade.getExecutionStorage().readFile(stepPath, "output.json");
+                JsonNode output = jsonMapper.readTree(outputJson);
+                ctx.json(output);
+            } catch (IOException e) {
+                writeError(ctx, 404, "Step output not found");
+            }
         });
 
         app.start(port);
@@ -140,9 +355,31 @@ public class WebServer {
             case PIPELINE -> runtimeFacade.runPipeline(name, input);
         };
     }
+    
+    private org.hubbers.forms.FormTrigger getFormTrigger(ManifestType type, String name) {
+        try {
+            return switch (type) {
+                case AGENT -> {
+                    var manifest = runtimeFacade.getArtifactRepository().loadAgent(name);
+                    yield manifest.getForms();
+                }
+                case TOOL -> {
+                    var manifest = runtimeFacade.getArtifactRepository().loadTool(name);
+                    yield manifest.getForms();
+                }
+                case PIPELINE -> {
+                    var manifest = runtimeFacade.getArtifactRepository().loadPipeline(name);
+                    yield manifest.getForms();
+                }
+            };
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     private Map<String, Object> toRunPayload(RunResult result) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("executionId", result.getExecutionId());
         payload.put("status", result.getStatus().name());
         payload.put("output", result.getOutput());
         payload.put("error", result.getError());
