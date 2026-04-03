@@ -3,6 +3,7 @@ package org.hubbers.tool;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
 
+@RequiredArgsConstructor
 public class PinchtabBrowserToolDriver implements ToolDriver {
     private static final String DEFAULT_PINCHTAB_URL = "http://localhost:9867";
     private static final String DEFAULT_PROFILE = "default";
@@ -20,11 +22,6 @@ public class PinchtabBrowserToolDriver implements ToolDriver {
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
     private final Map<String, SessionState> sessions = new HashMap<>();
-
-    public PinchtabBrowserToolDriver(HttpClient httpClient, ObjectMapper mapper) {
-        this.httpClient = httpClient;
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

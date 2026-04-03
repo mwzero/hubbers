@@ -36,6 +36,7 @@
       <div class="tabbar">
         <button id="tab-editor" class="tab active" type="button">YAML Editor</button>
         <button id="tab-pipeline" class="tab" type="button">Pipeline Designer</button>
+        <button id="tab-executions" class="tab" type="button">Executions</button>
       </div>
 
       <div id="editor-view" class="view active">
@@ -48,6 +49,40 @@
           <button id="pipeline-sync" type="button">Apply visual changes to YAML</button>
         </div>
         <div id="pipeline-canvas" class="pipeline-canvas"></div>
+      </div>
+
+      <div id="executions-view" class="view">
+        <div class="executions-toolbar">
+          <button id="executions-refresh" type="button">↻ Refresh</button>
+          <select id="executions-filter-status">
+            <option value="">All Statuses</option>
+            <option value="SUCCESS">Success</option>
+            <option value="FAILED">Failed</option>
+            <option value="RUNNING">Running</option>
+            <option value="PAUSED">Paused</option>
+          </select>
+          <select id="executions-filter-type">
+            <option value="">All Types</option>
+            <option value="agent">Agents</option>
+            <option value="tool">Tools</option>
+            <option value="pipeline">Pipelines</option>
+          </select>
+        </div>
+        <div id="executions-list" class="executions-list"></div>
+        <div id="execution-detail" class="execution-detail" style="display: none;">
+          <div class="execution-detail-header">
+            <button id="execution-back" type="button">← Back to list</button>
+            <h3 id="execution-id-title"></h3>
+          </div>
+          <div class="execution-detail-tabs">
+            <button class="detail-tab active" data-tab="metadata">Metadata</button>
+            <button class="detail-tab" data-tab="log">Log</button>
+            <button class="detail-tab" data-tab="input">Input</button>
+            <button class="detail-tab" data-tab="output">Output</button>
+            <button class="detail-tab" data-tab="steps">Steps</button>
+          </div>
+          <div id="execution-detail-content" class="execution-detail-content"></div>
+        </div>
       </div>
     </section>
 

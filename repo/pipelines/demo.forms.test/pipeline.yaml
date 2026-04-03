@@ -1,0 +1,93 @@
+pipeline:
+  name: demo.forms.test
+  version: 1.0.0
+  description: Demo pipeline with forms to test human-in-the-loop functionality
+
+# Form displayed BEFORE pipeline execution
+# Collects configuration from user
+forms:
+  before:
+    title: "Pipeline Configuration"
+    description: "Configure your demo pipeline parameters before execution (RSS feed: HackerNews)"
+    fields:
+      - name: searchQuery
+        type: text
+        label: "Search Query"
+        placeholder: "Enter search term..."
+        required: true
+        defaultValue: "artificial intelligence"
+      
+      - name: maxResults
+        type: number
+        label: "Maximum Results"
+        min: 1
+        max: 50
+        defaultValue: 10
+        required: true
+      
+      - name: language
+        type: select
+        label: "Target Language"
+        required: true
+        defaultValue: "en"
+        options:
+          - label: "English"
+            value: "en"
+          - label: "Italian"
+            value: "it"
+          - label: "Spanish"
+            value: "es"
+          - label: "French"
+            value: "fr"
+      
+      - name: includeMetadata
+        type: checkbox
+        label: "Include detailed metadata"
+        defaultValue: true
+      
+      - name: priority
+        type: select
+        label: "Processing Priority"
+        required: false
+        defaultValue: "normal"
+        options:
+          - label: "Low"
+            value: "low"
+          - label: "Normal"
+            value: "normal"
+          - label: "High"
+            value: "high"
+
+steps:
+  # Step 1: Fetch RSS data - uses feeds from pipeline input
+  - id: fetch_rss
+    tool: rss.fetch
+  
+  # Step 2: Analyze sentiment
+  - id: analyze_sentiment
+    agent: rss.sentiment
+    input_mapping:
+      items: ${steps.fetch_rss.output.items}
+      target_language: ${language}
+  
+  # Step 3: Extract named entities
+  - id: extract_entities
+    agent: rss.ner
+    input_mapping:
+      items: ${steps.analyze_sentiment.output.items}
+
+# You can also define forms for specific steps (human-in-the-loop during pipeline)
+# Uncomment to test:
+#
+# steps:
+#   - id: fetch_rss
+#     tool: rss.fetch
+#     form:
+#       title: "Review Fetch Results"
+#       description: "Review the fetched data before proceeding"
+#       fields:
+#         - name: proceedWithAnalysis
+#           type: checkbox
+#           label: "Proceed with sentiment analysis?"
+#           defaultValue: true
+#           required: true

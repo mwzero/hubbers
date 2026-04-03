@@ -3,6 +3,7 @@ package org.hubbers.execution;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class RunResult {
+    private String executionId;
     private ExecutionStatus status;
     private JsonNode output;
     private String error;
@@ -22,6 +23,8 @@ public class RunResult {
         return result;
     }
 
+    public String getExecutionId() { return executionId; }
+    public void setExecutionId(String executionId) { this.executionId = executionId; }
     public ExecutionStatus getStatus() { return status; }
     public void setStatus(ExecutionStatus status) { this.status = status; }
     public JsonNode getOutput() { return output; }

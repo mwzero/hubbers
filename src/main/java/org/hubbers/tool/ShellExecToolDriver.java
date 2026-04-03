@@ -3,6 +3,7 @@ package org.hubbers.tool;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.io.IOException;
@@ -12,13 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 public class ShellExecToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
     private static final int DEFAULT_TIMEOUT_SECONDS = 60;
-
-    public ShellExecToolDriver(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

@@ -40,7 +40,10 @@ public class ManifestValidator {
                 && !"lucene.kv".equals(manifest.getType())
                 && !"browser.pinchtab".equals(manifest.getType())
                 && !"csv.write".equals(manifest.getType())
-                && !"csv.read".equals(manifest.getType())) {
+                && !"csv.read".equals(manifest.getType())
+                && !"shell.exec".equals(manifest.getType())
+                && !"file.ops".equals(manifest.getType())
+                && !"process.manage".equals(manifest.getType())) {
             result.addError("Invalid tool type: " + manifest.getType());
         }
         if (manifest.getConfig() == null || manifest.getConfig().isEmpty()) {

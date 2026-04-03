@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.time.ZoneOffset;
@@ -11,13 +12,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+@RequiredArgsConstructor
 public class ProcessManageToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
     private static final int DEFAULT_MAX_PROCESSES = 1000;
-
-    public ProcessManageToolDriver(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

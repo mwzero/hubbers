@@ -2,6 +2,7 @@ package org.hubbers.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.io.IOException;
@@ -9,12 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class DockerToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
-
-    public DockerToolDriver(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

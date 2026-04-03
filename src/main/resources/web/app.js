@@ -1,6 +1,8 @@
 const state = {
   selection: null,
-  pipelineDraft: []
+  pipelineDraft: [],
+  executions: [],
+  selectedExecution: null
 };
 
 const elements = {
@@ -17,11 +19,21 @@ const elements = {
   runBtn: document.getElementById("run-btn"),
   tabEditor: document.getElementById("tab-editor"),
   tabPipeline: document.getElementById("tab-pipeline"),
+  tabExecutions: document.getElementById("tab-executions"),
   editorView: document.getElementById("editor-view"),
   pipelineView: document.getElementById("pipeline-view"),
+  executionsView: document.getElementById("executions-view"),
   pipelineCanvas: document.getElementById("pipeline-canvas"),
   pipelineAddStep: document.getElementById("pipeline-add-step"),
-  pipelineSync: document.getElementById("pipeline-sync")
+  pipelineSync: document.getElementById("pipeline-sync"),
+  executionsList: document.getElementById("executions-list"),
+  executionsRefresh: document.getElementById("executions-refresh"),
+  executionsFilterStatus: document.getElementById("executions-filter-status"),
+  executionsFilterType: document.getElementById("executions-filter-type"),
+  executionDetail: document.getElementById("execution-detail"),
+  executionBack: document.getElementById("execution-back"),
+  executionIdTitle: document.getElementById("execution-id-title"),
+  executionDetailContent: document.getElementById("execution-detail-content")
 };
 
 init().catch((error) => {
@@ -42,8 +54,13 @@ function bindActions() {
   elements.runBtn.addEventListener("click", runCurrent);
   elements.tabEditor.addEventListener("click", () => setActiveTab("editor"));
   elements.tabPipeline.addEventListener("click", () => setActiveTab("pipeline"));
+  elements.tabExecutions.addEventListener("click", () => { setActiveTab("executions"); loadExecutions(); });
   elements.pipelineAddStep.addEventListener("click", addPipelineStep);
   elements.pipelineSync.addEventListener("click", syncPipelineDesignerToYaml);
+  elements.executionsRefresh.addEventListener("click", loadExecutions);
+  elements.executionsFilterStatus.addEventListener("change", filterExecutions);
+  elements.executionsFilterType.addEventListener("change", filterExecutions);
+  elements.executionBack.addEventListener("click", () => showExecutionsList());
 }
 
 async function checkHealth() {
@@ -155,10 +172,16 @@ async function selectArtifact(item, node) {
 
 function setActiveTab(tab) {
   const isEditor = tab === "editor";
+  const isPipeline = tab === "pipeline";
+  const isExecutions = tab === "executions";
+  
   elements.tabEditor.classList.toggle("active", isEditor);
-  elements.tabPipeline.classList.toggle("active", !isEditor);
+  elements.tabPipeline.classList.toggle("active", isPipeline);
+  elements.tabExecutions.classList.toggle("active", isExecutions);
+  
   elements.editorView.classList.toggle("active", isEditor);
-  elements.pipelineView.classList.toggle("active", !isEditor);
+  elements.pipelineView.classList.toggle("active", isPipeline);
+  elements.executionsView.classList.toggle("active", isExecutions);
 }
 
 function renderPipelineDesigner() {
@@ -359,9 +382,160 @@ async function runCurrent() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input)
   });
+  
   const payload = await readJson(res);
+  
+  // Check if execution requires a form
+  if (res.status === 202 && payload.requiresForm) {
+    // Show form modal
+    showFormModal(payload.formSessionId, payload.form);
+    elements.runOutput.textContent = "Awaiting form submission...";
+    return;
+  }
+  
   elements.runOutput.textContent = JSON.stringify(payload, null, 2);
 }
+
+// Form rendering and submission
+function showFormModal(sessionId, formDef) {
+  const modal = document.createElement("div");
+  modal.className = "form-modal";
+  modal.id = "form-modal";
+  
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeFormModal()">
+      <div class="modal-content form-modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h4>${escapeHtml(formDef.title || 'Input Required')}</h4>
+          <button onclick="closeFormModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          ${formDef.description ? `<p class="form-description">${escapeHtml(formDef.description)}</p>` : ''}
+          <form id="dynamic-form" data-session-id="${sessionId}">
+            ${renderFormFields(formDef.fields)}
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Submit</button>
+              <button type="button" onclick="closeFormModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Bind form submission
+  document.getElementById("dynamic-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await submitForm(sessionId);
+  });
+}
+
+function renderFormFields(fields) {
+  if (!fields ||fields.length === 0) {
+    return '<p class="form-empty">No fields defined</p>';
+  }
+  
+  return fields.map(field => {
+    const required = field.required ? 'required' : '';
+    const placeholder = field.placeholder ? `placeholder="${escapeHtml(field.placeholder)}"` : '';
+    const defaultVal = field.defaultValue !== undefined ? escapeHtml(String(field.defaultValue)) : '';
+    
+    switch (field.type) {
+      case 'textarea':
+        return `
+          <div class="form-field">
+            <label for="field-${field.name}">${escapeHtml(field.label || field.name)}</label>
+            <textarea id="field-${field.name}" name="${field.name}" ${placeholder} ${required}>${defaultVal}</textarea>
+          </div>
+        `;
+      
+      case 'number':
+      case 'slider':
+        const min = field.min !== undefined ? `min="${field.min}"` : '';
+        const max = field.max !== undefined ? `max="${field.max}"` : '';
+        const step = field.step !== undefined ? `step="${field.step}"` : '';
+        return `
+          <div class="form-field">
+            <label for="field-${field.name}">${escapeHtml(field.label || field.name)}</label>
+            <input type="number" id="field-${field.name}" name="${field.name}" value="${defaultVal}" ${min} ${max} ${step} ${required} />
+          </div>
+        `;
+      
+      case 'checkbox':
+        const checked = field.defaultValue ? 'checked' : '';
+        return `
+          <div class="form-field form-field-checkbox">
+            <input type="checkbox" id="field-${field.name}" name="${field.name}" ${checked} />
+            <label for="field-${field.name}">${escapeHtml(field.label || field.name)}</label>
+          </div>
+        `;
+      
+      case 'select':
+        const options = (field.options || []).map(opt =>
+          `<option value="${escapeHtml(String(opt.value))}"${opt.value === field.defaultValue ? ' selected' : ''}>${escapeHtml(opt.label)}</option>`
+        ).join('');
+        return `
+          <div class="form-field">
+            <label for="field-${field.name}">${escapeHtml(field.label || field.name)}</label>
+            <select id="field-${field.name}" name="${field.name}" ${required}>
+              <option value="">-- Select --</option>
+              ${options}
+            </select>
+          </div>
+        `;
+      
+      case 'text':
+      default:
+        return `
+          <div class="form-field">
+            <label for="field-${field.name}">${escapeHtml(field.label || field.name)}</label>
+            <input type="text" id="field-${field.name}" name="${field.name}" value="${defaultVal}" ${placeholder} ${required} />
+          </div>
+        `;
+    }
+  }).join('');
+}
+
+async function submitForm(sessionId) {
+  const form = document.getElementById("dynamic-form");
+  const formData = new FormData(form);
+  const data = {};
+  
+  // Convert FormData to object
+  for (const [key, value] of formData.entries()) {
+    const input = form.elements[key];
+    if (input.type === 'checkbox') {
+      data[key] = input.checked;
+    } else if (input.type === 'number') {
+      data[key] = parseFloat(value) || 0;
+    } else {
+      data[key] = value;
+    }
+  }
+  
+  try {
+    const res = await fetch(`/api/forms/${sessionId}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    
+    const payload = await readJson(res);
+    elements.runOutput.textContent = JSON.stringify(payload, null, 2);
+    closeFormModal();
+  } catch (error) {
+    alert(`Form submission failed: ${error.message}`);
+  }
+}
+
+window.closeFormModal = function() {
+  const modal = document.getElementById("form-modal");
+  if (modal) {
+    modal.remove();
+  }
+};
 
 function ensureSelection() {
   if (state.selection) return state.selection;
@@ -391,3 +565,206 @@ async function readJson(response) {
     return { message: text };
   }
 }
+
+// Executions functionality
+async function loadExecutions() {
+  try {
+    const res = await fetch("/api/executions");
+    const payload = await readJson(res);
+    state.executions = payload.items || [];
+    filterExecutions();
+  } catch (error) {
+    elements.executionsList.innerHTML = `<div class="execution-error">Failed to load executions: ${error.message}</div>`;
+  }
+}
+
+function filterExecutions() {
+  const statusFilter = elements.executionsFilterStatus.value;
+  const typeFilter = elements.executionsFilterType.value;
+  
+  const filtered = state.executions.filter(execution => {
+    const matchesStatus = !statusFilter || execution.status === statusFilter;
+    const matchesType = !typeFilter || execution.artifactType === typeFilter;
+    return matchesStatus && matchesType;
+  });
+  
+  renderExecutionsList(filtered);
+}
+
+function renderExecutionsList(executions) {
+  if (!executions || executions.length === 0) {
+    elements.executionsList.innerHTML = '<div class="executions-empty">No executions found. Run an artifact to see execution history.</div>';
+    return;
+  }
+  
+  elements.executionsList.innerHTML = "";
+  
+  executions.forEach(execution => {
+    const card = document.createElement("div");
+    card.className = `execution-card status-${execution.status.toLowerCase()}`;
+    
+    const duration = execution.endedAt 
+      ? `${((execution.endedAt - execution.startedAt) / 1000).toFixed(2)}s`
+      : 'Running...';
+    
+    const date = new Date(execution.startedAt).toLocaleString();
+    
+    card.innerHTML = `
+      <div class="execution-card-header">
+        <span class="execution-id">${escapeHtml(execution.executionId)}</span>
+        <span class="execution-status badge-${execution.status.toLowerCase()}">${execution.status}</span>
+      </div>
+      <div class="execution-card-body">
+        <div class="execution-info">
+          <strong>${escapeHtml(execution.artifactType)}</strong>: ${escapeHtml(execution.artifactName)}
+        </div>
+        <div class="execution-meta">
+          <span>${date}</span>
+          <span>${duration}</span>
+        </div>
+      </div>
+    `;
+    
+    card.addEventListener("click", () => showExecutionDetail(execution.executionId));
+    elements.executionsList.appendChild(card);
+  });
+}
+
+async function showExecutionDetail(executionId) {
+  state.selectedExecution = executionId;
+  elements.executionsList.style.display = "none";
+  elements.executionDetail.style.display = "block";
+  elements.executionIdTitle.textContent = executionId;
+  
+  // Load metadata by default
+  showExecutionTab("metadata");
+}
+
+function showExecutionsList() {
+  elements.executionsList.style.display = "block";
+  elements.executionDetail.style.display = "none";
+  state.selectedExecution = null;
+}
+
+async function showExecutionTab(tabName) {
+  // Update tab buttons
+  document.querySelectorAll(".detail-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tabName);
+  });
+  
+  const executionId = state.selectedExecution;
+  if (!executionId) return;
+  
+  elements.executionDetailContent.innerHTML = '<div class="loading">Loading...</div>';
+  
+  try {
+    let content = "";
+    
+    switch (tabName) {
+      case "metadata":
+        const metadataRes = await fetch(`/api/executions/${encodeURIComponent(executionId)}`);
+        const metadata = await readJson(metadataRes);
+        content = `<pre class="detail-json">${JSON.stringify(metadata, null, 2)}</pre>`;
+        break;
+        
+      case "log":
+        const logRes = await fetch(`/api/executions/${encodeURIComponent(executionId)}/log`);
+        const log = await logRes.text();
+        content = `<pre class="detail-log">${escapeHtml(log)}</pre>`;
+        break;
+        
+      case "input":
+        const inputRes = await fetch(`/api/executions/${encodeURIComponent(executionId)}/input`);
+        const input = await readJson(inputRes);
+        content = `<pre class="detail-json">${JSON.stringify(input, null, 2)}</pre>`;
+        break;
+        
+      case "output":
+        const outputRes = await fetch(`/api/executions/${encodeURIComponent(executionId)}/output`);
+        const output = await readJson(outputRes);
+        content = `<pre class="detail-json">${JSON.stringify(output, null, 2)}</pre>`;
+        break;
+        
+      case "steps":
+        const stepsRes = await fetch(`/api/executions/${encodeURIComponent(executionId)}/steps`);
+        const stepsData = await readJson(stepsRes);
+        const steps = stepsData.items || [];
+        
+        if (steps.length === 0) {
+          content = '<div class="execution-detail-empty">No pipeline steps found for this execution.</div>';
+        } else {
+          content = '<div class="steps-list">';
+          steps.forEach((step, index) => {
+            content += `
+              <div class="step-card">
+                <div class="step-header">
+                  <strong>Step ${index + 1}</strong>: ${escapeHtml(step.name)}
+                </div>
+                <div class="step-actions">
+                  ${step.hasInput ? `<button onclick="showStepDetail('${executionId}', '${step.name}', 'input')">Input</button>` : ''}
+                  ${step.hasOutput ? `<button onclick="showStepDetail('${executionId}', '${step.name}', 'output')">Output</button>` : ''}
+                  <button onclick="showStepDetail('${executionId}', '${step.name}', 'log')">Log</button>
+                </div>
+              </div>
+            `;
+          });
+          content += '</div>';
+        }
+        break;
+    }
+    
+    elements.executionDetailContent.innerHTML = content;
+  } catch (error) {
+    elements.executionDetailContent.innerHTML = `<div class="execution-error">Failed to load ${tabName}: ${error.message}</div>`;
+  }
+}
+
+// Global function for step detail buttons
+window.showStepDetail = async function(executionId, stepName, type) {
+  const container = document.createElement("div");
+  container.className = "step-detail-modal";
+  
+  try {
+    const res = await fetch(`/api/executions/${encodeURIComponent(executionId)}/steps/${encodeURIComponent(stepName)}/${type}`);
+    let content = "";
+    
+    if (type === "log") {
+      content = await res.text();
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="this.parentElement.remove()">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h4>${stepName} - Log</h4>
+              <button onclick="this.closest('.step-detail-modal').remove()">✕</button>
+            </div>
+            <pre class="detail-log">${escapeHtml(content)}</pre>
+          </div>
+        </div>
+      `;
+    } else {
+      const data = await readJson(res);
+      container.innerHTML = `
+        <div class="modal-overlay" onclick="this.parentElement.remove()">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+              <h4>${stepName} - ${type.toUpperCase()}</h4>
+              <button onclick="this.closest('.step-detail-modal').remove()">✕</button>
+            </div>
+            <pre class="detail-json">${JSON.stringify(data, null, 2)}</pre>
+          </div>
+        </div>
+      `;
+    }
+    
+    document.body.appendChild(container);
+  } catch (error) {
+    alert(`Failed to load step ${type}: ${error.message}`);
+  }
+};
+
+// Add tab click handlers
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".detail-tab").forEach(btn => {
+    btn.addEventListener("click", () => showExecutionTab(btn.dataset.tab));
+  });
+});

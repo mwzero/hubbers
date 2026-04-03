@@ -1,10 +1,9 @@
 package org.hubbers.manifest.agent;
 
+import lombok.Data;
 import org.hubbers.manifest.common.SchemaDefinition;
 
+@Data
 public class OutputDefinition {
     private SchemaDefinition schema;
-
-    public SchemaDefinition getSchema() { return schema; }
-    public void setSchema(SchemaDefinition schema) { this.schema = schema; }
 }

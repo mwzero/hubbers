@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -20,17 +21,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
+@RequiredArgsConstructor
 public class RssToolDriver implements ToolDriver {
     private static final int DEFAULT_LIMIT = 20;
     private static final int MAX_LIMIT = 200;
 
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
-
-    public RssToolDriver(HttpClient httpClient, ObjectMapper mapper) {
-        this.httpClient = httpClient;
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

@@ -33,3 +33,4 @@ replay_pid*
 **/*/target
 .DS_Store
 /target
+/repo/executions

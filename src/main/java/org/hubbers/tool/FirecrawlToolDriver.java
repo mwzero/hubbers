@@ -13,20 +13,17 @@ import com.firecrawl.models.MapOptions;
 import com.firecrawl.models.ScrapeOptions;
 import com.firecrawl.models.SearchData;
 import com.firecrawl.models.SearchOptions;
+import lombok.RequiredArgsConstructor;
 import org.hubbers.config.AppConfig;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor
 public class FirecrawlToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
     private final AppConfig appConfig;
-
-    public FirecrawlToolDriver(ObjectMapper mapper, AppConfig appConfig) {
-        this.mapper = mapper;
-        this.appConfig = appConfig;
-    }
 
     @Override
     public String type() {

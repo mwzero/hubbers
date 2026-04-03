@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.agent.memory.ConversationMemory;
-import org.hubbers.artifact.LocalArtifactRepository;
+import org.hubbers.app.ArtifactRepository;
 import org.hubbers.execution.ExecutionMetadata;
 import org.hubbers.execution.RunResult;
 import org.hubbers.execution.ExecutionStatus;
@@ -30,7 +30,7 @@ import java.util.UUID;
 public class AgenticExecutor {
     private final ModelProviderRegistry modelProviderRegistry;
     private final ToolExecutor toolExecutor;
-    private final LocalArtifactRepository repository;
+    private final ArtifactRepository repository;
     private final SchemaValidator schemaValidator;
     private final ConversationMemory conversationMemory;
     private final ObjectMapper mapper;
@@ -41,7 +41,7 @@ public class AgenticExecutor {
 
     public AgenticExecutor(ModelProviderRegistry modelProviderRegistry,
                           ToolExecutor toolExecutor,
-                          LocalArtifactRepository repository,
+                          ArtifactRepository repository,
                           SchemaValidator schemaValidator,
                           ConversationMemory conversationMemory,
                           ObjectMapper mapper) {

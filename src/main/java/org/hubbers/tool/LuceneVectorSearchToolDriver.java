@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.KnnFloatVectorQuery;
@@ -14,13 +15,10 @@ import org.hubbers.manifest.tool.ToolManifest;
 import java.io.IOException;
 import java.nio.file.Path;
 
+@RequiredArgsConstructor
 public class LuceneVectorSearchToolDriver implements ToolDriver {
     private static final int DEFAULT_TOP_K = 3;
     private final ObjectMapper mapper;
-
-    public LuceneVectorSearchToolDriver(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {

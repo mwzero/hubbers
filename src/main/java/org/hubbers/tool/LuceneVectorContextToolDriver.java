@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.RequiredArgsConstructor;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -30,16 +31,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+@RequiredArgsConstructor
 public class LuceneVectorContextToolDriver implements ToolDriver {
     private static final Pattern TOKEN_SPLITTER = Pattern.compile("[^a-z0-9]+", Pattern.CASE_INSENSITIVE);
     private static final int DEFAULT_TOP_K = 3;
     private static final int VECTOR_DIMENSIONS = 256;
 
     private final ObjectMapper mapper;
-
-    public LuceneVectorContextToolDriver(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public String type() {
