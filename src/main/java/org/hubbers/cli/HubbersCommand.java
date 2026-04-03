@@ -3,6 +3,8 @@ package org.hubbers.cli;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.hubbers.app.Bootstrap;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.execution.ExecutionStatus;
@@ -14,6 +16,7 @@ import org.hubbers.validation.ManifestValidator;
 import org.hubbers.web.ManifestFileService;
 import org.hubbers.web.WebServer;
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,13 +29,15 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(
     name = "hubbers",
-    description = "Hubbers CLI",
+    description = "Hubbers CLI - Execute agents, tools, pipelines, and natural language tasks",
     subcommands = {
         HubbersCommand.ListCommand.class,
         HubbersCommand.AgentCommand.class,
         HubbersCommand.ToolCommand.class,
         HubbersCommand.PipelineCommand.class,
-        HubbersCommand.WebCommand.class
+        HubbersCommand.WebCommand.class,
+        HubbersCommand.TaskCommand.class
+
     }
 )
 public class HubbersCommand implements Callable<Integer> {
@@ -69,6 +74,20 @@ public class HubbersCommand implements Callable<Integer> {
         return 0;
     }
 
+
+    // Add new subcommand class
+    @Command(
+        name = "task",
+        description = "Natural language task execution commands",
+        subcommands = {TaskRunCommand.class}
+    )
+    static class TaskCommand implements Callable<Integer> {
+        @Override
+        public Integer call() {
+            System.out.println("Use 'hubbers task run' to execute natural language tasks");
+            return 0;
+        }
+    }
 
     @CommandLine.Command(name = "list", subcommands = {ListAgents.class, ListTools.class, ListPipelines.class})
     static class ListCommand implements Callable<Integer> {
@@ -145,7 +164,11 @@ public class HubbersCommand implements Callable<Integer> {
         public Integer call() {
             var appConfig = new ConfigLoader(root.repoPath).load();
             var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
-            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator()).start(port);
+            var taskService = Bootstrap.createNaturalLanguageTaskService(root.runtimeFacade);
+
+            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator(), taskService).start(port);
+
+
             System.out.println("Hubbers Web UI available at http://localhost:" + port);
             try {
                 Thread.currentThread().join();

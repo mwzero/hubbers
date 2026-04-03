@@ -18,7 +18,7 @@ public class AgentManifest {
     private InputDefinition input;
     private OutputDefinition output;
     private Map<String, Object> config = new HashMap<>();
-    private List<ToolReference> tools = new ArrayList<>();
+    private List<String> tools = new ArrayList<>();
     private List<ExampleDefinition> examples = new ArrayList<>();
     private FormTrigger forms;
 }

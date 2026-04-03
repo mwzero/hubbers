@@ -4,6 +4,7 @@ import org.hubbers.app.Bootstrap;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.config.LogbackConfigurator;
+import org.hubbers.nlp.NaturalLanguageTaskService;
 import org.hubbers.validation.ManifestValidator;
 
 import java.nio.file.Path;
@@ -19,7 +20,10 @@ public class WebMain {
         RuntimeFacade facade = Bootstrap.createRuntimeFacade(repoPath);
 
         ManifestFileService manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
-        new WebServer(facade, manifestFileService, new ManifestValidator()).start(port);
+
+        NaturalLanguageTaskService taskService = Bootstrap.createNaturalLanguageTaskService(facade);
+
+        new WebServer(facade, manifestFileService, new ManifestValidator(), taskService).start(port);
 
         System.out.println("Hubbers Web UI available at http://localhost:" + port);
     }

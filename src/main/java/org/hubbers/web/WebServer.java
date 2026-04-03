@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import lombok.extern.slf4j.Slf4j;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -13,15 +14,19 @@ import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
+import org.hubbers.nlp.NaturalLanguageTaskService;
+import org.hubbers.nlp.TaskExecutionResult;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.validation.ValidationResult;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Slf4j
 public class WebServer {
     private final RuntimeFacade runtimeFacade;
     private final ManifestFileService manifestFileService;
@@ -29,12 +34,16 @@ public class WebServer {
     private final ObjectMapper yamlMapper;
     private final ObjectMapper jsonMapper;
 
+    private final NaturalLanguageTaskService taskService;
+
     public WebServer(RuntimeFacade runtimeFacade,
                      ManifestFileService manifestFileService,
-                     ManifestValidator manifestValidator) {
+                     ManifestValidator manifestValidator,
+                     NaturalLanguageTaskService taskService) {
         this.runtimeFacade = runtimeFacade;
         this.manifestFileService = manifestFileService;
         this.manifestValidator = manifestValidator;
+        this.taskService = taskService;
         this.yamlMapper = JacksonFactory.yamlMapper();
         this.jsonMapper = JacksonFactory.jsonMapper();
     }
@@ -324,6 +333,58 @@ public class WebServer {
             } catch (IOException e) {
                 writeError(ctx, 404, "Step output not found");
             }
+        });
+
+                // Execute a new task
+        app.post("/api/task/execute", ctx -> {
+            try {
+                JsonNode body = jsonMapper.readTree(ctx.body());
+                String request = body.get("request").asText();
+                JsonNode context = body.has("context") ? body.get("context") : null;
+                
+                log.info("POST /api/task/execute - request: {}", request);
+                
+                TaskExecutionResult result = taskService.executeTask(request, context);
+                
+                ctx.json(result);
+                ctx.status(result.isSuccess() ? 200 : 500);
+                
+            } catch (Exception e) {
+                log.error("Task execution failed", e);
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+            }
+        });
+        
+        // Continue an existing conversation
+        app.post("/api/task/continue", ctx -> {
+            try {
+                JsonNode body = jsonMapper.readTree(ctx.body());
+                String request = body.get("request").asText();
+                String conversationId = body.get("conversationId").asText();
+                JsonNode context = body.has("context") ? body.get("context") : null;
+                
+                log.info("POST /api/task/continue - conversation: {}, request: {}", 
+                    conversationId, request);
+                
+                TaskExecutionResult result = taskService.executeTaskWithConversation(
+                    request, context, conversationId);
+                
+                ctx.json(result);
+                ctx.status(result.isSuccess() ? 200 : 500);
+                
+            } catch (Exception e) {
+                log.error("Task continuation failed", e);
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+            }
+        });
+        
+        // Get task service info
+        app.get("/api/task/info", ctx -> {
+            Map<String, Object> info = new HashMap<>();
+            info.put("available_tools", taskService.getAvailableToolsCount());
+            info.put("agent", "universal.task");
+            info.put("status", "ready");
+            ctx.json(info);
         });
 
         app.start(port);

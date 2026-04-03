@@ -1,8 +1,11 @@
 package org.hubbers.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.hubbers.agent.AgenticExecutor;
 import org.hubbers.execution.*;
+import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.validation.ManifestValidator;
@@ -10,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
+import org.hubbers.manifest.agent.AgentManifest;
 
 public class RuntimeFacade {
     
@@ -158,4 +163,23 @@ public class RuntimeFacade {
     public ExecutionStorageService getExecutionStorage() { return executionStorage; }
     public org.hubbers.forms.JuiFormService getFormService() { return formService; }
     public ArtifactRepository getArtifactRepository() { return artifactRepository; }
+
+    /**
+     * Execute an agent with ReAct loop using a pre-configured manifest and conversation ID.
+     * This is used for advanced scenarios where the agent manifest has been dynamically modified
+     * (e.g., tool injection for universal task agent).
+     * 
+     * @param manifest Pre-configured agent manifest (tools already injected if needed)
+     * @param input Input JSON for the agent
+     * @param conversationId Conversation ID for multi-turn dialogue (or null for new conversation)
+     * @return RunResult with agent output
+     */
+    public RunResult executeAgenticAgent(org.hubbers.manifest.agent.AgentManifest manifest, 
+                                        JsonNode input, 
+                                        String conversationId) {
+        return executeWithTracking("agent", manifest.getAgent().getName(), input, () -> {
+            // Manifest is already validated and configured by caller
+            return agentExecutor.execute(manifest, input, conversationId);
+        });
+    }
 }
