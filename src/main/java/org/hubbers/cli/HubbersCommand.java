@@ -29,15 +29,14 @@ import java.util.concurrent.Callable;
 
 @CommandLine.Command(
     name = "hubbers",
-    description = "Hubbers CLI - Execute agents, tools, pipelines, and natural language tasks",
+    description = "Hubbers CLI - Execute agents, tools, pipelines, and skills",
     subcommands = {
         HubbersCommand.ListCommand.class,
         HubbersCommand.AgentCommand.class,
         HubbersCommand.ToolCommand.class,
         HubbersCommand.PipelineCommand.class,
-        HubbersCommand.WebCommand.class,
-        HubbersCommand.TaskCommand.class
-
+        HubbersCommand.SkillCommand.class,
+        HubbersCommand.WebCommand.class
     }
 )
 public class HubbersCommand implements Callable<Integer> {
@@ -74,22 +73,7 @@ public class HubbersCommand implements Callable<Integer> {
         return 0;
     }
 
-
-    // Add new subcommand class
-    @Command(
-        name = "task",
-        description = "Natural language task execution commands",
-        subcommands = {TaskRunCommand.class}
-    )
-    static class TaskCommand implements Callable<Integer> {
-        @Override
-        public Integer call() {
-            System.out.println("Use 'hubbers task run' to execute natural language tasks");
-            return 0;
-        }
-    }
-
-    @CommandLine.Command(name = "list", subcommands = {ListAgents.class, ListTools.class, ListPipelines.class})
+    @CommandLine.Command(name = "list", subcommands = {ListAgents.class, ListTools.class, ListPipelines.class, ListSkills.class})
     static class ListCommand implements Callable<Integer> {
         @CommandLine.ParentCommand HubbersCommand root;
         @Override public Integer call() { CommandLine.usage(this, System.out); return 0; }
@@ -113,18 +97,161 @@ public class HubbersCommand implements Callable<Integer> {
         @Override public Integer call() { return printList(parent.root.runtimeFacade.listPipelines()); }
     }
 
+    @CommandLine.Command(name = "skills")
+    static class ListSkills implements Callable<Integer> {
+        @CommandLine.ParentCommand ListCommand parent;
+        @Override public Integer call() { return printList(parent.root.runtimeFacade.listSkills()); }
+    }
+
     @CommandLine.Command(name = "agent", subcommands = AgentRun.class)
     static class AgentCommand implements Callable<Integer> {
         @CommandLine.ParentCommand HubbersCommand root;
         @Override public Integer call() { return 0; }
     }
 
-    @CommandLine.Command(name = "run")
+    @CommandLine.Command(name = "run", description = "Execute an agent")
     static class AgentRun implements Callable<Integer> {
         @CommandLine.ParentCommand AgentCommand parent;
-        @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) String input;
-        @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.AGENT); }
+        @CommandLine.Parameters(index = "0", description = "Agent name") String name;
+        
+        @CommandLine.Option(names = {"-i", "--input"}, 
+                description = "Input JSON string or file path (for direct agent execution)")
+        String input;
+        
+        @CommandLine.Option(names = {"-r", "--request"}, 
+                description = "Natural language task request (for task-style execution)")
+        String request;
+        
+        @CommandLine.Option(names = {"-c", "--context"}, 
+                description = "Context data as JSON string (used with --request)")
+        String context;
+        
+        @CommandLine.Option(names = {"--conversation"}, 
+                description = "Continue existing conversation ID (for multi-turn dialogue)")
+        String conversationId;
+        
+        @CommandLine.Option(names = {"-v", "--verbose"}, 
+                description = "Show detailed agent reasoning and tool calls")
+        boolean verbose;
+        
+        @Override 
+        public Integer call() {
+            // Validate: either --input or --request must be provided
+            if (input == null && request == null) {
+                System.err.println("❌ Error: Either --input or --request must be provided");
+                System.err.println("   Use --input for direct JSON execution");
+                System.err.println("   Use --request for natural language tasks");
+                return 1;
+            }
+            
+            if (input != null && request != null) {
+                System.err.println("❌ Error: Cannot use both --input and --request together");
+                return 1;
+            }
+            
+            try {
+                if (request != null) {
+                    // Natural language task mode
+                    return executeNaturalLanguageTask();
+                } else {
+                    // Direct agent execution mode
+                    return run(parent.root.runtimeFacade, name, input, Mode.AGENT);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Execution failed: " + e.getMessage());
+                if (verbose) {
+                    e.printStackTrace();
+                }
+                return 1;
+            }
+        }
+        
+        private Integer executeNaturalLanguageTask() throws Exception {
+            ObjectMapper mapper = JacksonFactory.jsonMapper();
+            RuntimeFacade facade = parent.root.runtimeFacade;
+            
+            System.out.println("🤖 Executing agent '" + name + "' with natural language request");
+            System.out.println("📝 Request: " + request);
+            System.out.println();
+            
+            // Build input JSON with request field
+            var inputJson = mapper.createObjectNode();
+            inputJson.put("request", request);
+            
+            // Add context if provided
+            if (context != null) {
+                try {
+                    JsonNode contextNode = mapper.readTree(context);
+                    inputJson.set("context", contextNode);
+                } catch (Exception e) {
+                    System.err.println("❌ Invalid context JSON: " + e.getMessage());
+                    return 1;
+                }
+            }
+            
+            System.out.println("⏳ Agent is thinking and calling tools...");
+            System.out.println();
+            
+            // Execute agent with conversation support
+            RunResult result = facade.runAgent(name, inputJson, conversationId);
+            
+            if (result.getStatus() != ExecutionStatus.SUCCESS) {
+                System.err.println("❌ Task failed: " + result.getError());
+                return 1;
+            }
+            
+            System.out.println("✅ Task completed successfully!");
+            System.out.println();
+            
+            // Extract enhanced metadata from output if available
+            JsonNode output = result.getOutput();
+            
+            // Show tool usage if available
+            if (output.has("tools_used") && output.get("tools_used").isArray()) {
+                var toolsUsed = new java.util.ArrayList<String>();
+                output.get("tools_used").forEach(t -> toolsUsed.add(t.asText()));
+                if (!toolsUsed.isEmpty()) {
+                    System.out.println("🔧 Tools used: " + String.join(", ", toolsUsed));
+                }
+            }
+            
+            // Show iterations if available
+            if (output.has("iterations")) {
+                System.out.println("📊 Iterations: " + output.get("iterations").asInt());
+            }
+            
+            if (output.has("tools_used") || output.has("iterations")) {
+                System.out.println();
+            }
+            
+            // Show reasoning in verbose mode
+            if (verbose && output.has("reasoning") && !output.get("reasoning").asText().isEmpty()) {
+                System.out.println("💭 Agent reasoning:");
+                System.out.println(output.get("reasoning").asText());
+                System.out.println();
+            }
+            
+            // Show result
+            System.out.println("📋 Result:");
+            JsonNode resultNode = output.has("result") ? output.get("result") : output;
+            String resultJson = mapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(resultNode);
+            System.out.println(resultJson);
+            System.out.println();
+            
+            // Show conversation ID for follow-ups
+            if (conversationId != null) {
+                System.out.println("💬 Continuing conversation: " + conversationId);
+            }
+            
+            // Show execution ID
+            if (result.getExecutionId() != null) {
+                System.out.println("📂 Execution ID: " + result.getExecutionId());
+                System.out.println("   Details: ./repo/_executions/" + result.getExecutionId());
+            }
+            
+            return 0;
+        }
     }
 
     @CommandLine.Command(name = "tool", subcommands = ToolRun.class)
@@ -147,6 +274,48 @@ public class HubbersCommand implements Callable<Integer> {
         @Override public Integer call() { return 0; }
     }
 
+    @CommandLine.Command(name = "skill", subcommands = {SkillRun.class, SkillValidate.class})
+    static class SkillCommand implements Callable<Integer> {
+        @CommandLine.ParentCommand HubbersCommand root;
+        @Override public Integer call() { return 0; }
+    }
+
+    @CommandLine.Command(name = "run")
+    static class SkillRun implements Callable<Integer> {
+        @CommandLine.ParentCommand SkillCommand parent;
+        @CommandLine.Parameters(index = "0") String name;
+        @CommandLine.Option(names = "--input", required = true) String input;
+        @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.SKILL); }
+    }
+
+    @CommandLine.Command(name = "validate", description = "Validate a skill against agentskills.io spec")
+    static class SkillValidate implements Callable<Integer> {
+        @CommandLine.ParentCommand SkillCommand parent;
+        @CommandLine.Parameters(index = "0") String name;
+        
+        @Override
+        public Integer call() {
+            try {
+                var repository = parent.root.runtimeFacade.getArtifactRepository();
+                var manifest = repository.loadSkill(name);
+                var validator = new org.hubbers.skill.SkillValidator();
+                var result = validator.validate(manifest);
+                
+                if (result.isValid()) {
+                    System.out.println("✓ Skill '" + name + "' is valid");
+                    return 0;
+                } else {
+                    System.err.println("✗ Skill '" + name + "' validation failed:");
+                    result.getErrors().forEach(err -> System.err.println("  - " + err));
+                    return 1;
+                }
+            } catch (Exception e) {
+                System.err.println("Validation error: " + e.getMessage());
+                return 1;
+            }
+        }
+    }
+
     @CommandLine.Command(name = "run")
     static class PipelineRun implements Callable<Integer> {
         @CommandLine.ParentCommand PipelineCommand parent;
@@ -164,9 +333,8 @@ public class HubbersCommand implements Callable<Integer> {
         public Integer call() {
             var appConfig = new ConfigLoader(root.repoPath).load();
             var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
-            var taskService = Bootstrap.createNaturalLanguageTaskService(root.runtimeFacade);
 
-            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator(), taskService).start(port);
+            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator()).start(port);
 
 
             System.out.println("Hubbers Web UI available at http://localhost:" + port);
@@ -180,7 +348,7 @@ public class HubbersCommand implements Callable<Integer> {
         }
     }
 
-    private enum Mode { AGENT, TOOL, PIPELINE }
+    private enum Mode { AGENT, TOOL, PIPELINE, SKILL }
 
     private static Integer run(RuntimeFacade facade, String name, String inputSource, Mode mode) {
         ObjectMapper mapper = JacksonFactory.jsonMapper();
@@ -232,6 +400,7 @@ public class HubbersCommand implements Callable<Integer> {
                 case AGENT -> facade.runAgent(name, input);
                 case TOOL -> facade.runTool(name, input);
                 case PIPELINE -> facade.runPipeline(name, input);
+                case SKILL -> facade.runSkill(name, input);
             };
             if (result.getStatus() == ExecutionStatus.SUCCESS) {
                 System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result.getOutput()));
@@ -260,6 +429,7 @@ public class HubbersCommand implements Callable<Integer> {
                     var manifest = facade.getArtifactRepository().loadPipeline(name);
                     yield manifest.getForms();
                 }
+                case SKILL -> null; // Skills don't support forms (yet)
             };
         } catch (Exception e) {
             return null;

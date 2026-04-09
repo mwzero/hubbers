@@ -8,7 +8,6 @@ import org.hubbers.execution.ExecutionStorageService;
 import org.hubbers.model.ModelProviderRegistry;
 import org.hubbers.model.OllamaModelProvider;
 import org.hubbers.model.OpenAiModelProvider;
-import org.hubbers.nlp.NaturalLanguageTaskService;
 import org.hubbers.pipeline.InputMapper;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.DockerToolDriver;
@@ -111,17 +110,18 @@ public class Bootstrap {
         // For now, we'll accept that pipelines can't be called from agents until refactored
         // TODO: Add setPipelineExecutor method to AgenticExecutor for proper initialization
 
+        // Initialize skill executor
+        var skillExecutor = new org.hubbers.skill.SkillExecutor(
+                modelRegistry,
+                toolExecutor,
+                repository,
+                jsonMapper
+        );
+
         // Initialize form support
         var formSessionStore = new org.hubbers.forms.FormSessionStore();
         var juiFormService = new org.hubbers.forms.JuiFormService(formSessionStore);
 
-        return new RuntimeFacade(repository, agenticExecutor, toolExecutor, pipelineExecutor, new ManifestValidator(), executionStorage, juiFormService);
-    }
-
-    // Add this method to create the task service
-    public static NaturalLanguageTaskService createNaturalLanguageTaskService(
-            RuntimeFacade facade) {
-        ObjectMapper mapper = JacksonFactory.jsonMapper();
-        return new NaturalLanguageTaskService(facade, mapper);
+        return new RuntimeFacade(repository, agenticExecutor, toolExecutor, pipelineExecutor, skillExecutor, new ManifestValidator(), executionStorage, juiFormService);
     }
 }

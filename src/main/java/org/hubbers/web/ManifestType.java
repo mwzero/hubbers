@@ -1,9 +1,10 @@
 package org.hubbers.web;
 
 public enum ManifestType {
-    AGENT("agents", "agent.yaml"),
+    AGENT("agents", "agent.md"),
     TOOL("tools", "tool.yaml"),
-    PIPELINE("pipelines", "pipeline.yaml");
+    PIPELINE("pipelines", "pipeline.yaml"),
+    SKILL("skills", "SKILL.md");
 
     private final String folder;
     private final String filename;
@@ -26,6 +27,7 @@ public enum ManifestType {
             case "agent", "agents" -> AGENT;
             case "tool", "tools" -> TOOL;
             case "pipeline", "pipelines" -> PIPELINE;
+            case "skill", "skills" -> SKILL;
             default -> throw new IllegalArgumentException("Unsupported manifest type: " + value);
         };
     }

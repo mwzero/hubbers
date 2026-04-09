@@ -6,10 +6,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
+import org.hubbers.manifest.skill.SkillMetadata;
 import org.hubbers.model.FunctionDefinition;
 
 /**
- * Unified converter for all artifact types (tools, agents, pipelines) to LLM FunctionDefinitions.
+ * Unified converter for all artifact types (tools, agents, pipelines, skills) to LLM FunctionDefinitions.
  * This allows the universal task agent to call any artifact type as if it were a tool.
  */
 public class ArtifactToFunctionConverter {
@@ -53,6 +54,20 @@ public class ArtifactToFunctionConverter {
         var examples = pipelineManifest.getExamples();
 
         return new FunctionDefinition(name, description, parameters, examples);
+    }
+
+    /**
+     * Convert a skill metadata to a function definition.
+     * Skills are portable instructions/scripts following agentskills.io format.
+     * Only lightweight metadata is converted (progressive disclosure).
+     */
+    public FunctionDefinition convertSkill(SkillMetadata skillMetadata) {
+        String name = skillMetadata.getName();
+        String description = extractSkillDescription(skillMetadata);
+        JsonNode parameters = createGenericSkillParameters();
+
+        // Skills don't have predefined examples in metadata (loaded on activation)
+        return new FunctionDefinition(name, description, parameters, null);
     }
 
     // Agent extraction methods
@@ -154,6 +169,48 @@ public class ArtifactToFunctionConverter {
         emptySchema.put("type", "object");
         emptySchema.set("properties", mapper.createObjectNode());
         return emptySchema;
+    }
+
+    // Skill extraction methods
+    private String extractSkillDescription(SkillMetadata skillMetadata) {
+        StringBuilder desc = new StringBuilder();
+        
+        // Add skill description
+        if (skillMetadata.getDescription() != null) {
+            desc.append(skillMetadata.getDescription());
+        } else {
+            desc.append("Execute skill: ").append(skillMetadata.getName());
+        }
+        
+        // Add context about execution mode
+        desc.append(" [SKILL - agentskills.io compatible");
+        String mode = skillMetadata.getExecutionMode();
+        if (mode != null) {
+            desc.append(", mode=").append(mode);
+        }
+        desc.append("]");
+        
+        return desc.toString();
+    }
+
+    private JsonNode createGenericSkillParameters() {
+        // Skills accept generic input (structure defined in SKILL.md body)
+        // Create flexible schema that accepts any object
+        ObjectNode schema = mapper.createObjectNode();
+        schema.put("type", "object");
+        
+        ObjectNode properties = mapper.createObjectNode();
+        
+        // Add a generic input field
+        ObjectNode inputProp = mapper.createObjectNode();
+        inputProp.put("type", "string");
+        inputProp.put("description", "Input for the skill");
+        properties.set("input", inputProp);
+        
+        schema.set("properties", properties);
+        schema.set("required", mapper.createArrayNode().add("input"));
+        
+        return schema;
     }
 
     /**

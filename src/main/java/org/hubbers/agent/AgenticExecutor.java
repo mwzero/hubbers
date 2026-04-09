@@ -16,6 +16,8 @@ import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,8 @@ import java.util.UUID;
  * - Supports memory persistence
  */
 public class AgenticExecutor {
+    private static final Logger log = LoggerFactory.getLogger(AgenticExecutor.class);
+    
     private final ModelProviderRegistry modelProviderRegistry;
     private final ToolExecutor toolExecutor;
     private final ArtifactRepository repository;
@@ -98,6 +102,21 @@ public class AgenticExecutor {
         
         // Prepare function definitions from available tools
         List<FunctionDefinition> functionDefinitions = buildFunctionDefinitions(manifest);
+        
+        // Log system prompt and available functions (TRACE level)
+        if (log.isTraceEnabled() && !history.isEmpty()) {
+            log.trace("=== AGENT SYSTEM PROMPT ===");
+            for (Message msg : history) {
+                if ("system".equals(msg.getRole())) {
+                    log.trace(msg.getContent());
+                }
+            }
+            log.trace("=== AVAILABLE FUNCTIONS ({}) ===", functionDefinitions.size());
+            for (FunctionDefinition func : functionDefinitions) {
+                log.trace("Function: {} - {}", func.getName(), func.getDescription());
+            }
+            log.trace("==============================");
+        }
         
         // ReAct loop
         int maxIterations = getMaxIterations(manifest);

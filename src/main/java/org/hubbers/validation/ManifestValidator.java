@@ -3,6 +3,7 @@ package org.hubbers.validation;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.pipeline.PipelineStep;
+import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 
 public class ManifestValidator {
@@ -67,6 +68,21 @@ public class ManifestValidator {
             if (hasAgent == hasTool) {
                 result.addError("Step " + step.getId() + " must contain agent XOR tool");
             }
+        }
+        return result;
+    }
+
+    public ValidationResult validateSkill(SkillManifest manifest) {
+        ValidationResult result = ValidationResult.ok();
+        if (manifest == null || manifest.getFrontmatter() == null) {
+            result.addError("Skill metadata missing");
+            return result;
+        }
+        if (manifest.getFrontmatter().getName() == null || manifest.getFrontmatter().getName().isBlank()) {
+            result.addError("Skill name missing");
+        }
+        if (manifest.getBody() == null || manifest.getBody().isBlank()) {
+            result.addError("Skill instructions missing");
         }
         return result;
     }

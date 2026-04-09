@@ -51,8 +51,20 @@ public class OllamaModelProvider implements ModelProvider {
             payload.put("format", "json");
 
             ArrayNode messages = payload.putArray("messages");
-            messages.addObject().put("role", "system").put("content", request.getSystemPrompt());
-            messages.addObject().put("role", "user").put("content", request.getUserPrompt());
+            
+            // Support both single-request (systemPrompt/userPrompt) and multi-turn (messages) modes
+            if (request.getMessages() != null && !request.getMessages().isEmpty()) {
+                // Multi-turn conversation mode (used by AgenticExecutor)
+                for (Message msg : request.getMessages()) {
+                    messages.addObject()
+                        .put("role", msg.getRole())
+                        .put("content", msg.getContent());
+                }
+            } else {
+                // Single-request mode (used by AgentExecutor)
+                messages.addObject().put("role", "system").put("content", request.getSystemPrompt());
+                messages.addObject().put("role", "user").put("content", request.getUserPrompt());
+            }
 
             if (request.getTemperature() != null) {
                 payload.putObject("options").put("temperature", request.getTemperature());

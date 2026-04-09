@@ -13,6 +13,7 @@ import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
+import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.nlp.NaturalLanguageTaskService;
 import org.hubbers.nlp.TaskExecutionResult;
@@ -34,16 +35,12 @@ public class WebServer {
     private final ObjectMapper yamlMapper;
     private final ObjectMapper jsonMapper;
 
-    private final NaturalLanguageTaskService taskService;
-
     public WebServer(RuntimeFacade runtimeFacade,
                      ManifestFileService manifestFileService,
-                     ManifestValidator manifestValidator,
-                     NaturalLanguageTaskService taskService) {
+                     ManifestValidator manifestValidator) {
         this.runtimeFacade = runtimeFacade;
         this.manifestFileService = manifestFileService;
         this.manifestValidator = manifestValidator;
-        this.taskService = taskService;
         this.yamlMapper = JacksonFactory.yamlMapper();
         this.jsonMapper = JacksonFactory.jsonMapper();
     }
@@ -78,6 +75,7 @@ public class WebServer {
         app.get("/api/agents", ctx -> ctx.json(Map.of("items", runtimeFacade.listAgents())));
         app.get("/api/tools", ctx -> ctx.json(Map.of("items", runtimeFacade.listTools())));
         app.get("/api/pipelines", ctx -> ctx.json(Map.of("items", runtimeFacade.listPipelines())));
+        app.get("/api/skills", ctx -> ctx.json(Map.of("items", runtimeFacade.listSkills())));
 
         app.get("/api/manifest/{type}/{name}", ctx -> {
             ManifestType type = ManifestType.fromPath(ctx.pathParam("type"));
@@ -335,7 +333,7 @@ public class WebServer {
             }
         });
 
-                // Execute a new task
+        // Execute a new task using universal.task agent
         app.post("/api/task/execute", ctx -> {
             try {
                 JsonNode body = jsonMapper.readTree(ctx.body());
@@ -344,10 +342,28 @@ public class WebServer {
                 
                 log.info("POST /api/task/execute - request: {}", request);
                 
-                TaskExecutionResult result = taskService.executeTask(request, context);
+                // Build input JSON for natural language mode
+                var inputJson = jsonMapper.createObjectNode();
+                inputJson.put("request", request);
+                if (context != null) {
+                    inputJson.set("context", context);
+                }
                 
-                ctx.json(result);
-                ctx.status(result.isSuccess() ? 200 : 500);
+                // Execute via universal.task agent with intelligent routing
+                RunResult result = runtimeFacade.runAgent("universal.task", inputJson, null);
+                
+                // Convert to API response format
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", result.getStatus() == ExecutionStatus.SUCCESS);
+                if (result.getStatus() == ExecutionStatus.SUCCESS) {
+                    response.put("result", result.getOutput());
+                    response.put("executionId", result.getExecutionId());
+                } else {
+                    response.put("error", result.getError());
+                }
+                
+                ctx.json(response);
+                ctx.status(result.getStatus() == ExecutionStatus.SUCCESS ? 200 : 500);
                 
             } catch (Exception e) {
                 log.error("Task execution failed", e);
@@ -366,11 +382,29 @@ public class WebServer {
                 log.info("POST /api/task/continue - conversation: {}, request: {}", 
                     conversationId, request);
                 
-                TaskExecutionResult result = taskService.executeTaskWithConversation(
-                    request, context, conversationId);
+                // Build input JSON for natural language mode
+                var inputJson = jsonMapper.createObjectNode();
+                inputJson.put("request", request);
+                if (context != null) {
+                    inputJson.set("context", context);
+                }
                 
-                ctx.json(result);
-                ctx.status(result.isSuccess() ? 200 : 500);
+                // Execute with conversation ID
+                RunResult result = runtimeFacade.runAgent("universal.task", inputJson, conversationId);
+                
+                // Convert to API response format
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", result.getStatus() == ExecutionStatus.SUCCESS);
+                response.put("conversationId", conversationId);
+                if (result.getStatus() == ExecutionStatus.SUCCESS) {
+                    response.put("result", result.getOutput());
+                    response.put("executionId", result.getExecutionId());
+                } else {
+                    response.put("error", result.getError());
+                }
+                
+                ctx.json(response);
+                ctx.status(result.getStatus() == ExecutionStatus.SUCCESS ? 200 : 500);
                 
             } catch (Exception e) {
                 log.error("Task continuation failed", e);
@@ -381,7 +415,9 @@ public class WebServer {
         // Get task service info
         app.get("/api/task/info", ctx -> {
             Map<String, Object> info = new HashMap<>();
-            info.put("available_tools", taskService.getAvailableToolsCount());
+            info.put("available_tools", runtimeFacade.listTools().size());
+            info.put("available_agents", runtimeFacade.listAgents().size());
+            info.put("available_pipelines", runtimeFacade.listPipelines().size());
             info.put("agent", "universal.task");
             info.put("status", "ready");
             ctx.json(info);
@@ -397,6 +433,7 @@ public class WebServer {
                 case AGENT -> manifestValidator.validateAgent(yamlMapper.readValue(yaml, AgentManifest.class));
                 case TOOL -> manifestValidator.validateTool(yamlMapper.readValue(yaml, ToolManifest.class));
                 case PIPELINE -> manifestValidator.validatePipeline(yamlMapper.readValue(yaml, PipelineManifest.class));
+                case SKILL -> manifestValidator.validateSkill(yamlMapper.readValue(yaml, SkillManifest.class));
             };
         } catch (IOException e) {
             ValidationResult result = ValidationResult.ok();
@@ -421,6 +458,7 @@ public class WebServer {
             case AGENT -> runtimeFacade.runAgent(name, input);
             case TOOL -> runtimeFacade.runTool(name, input);
             case PIPELINE -> runtimeFacade.runPipeline(name, input);
+            case SKILL -> runtimeFacade.runSkill(name, input);
         };
     }
     
@@ -439,6 +477,7 @@ public class WebServer {
                     var manifest = runtimeFacade.getArtifactRepository().loadPipeline(name);
                     yield manifest.getForms();
                 }
+                case SKILL -> null; // Skills don't support forms
             };
         } catch (Exception e) {
             return null;

@@ -19,25 +19,6 @@ input:
         type: number
         required: false
 
-# Form displayed BEFORE agent execution
-forms:
-  before:
-    title: "Search Configuration"
-    description: "Configure your search parameters. These will be used by the AI agent to provide better results."
-    fields:
-      - name: feeds
-        type: select
-        label: "Search Depth"
-        required: true
-        defaultValue: "standard"
-        options:
-          - label: "Quick scan"
-            value: "quick"
-          - label: "Standard search"
-            value: "standard"
-          - label: "Deep analysis"
-            value: "deep"
-
 output:
   schema:
     type: object

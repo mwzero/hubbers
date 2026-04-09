@@ -23,6 +23,7 @@ import java.util.UUID;
 /**
  * Service for executing natural language tasks using the universal task agent.
  * Handles dynamic tool injection, conversation management, and result processing.
+ * Internal use only: prefer RuntimeFacade.runAgent() with {"request":"..."} pattern.
  */
 public class NaturalLanguageTaskService {
     private static final Logger logger = LoggerFactory.getLogger(NaturalLanguageTaskService.class);
@@ -120,8 +121,37 @@ public class NaturalLanguageTaskService {
             logger.info("Loaded {} tools, {} agents, {} pipelines for task execution", 
                 allTools.size(), allAgents.size(), allPipelines.size());
             
-            // Inject all artifacts into agent
-            artifactCatalogInjector.injectAllArtifacts(agent, allTools, allAgents, allPipelines);
+            // Check if agent has pre-defined tools (no filtering needed)
+            @SuppressWarnings("unchecked")
+            List<String> preDefinedTools = agent.getConfig() != null ? 
+                (List<String>) agent.getConfig().get("tools") : null;
+            boolean hasPreDefinedTools = preDefinedTools != null && !preDefinedTools.isEmpty();
+            
+            // Apply RAG-based filtering if agent doesn't have pre-defined tools
+            if (!hasPreDefinedTools) {
+                logger.info("Applying RAG-based filtering for universal task agent");
+                var filtered = artifactCatalogInjector.filterByRelevance(
+                    naturalLanguageRequest,
+                    allTools, 
+                    allAgents, 
+                    allPipelines,
+                    repository.getAllSkillMetadata(),
+                    5  // top-5 per type
+                );
+                
+                // Inject filtered artifacts
+                artifactCatalogInjector.injectAllArtifacts(
+                    agent, filtered.tools(), filtered.agents(), 
+                    filtered.pipelines(), filtered.skills()
+                );
+            } else {
+                logger.info("Agent has pre-defined tools, skipping RAG filtering");
+                // Inject all artifacts (respects pre-defined tools)
+                artifactCatalogInjector.injectAllArtifacts(
+                    agent, allTools, allAgents, allPipelines, 
+                    repository.getAllSkillMetadata()
+                );
+            }
             
             // Build input JSON
             ObjectNode input = mapper.createObjectNode();
