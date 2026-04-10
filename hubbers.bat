@@ -1,4 +1,3 @@
 @echo off
-set HUBBERS_REPO=.\repo
-java -cp target\hubbers-0.1.0-SNAPSHOT.jar org.hubbers.Main %*
-echo target\hubbers.exe %* 
+set HUBBERS_REPO=hubbers-repo\src\main\resources\repo
+java -cp hubbers-distribution\target\hubbers.jar org.hubbers.Main --repo %HUBBERS_REPO% %* 

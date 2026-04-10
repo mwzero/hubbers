@@ -1,0 +1,2 @@
+[2026-04-10 12:44:07.750] INFO - Starting skill execution: ner-extraction
+[2026-04-10 12:44:59.446] INFO - Execution completed successfully

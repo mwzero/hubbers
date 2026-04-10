@@ -1,0 +1,177 @@
+{
+  "executionId" : "20260409_172440-dc99ad56",
+  "artifactType" : "tool",
+  "artifactName" : "rss.fetch",
+  "status" : "SUCCESS",
+  "startedAt" : 1775748280164,
+  "endedAt" : 1775748280705,
+  "input" : {
+    "feeds" : [ "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml" ]
+  },
+  "output" : {
+    "items" : [ {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Nuova frana in Molise, evacuate 50 persone a Salcito",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/nuova-frana-in-molise-evacuate-50-persone-a-salcito_28daee04-6674-402f-9160-5ff3cb62d79d.html",
+      "published_at" : "Thu, 9 Apr 2026 17:06:45 +0200",
+      "summary" : "La decisione in via precauzionale per la tutela dei residenti",
+      "content" : "La decisione in via precauzionale per la tutela dei residenti"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Lite tra Maurizio Battista e l'ex manager finisce in Procura. Denunce incrociate",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/lite-tra-maurizio-battista-e-lex-manager-finisce-in-procura-denunce-incrociate_eb4fa4f1-f0eb-48ea-9624-6eb1b19240c9.html",
+      "published_at" : "Thu, 9 Apr 2026 16:56:42 +0200",
+      "summary" : "Il comico lo accusa con video sui social di esser stato truffato",
+      "content" : "Il comico lo accusa con video sui social di esser stato truffato"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Ladro ucciso a Milano, pm chiede due condanne a 14 anni per gestori bar",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/ladro-ucciso-a-milano-pm-chiede-due-condanne-a-14-anni-per-gestori-bar_695cb783-fd98-4c01-962d-6e01f561f91b.html",
+      "published_at" : "Thu, 9 Apr 2026 16:47:14 +0200",
+      "summary" : "'Fu omicidio volontario con crudeltà, 44 forbiciate dopo gratta e vinci presi'",
+      "content" : "'Fu omicidio volontario con crudeltà, 44 forbiciate dopo gratta e vinci presi'"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Omicidio a Crema, resta in carcere il 17enne: 'Chiedo perdono'",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/omicidio-a-crema-resta-in-carcere-il-17enne-chiedo-perdono_332e10a8-591d-46d0-a617-168e6c9a8ecb.html",
+      "published_at" : "Thu, 9 Apr 2026 16:46:10 +0200",
+      "summary" : "Convalidato l'arresto per il minore che non ha dato spiegazioni sul movente",
+      "content" : "Convalidato l'arresto per il minore che non ha dato spiegazioni sul movente"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Vercelli e Università Piemonte Orientale rendono omaggio a Amedeo Avogadro",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/vercelli-e-universita-piemonte-orientale-rendono-omaggio-a-amedeo-avogadro_cb6f85fb-20d6-4cb9-aeee-b32e9f7d89cf.html",
+      "published_at" : "Thu, 9 Apr 2026 16:34:54 +0200",
+      "summary" : "Presentato calendario di appuntamenti per il 250/o anniversario dalla nascita",
+      "content" : "Presentato calendario di appuntamenti per il 250/o anniversario dalla nascita"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Stop ferrovia Roma-Firenze nel weekend, collegamenti ridotti e disagi",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/stop-ferrovia-roma-firenze-nel-weekend-collegamenti-ridotti-e-disagi_eb9436ee-e3b4-4cf3-ac10-e89a80530766.html",
+      "published_at" : "Thu, 9 Apr 2026 16:22:03 +0200",
+      "summary" : "Per lavori di potenziamento tecnologico. Disagi e collegamenti ridotti",
+      "content" : "Per lavori di potenziamento tecnologico. Disagi e collegamenti ridotti"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Hannoun: legale, per come motivato reato terrorismo non sta in piedi",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/hannoun-legale-per-come-motivato-reato-terrorismo-non-sta-in-piedi_32992097-ae78-4bee-8693-42e674eab0e7.html",
+      "published_at" : "Thu, 9 Apr 2026 16:15:56 +0200",
+      "summary" : "Avvocato Sommovigo, già procura Roma aveva archiviato ipotesi",
+      "content" : "Avvocato Sommovigo, già procura Roma aveva archiviato ipotesi"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Anziano ucciso con un cacciavite, arrestato il figlio",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/anziano-ucciso-con-un-cacciavite-arrestato-il-figlio_402257e8-0f89-46e3-a66e-f38bf8b79611.html",
+      "published_at" : "Thu, 9 Apr 2026 15:35:04 +0200",
+      "summary" : "Tragedia a Bosa in Sardegna, il 78enne è morto in ospedale",
+      "content" : "Tragedia a Bosa in Sardegna, il 78enne è morto in ospedale"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Cnsas, 40 morti per scialpinismo e freeride in Trentino Alto Adige",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/cnsas-40-morti-per-scialpinismo-e-freeride-in-trentino-alto-adige_8e11e010-628b-4827-8d78-1695729f735e.html",
+      "published_at" : "Thu, 9 Apr 2026 15:29:35 +0200",
+      "summary" : "Sono stati oltre 250 i soccorsi effettuati sulle piste da sci",
+      "content" : "Sono stati oltre 250 i soccorsi effettuati sulle piste da sci"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Urbanistica a Milano, giudice ammette i cittadini come parti civili per danni",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/urbanistica-a-milano-giudice-ammette-i-cittadini-come-parti-civili-per-danni_05e22960-c35b-4e85-9cee-cce1d3085cc2.html",
+      "published_at" : "Thu, 9 Apr 2026 14:58:19 +0200",
+      "summary" : "Accolta la richiesta di \"azione popolare\" in sostituzione del Comune",
+      "content" : "Accolta la richiesta di \"azione popolare\" in sostituzione del Comune"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Dipinto rubato restituito grazie all'intelligenza artificiale dopo oltre 50 anni",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/dipinto-rubato-restituito-grazie-allintelligenza-artificiale-dopo-oltre-50-anni_ab670f9d-9770-420d-82d1-42ccf155a350.html",
+      "published_at" : "Thu, 9 Apr 2026 14:43:19 +0200",
+      "summary" : "Scoperto dai carabinieri del nucleo Tpc di Torino, riconsegnato al Comune di Feltre",
+      "content" : "Scoperto dai carabinieri del nucleo Tpc di Torino, riconsegnato al Comune di Feltre"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Assalto alla Cgil, disposte altre cinque condanne",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/assalto-alla-cgil-disposte-altre-cinque-condanne_f3c02238-ff5d-4f76-9046-2f88b69172d5.html",
+      "published_at" : "Thu, 9 Apr 2026 14:11:16 +0200",
+      "summary" : "Pene comprese tra i 6 anni e i 5 anni e quattro mesi",
+      "content" : "Pene comprese tra i 6 anni e i 5 anni e quattro mesi"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Caso Equalize, tra gli spiati anche Bobo Vieri, Corona e Ricky Tognazzi",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/caso-equalize-tra-gli-spiati-anche-bobo-vieri-corona-e-ricky_e9a96358-bf91-4ad5-9983-8f55cf631ec2.html",
+      "published_at" : "Thu, 9 Apr 2026 14:01:23 +0200",
+      "summary" : "E Selvaggia Lucarelli. Nuovi nomi di 'vittime' di accessi abusivi spuntano da atti",
+      "content" : "E Selvaggia Lucarelli. Nuovi nomi di 'vittime' di accessi abusivi spuntano da atti"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Roccella, bene ok Conferenza Stato Città su riparto centri estivi",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/roccella-bene-ok-conferenza-stato-citta-su-riparto-centri-estivi_5362c5da-88d9-44cd-a772-8da6737bf07f.html",
+      "published_at" : "Thu, 9 Apr 2026 13:52:39 +0200",
+      "summary" : "Stabilizzazione fondi consente tempi rapidi e miglior aiuto ai Comuni",
+      "content" : "Stabilizzazione fondi consente tempi rapidi e miglior aiuto ai Comuni"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Afam4Sicily per Niscemi, l'Alta Formazione in campo per la ricostruzione",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/afam4sicily-per-niscemi-lalta-formazione-in-campo-per-la-ricostruzione_f58baf4d-07f7-4474-a4fd-f4eb67a1ab08.html",
+      "published_at" : "Thu, 9 Apr 2026 13:44:45 +0200",
+      "summary" : "A Palermo evento Mur con i Conservatori di Sicilia e Sardegna, le Accademie di Belle Arti",
+      "content" : "A Palermo evento Mur con i Conservatori di Sicilia e Sardegna, le Accademie di Belle Arti"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "20enne ucciso a Napoli, si rafforza ipotesi che non fosse l' obiettivo",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/20enne-ucciso-a-napoli-si-rafforza-ipotesi-che-non-fosse-l-obiettivo_d2d4a508-36c1-47b5-b952-17781aafc539.html",
+      "published_at" : "Thu, 9 Apr 2026 13:37:05 +0200",
+      "summary" : "Carabinieri e Procura sulle tracce di un' auto scura",
+      "content" : "Carabinieri e Procura sulle tracce di un' auto scura"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Latitanti dopo un omicidio del 1999, fratelli arrestati tra la Spezia e Lunigiana",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/latitanti-dopo-un-omicidio-del-1999-fratelli-arrestati-tra-la-spezia-e-lunigiana_e1cdae2e-02bb-4f1c-a3a1-9de33d91b751.html",
+      "published_at" : "Thu, 9 Apr 2026 13:21:42 +0200",
+      "summary" : "Operazione della Polizia di Stato, saranno estradati in Albania",
+      "content" : "Operazione della Polizia di Stato, saranno estradati in Albania"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Instagram amplia le protezioni per gli account dei teenager in Italia",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/instagram-amplia-le-protezioni-per-gli-account-dei-teenager-in-italia_c40442d4-0722-4823-9709-2193ac5e2303.html",
+      "published_at" : "Thu, 9 Apr 2026 12:58:23 +0200",
+      "summary" : "Restrizioni per gli utenti sotto i 18 anni simili ai criteri di classificazione dei film",
+      "content" : "Restrizioni per gli utenti sotto i 18 anni simili ai criteri di classificazione dei film"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Il comico Battista denunciato per stalking dall'ex manager",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/il-comico-battista-denunciato-per-stalking-dallex-manager_0a3b2d1c-8815-400f-9ffa-9f3a789a5e4b.html",
+      "published_at" : "Thu, 9 Apr 2026 12:56:28 +0200",
+      "summary" : "L'artista lo accusa via social di avergli sottratto un milione di euro. 'E' diffamazione'",
+      "content" : "L'artista lo accusa via social di avergli sottratto un milione di euro. 'E' diffamazione'"
+    }, {
+      "source" : "RSS di Cronaca  - ANSA.it",
+      "feed_url" : "https://www.ansa.it/sito/notizie/cronaca/cronaca_rss.xml",
+      "title" : "Turista morta sulla teleferica, pm chiede due condanne a un anno e quattro mesi",
+      "link" : "https://www.ansa.it/sito/notizie/cronaca/2026/04/09/turista-morta-sulla-teleferica-pm-chiede-due-condanne-a-un-anno-e-quattro-mesi_17636a60-916e-44f0-9b91-fa1d3894b9cf.html",
+      "published_at" : "Thu, 9 Apr 2026 12:54:38 +0200",
+      "summary" : "Per terzo imputato chiesto patteggiamento, l'incidente due anni fa nel Vco",
+      "content" : "Per terzo imputato chiesto patteggiamento, l'incidente due anni fa nel Vco"
+    } ]
+  },
+  "error" : null,
+  "details" : null,
+  "durationMs" : 541
+}

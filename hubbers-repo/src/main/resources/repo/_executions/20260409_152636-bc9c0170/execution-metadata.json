@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260409_152636-bc9c0170",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775741196926,
+  "endedAt" : 1775741235889,
+  "input" : {
+    "request" : "extract feeds from ansa.it"
+  },
+  "output" : null,
+  "error" : "Required field missing: result, Required field missing: tools_used, Required field missing: reasoning",
+  "details" : null,
+  "durationMs" : 38963
+}

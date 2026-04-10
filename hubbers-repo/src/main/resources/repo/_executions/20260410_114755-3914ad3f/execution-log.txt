@@ -1,0 +1,26 @@
+[2026-04-10 11:47:55.111] INFO - Starting agent execution: universal.task
+[2026-04-10 11:49:55.532] ERROR - Unexpected error during execution
+Exception: java.lang.IllegalStateException: Ollama request timed out after 120s
+  at org.hubbers.model.OllamaModelProvider.generate(OllamaModelProvider.java:168)
+  at org.hubbers.agent.AgenticExecutor.execute(AgenticExecutor.java:147)
+  at org.hubbers.app.RuntimeFacade.lambda$executeAgenticAgent$4(RuntimeFacade.java:281)
+  at org.hubbers.app.RuntimeFacade.executeWithTracking(RuntimeFacade.java:202)
+  at org.hubbers.app.RuntimeFacade.executeAgenticAgent(RuntimeFacade.java:279)
+  at org.hubbers.nlp.NaturalLanguageTaskService.executeTaskWithConversation(NaturalLanguageTaskService.java:164)
+  at org.hubbers.nlp.NaturalLanguageTaskService.executeTask(NaturalLanguageTaskService.java:54)
+  at org.hubbers.app.RuntimeFacade.executeNaturalLanguageTask(RuntimeFacade.java:128)
+  at org.hubbers.app.RuntimeFacade.runAgent(RuntimeFacade.java:85)
+  at org.hubbers.app.RuntimeFacade.runAgent(RuntimeFacade.java:67)
+  at org.hubbers.cli.HubbersCommand.run(HubbersCommand.java:400)
+  at org.hubbers.cli.HubbersCommand$AgentRun.call(HubbersCommand.java:158)
+  at org.hubbers.cli.HubbersCommand$AgentRun.call(HubbersCommand.java:112)
+  at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+  at picocli.CommandLine.access$1500(CommandLine.java:148)
+  at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2465)
+  at picocli.CommandLine$RunLast.handle(CommandLine.java:2457)
+  at picocli.CommandLine$RunLast.handle(CommandLine.java:2419)
+  at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+  at picocli.CommandLine$RunLast.execute(CommandLine.java:2421)
+  at picocli.CommandLine.execute(CommandLine.java:2174)
+  at org.hubbers.Main.main(Main.java:13)
+

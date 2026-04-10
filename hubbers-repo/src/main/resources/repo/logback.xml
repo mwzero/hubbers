@@ -1,0 +1,18 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Suppress ExecutionStorageService initialization message -->
+    <logger name="org.hubbers.execution.ExecutionStorageService" level="WARN"/>
+    
+    <!-- Enable debug for agent execution to see model responses -->
+    <logger name="org.hubbers.agent" level="DEBUG"/>
+    <logger name="org.hubbers.model" level="TRACE"/>
+    
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

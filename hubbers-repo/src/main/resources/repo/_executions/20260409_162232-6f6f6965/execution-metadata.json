@@ -1,0 +1,13 @@
+{
+  "executionId" : "20260409_162232-6f6f6965",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775744552091,
+  "endedAt" : 1775744552831,
+  "input" : { },
+  "output" : null,
+  "error" : "Required field missing: request",
+  "details" : null,
+  "durationMs" : 740
+}

@@ -1,0 +1,2 @@
+[2026-04-09 17:15:00.785] INFO - Starting tool execution: rss.fetch
+[2026-04-09 17:15:00.796] ERROR - Execution failed: Invalid type for field feeds, expected: array
