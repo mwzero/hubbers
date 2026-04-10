@@ -32,22 +32,24 @@ java -version
 echo.
 
 REM Clean and build with native profile
-echo Building native executable...
+echo Building native executable from hubbers-framework module...
 echo.
+cd hubbers-framework
 call mvn -Pnative clean package
+cd ..
 
 REM Check if build was successful
-if exist "target\hubbers.exe" (
+if exist "hubbers-framework\target\hubbers.exe" (
     echo.
     echo =========================================
     echo Build successful!
     echo =========================================
     echo.
-    echo Native executable: target\hubbers.exe
-    for %%A in (target\hubbers.exe) do echo Size: %%~zA bytes
+    echo Native executable: hubbers-framework\target\hubbers.exe
+    for %%A in (hubbers-framework\target\hubbers.exe) do echo Size: %%~zA bytes
     echo.
     echo To test the executable:
-    echo   target\hubbers.exe --help
+    echo   hubbers-framework\target\hubbers.exe --help
     echo.
     echo To install globally:
     echo   install.bat

@@ -1,0 +1,19 @@
+repoRoot: ./repo
+
+openai:
+  apiKey: ${OPENAI_API_KEY}
+  baseUrl: https://api.openai.com/v1
+  defaultModel: gpt-4.1-mini
+
+ollama:
+  baseUrl: http://localhost:11434
+  defaultModel: gemma4
+
+tools:
+  firecrawl:
+    api_key: ${FIRECRAWL_API_KEY}
+
+executions:
+  path: ./_executions
+  retentionDays: 30
+  maxConcurrent: 10

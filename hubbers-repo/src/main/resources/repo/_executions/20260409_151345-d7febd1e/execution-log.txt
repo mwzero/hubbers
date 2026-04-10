@@ -1,0 +1,20 @@
+[2026-04-09 15:13:45.229] INFO - Starting skill execution: translation
+[2026-04-09 15:13:45.502] ERROR - Unexpected error during execution
+Exception: java.lang.IllegalStateException: Cannot load skill: translation
+  at org.hubbers.app.ArtifactRepository.loadSkill(ArtifactRepository.java:127)
+  at org.hubbers.app.RuntimeFacade.lambda$runSkill$3(RuntimeFacade.java:166)
+  at org.hubbers.app.RuntimeFacade.executeWithTracking(RuntimeFacade.java:202)
+  at org.hubbers.app.RuntimeFacade.runSkill(RuntimeFacade.java:165)
+  at org.hubbers.cli.HubbersCommand.run(HubbersCommand.java:403)
+  at org.hubbers.cli.HubbersCommand$SkillRun.call(HubbersCommand.java:288)
+  at org.hubbers.cli.HubbersCommand$SkillRun.call(HubbersCommand.java:283)
+  at picocli.CommandLine.executeUserObject(CommandLine.java:2045)
+  at picocli.CommandLine.access$1500(CommandLine.java:148)
+  at picocli.CommandLine$RunLast.executeUserObjectOfLastSubcommandWithSameParent(CommandLine.java:2465)
+  at picocli.CommandLine$RunLast.handle(CommandLine.java:2457)
+  at picocli.CommandLine$RunLast.handle(CommandLine.java:2419)
+  at picocli.CommandLine$AbstractParseResultHandler.execute(CommandLine.java:2277)
+  at picocli.CommandLine$RunLast.execute(CommandLine.java:2421)
+  at picocli.CommandLine.execute(CommandLine.java:2174)
+  at org.hubbers.Main.main(Main.java:13)
+

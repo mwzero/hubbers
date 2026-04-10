@@ -1,0 +1,3 @@
+[2026-04-10 12:25:43.508] INFO - Starting agent execution: universal.task
+[2026-04-10 12:26:16.515] ERROR - Execution failed: Failed to parse agent output: Unrecognized token 'plan_task': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')
+ at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 10]

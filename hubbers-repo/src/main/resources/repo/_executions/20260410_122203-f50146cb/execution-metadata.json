@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260410_122203-f50146cb",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "RUNNING",
+  "startedAt" : 1775816523505,
+  "endedAt" : null,
+  "input" : {
+    "request" : "estrai 5 feeds da ansa.it"
+  },
+  "output" : null,
+  "error" : null,
+  "details" : null,
+  "durationMs" : 618
+}

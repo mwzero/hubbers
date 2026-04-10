@@ -2,21 +2,39 @@
 setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
-set "BINARY_PATH=%SCRIPT_DIR%target\hubbers.exe"
+set "NATIVE_BINARY=%SCRIPT_DIR%hubbers-framework\target\hubbers.exe"
+set "JAR_FILE=%SCRIPT_DIR%hubbers-distribution\target\hubbers.jar"
 set "INSTALL_DIR=%ProgramFiles%\Hubbers"
 set "INSTALL_PATH=%INSTALL_DIR%\hubbers.exe"
+set "JAR_INSTALL_PATH=%INSTALL_DIR%\hubbers.jar"
+
+REM Determine what to install
+if exist "%NATIVE_BINARY%" (
+    set "BINARY_PATH=%NATIVE_BINARY%"
+    set "BINARY_TYPE=native"
+) else if exist "%JAR_FILE%" (
+    set "BINARY_PATH=%JAR_FILE%"
+    set "BINARY_TYPE=jar"
+) else (
+    echo ERROR: No executable found!
+    echo.
+    echo Please build first:
+    echo   For native: build-native.bat
+    echo   For JAR:    mvn clean package
+    echo.
+    exit /b 1
+)
 
 echo =========================================
 echo Hubbers Installation Script
 echo =========================================
 echo.
+echo Binary type: %BINARY_TYPE%
+echo.
 
-REM Check if binary exists
+REM Check if binary exists (redundant but keep for clarity)
 if not exist "%BINARY_PATH%" (
-    echo ERROR: Native executable not found at %BINARY_PATH%
-    echo.
-    echo Please build the native executable first:
-    echo   build-native.bat
+    echo ERROR: Executable not found at %BINARY_PATH%
     echo.
     exit /b 1
 )
@@ -43,8 +61,19 @@ if not exist "%INSTALL_DIR%" (
 
 REM Copy binary
 echo Copying binary to: %INSTALL_PATH%
-copy /Y "%BINARY_PATH%" "%INSTALL_PATH%" >nul
-
+if "%BINARY_TYPE%"=="jar" (
+    echo Copying JAR to: %JAR_INSTALL_PATH%
+    copy /Y "%BINARY_PATH%" "%JAR_INSTALL_PATH%" >nul
+    
+    REM Create batch wrapper
+    echo @echo off > "%INSTALL_PATH:.exe=.bat%"
+    echo java -jar "%JAR_INSTALL_PATH%" %%* >> "%INSTALL_PATH:.exe=.bat%"
+    
+    echo Creating wrapper: %INSTALL_PATH:.exe=.bat%
+) else (
+    echo Copying binary to: %INSTALL_PATH%
+    copy /Y "%BINARY_PATH%" "%INSTALL_PATH%" >nul
+)
 REM Add to PATH if not already there
 echo %PATH% | find /i "%INSTALL_DIR%" >nul
 if %errorlevel% neq 0 (

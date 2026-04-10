@@ -1,0 +1,16 @@
+{
+  "executionId" : "20260409_151911-a9f0ccaf",
+  "artifactType" : "skill",
+  "artifactName" : "translation",
+  "status" : "FAILED",
+  "startedAt" : 1775740751869,
+  "endedAt" : 1775740752278,
+  "input" : {
+    "text" : "traduci questo",
+    "target_language" : "es"
+  },
+  "output" : null,
+  "error" : "LLM execution error: Ollama error 404: {\"error\":\"model 'llama3.2:3b' not found\"}",
+  "details" : "skill=translation, mode=llm-prompt, latencyMs=83",
+  "durationMs" : 409
+}

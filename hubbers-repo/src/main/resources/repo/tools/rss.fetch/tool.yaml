@@ -1,0 +1,46 @@
+tool:
+  name: rss.fetch
+  version: 1.0.0
+  description: Fetch and normalize RSS/Atom feed items
+
+type: rss
+
+config:
+  default_limit: 20
+
+input:
+  schema:
+    type: object
+    properties:
+      feeds:
+        type: array
+        required: true
+      limit:
+        type: number
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        required: true
+
+examples:
+  - name: fetch-two-feeds
+    description: Recupero ultimi item da due feed RSS
+    input:
+      feeds:
+        - https://example.com/rss.xml
+        - https://another.example.com/feed
+      limit: 2
+    output:
+      items:
+        - source: Example News
+          feed_url: https://example.com/rss.xml
+          title: AI adoption grows in Europe
+          link: https://example.com/articles/ai-europe
+          published_at: "2026-03-29T07:00:00Z"
+          summary: New report highlights rapid enterprise adoption.
+          content: Companies are investing more in AI training and tooling.

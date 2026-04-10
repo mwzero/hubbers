@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260410_112906-8fef30ca",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775813346741,
+  "endedAt" : 1775813347233,
+  "input" : {
+    "request" : "estrai i primi 5 RSS feeds di ansa.it"
+  },
+  "output" : null,
+  "error" : "Ollama error 400: {\"error\":\"json: cannot unmarshal bool into Go struct field ToolFunctionParameters.tools.function.parameters.properties.required of type []string\"}",
+  "details" : null,
+  "durationMs" : 492
+}
