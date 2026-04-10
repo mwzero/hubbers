@@ -33,22 +33,42 @@ public class ArtifactRepository {
     
     // Progressive disclosure: cache lightweight metadata, load full manifest on demand
     private final Map<String, SkillMetadata> skillMetadataCache = new ConcurrentHashMap<>();
+    private final Map<String, AgentManifest> agentCache = new ConcurrentHashMap<>();
+    private final Map<String, ToolManifest> toolCache = new ConcurrentHashMap<>();
+    private final Map<String, PipelineManifest> pipelineCache = new ConcurrentHashMap<>();
+
 
     public ArtifactRepository(Path repoRoot) {
         this.repoRoot = repoRoot;
+        listManifestNames(repoRoot, "tools", "tool.yaml");
     }
 
     public java.util.List<String> listAgents() {
         // List agents with either agent.yaml or AGENT.md
-        return listManifestNamesMultiFormat(repoRoot, "agents", "agent.yaml", "AGENT.md");
+        return Stream.concat(
+                listManifestNamesMultiFormat(repoRoot, "agents", "agent.yaml", "AGENT.md").stream(),
+                agentCache.keySet().stream())
+            .distinct()
+            .sorted()
+            .toList();
     }
 
     public java.util.List<String> listTools() {
-        return listManifestNames(repoRoot, "tools", "tool.yaml");
+        return Stream.concat(
+                listManifestNames(repoRoot, "tools", "tool.yaml").stream(),
+                toolCache.keySet().stream())
+            .distinct()
+            .sorted()
+            .toList();
     }
 
-    public java.util.List<String> listPipelines() {
-        return listManifestNames(repoRoot, "pipelines", "pipeline.yaml");
+     public java.util.List<String> listPipelines() {
+        return Stream.concat(
+                listManifestNames(repoRoot, "pipelines", "pipeline.yaml").stream(),
+                pipelineCache.keySet().stream())
+            .distinct()
+            .sorted()
+            .toList();
     }
 
     /**
@@ -59,6 +79,11 @@ public class ArtifactRepository {
      * @return Parsed AgentManifest
      */
     public AgentManifest loadAgent(String name) {
+        AgentManifest cached = agentCache.get(name);
+        if (cached != null) {
+            return cached;
+        }
+
         Path agentDir = repoRoot.resolve("agents").resolve(name);
         Path agentMdPath = agentDir.resolve("AGENT.md");
         Path agentYamlPath = agentDir.resolve("agent.yaml");
@@ -86,10 +111,20 @@ public class ArtifactRepository {
     }
 
     public ToolManifest loadTool(String name) {
+        ToolManifest cached = toolCache.get(name);
+        if (cached != null) {
+            return cached;
+        }
+
         return read(repoRoot.resolve("tools").resolve(name).resolve("tool.yaml"), ToolManifest.class);
     }
 
     public PipelineManifest loadPipeline(String name) {
+        PipelineManifest cached = pipelineCache.get(name);
+        if (cached != null) {
+            return cached;
+        }
+
         return read(repoRoot.resolve("pipelines").resolve(name).resolve("pipeline.yaml"), PipelineManifest.class);
     }
 
@@ -210,4 +245,33 @@ public class ArtifactRepository {
             throw new IllegalStateException("Cannot scan artifacts in " + base, e);
         }
     }
+
+    public void addAgent(AgentManifest researcher) {
+        if (researcher == null || researcher.getAgent() == null || researcher.getAgent().getName() == null
+                || researcher.getAgent().getName().isBlank()) {
+            throw new IllegalArgumentException("Agent manifest must define a non-blank agent name");
+        }
+
+        agentCache.put(researcher.getAgent().getName(), researcher);
+    }
+
+    public void addTool(ToolManifest tool) {
+        if (tool == null || tool.getTool() == null || tool.getTool().getName() == null
+                || tool.getTool().getName().isBlank()) {
+            throw new IllegalArgumentException("Tool manifest must define a non-blank tool name");
+        }
+
+        toolCache.put(tool.getTool().getName(), tool);
+    }
+
+     public void addPipeline(PipelineManifest pipeline) {
+        if (pipeline == null || pipeline.getPipeline() == null || pipeline.getPipeline().getName() == null
+                || pipeline.getPipeline().getName().isBlank()) {
+            throw new IllegalArgumentException("Pipeline manifest must define a non-blank pipeline name");
+        }
+
+        pipelineCache.put(pipeline.getPipeline().getName(), pipeline);
+    }
+
+    
 }

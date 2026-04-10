@@ -12,6 +12,7 @@ import java.util.Map;
 
 @Data
 public class AgentManifest {
+    
     private Metadata agent;
     private ModelConfig model;
     private Instructions instructions;

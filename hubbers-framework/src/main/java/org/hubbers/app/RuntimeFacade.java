@@ -16,6 +16,7 @@ import org.hubbers.validation.ManifestValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class RuntimeFacade {
@@ -50,6 +51,24 @@ public class RuntimeFacade {
         this.manifestValidator = manifestValidator;
         this.executionStorage = executionStorage;
         this.formService = formService;
+    }
+
+    public RuntimeFacade(Path of) {
+        this(Bootstrap.createRuntimeFacade(of.toString()));
+    }
+
+    private RuntimeFacade(RuntimeFacade delegate) {
+        this(
+            delegate.artifactRepository,
+            delegate.agentExecutor,
+            delegate.toolExecutor,
+            delegate.pipelineExecutor,
+            delegate.skillExecutor,
+            delegate.manifestValidator,
+            delegate.executionStorage,
+            delegate.formService
+        );
+        this.taskService = delegate.taskService;
     }
 
     /**
