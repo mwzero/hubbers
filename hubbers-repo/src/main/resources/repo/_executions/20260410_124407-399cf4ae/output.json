@@ -1,0 +1,15 @@
+{
+  "entities" : [ {
+    "entity" : "Elon Musk",
+    "type" : "PERSON"
+  }, {
+    "entity" : "Tesla",
+    "type" : "ORGANIZATION"
+  }, {
+    "entity" : "Berlin",
+    "type" : "LOCATION"
+  }, {
+    "entity" : "Germany",
+    "type" : "LOCATION"
+  } ]
+}

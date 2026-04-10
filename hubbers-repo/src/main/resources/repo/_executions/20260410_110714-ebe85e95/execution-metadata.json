@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260410_110714-ebe85e95",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775812034868,
+  "endedAt" : 1775812103645,
+  "input" : {
+    "request" : "estrai i primi 5 RSS feeds di ansa.it"
+  },
+  "output" : null,
+  "error" : "Invalid type for field result, expected: object",
+  "details" : null,
+  "durationMs" : 68777
+}

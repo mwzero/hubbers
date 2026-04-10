@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260409_152847-895dce80",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775741327181,
+  "endedAt" : 1775741327614,
+  "input" : {
+    "request" : "extract feeds from ansa.it"
+  },
+  "output" : null,
+  "error" : "Ollama error 404: {\"error\":\"model 'qwen2.5-coder:7b' not found\"}",
+  "details" : null,
+  "durationMs" : 433
+}

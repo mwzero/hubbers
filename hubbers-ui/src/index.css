@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 20% 10%;
+
+    --card: 0 0% 99%;
+    --card-foreground: 220 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+
+    --primary: 220 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 20% 10%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 46%;
+
+    --accent: 220 14% 93%;
+    --accent-foreground: 220 20% 10%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 220 70% 50%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 220 10% 30%;
+    --sidebar-primary: 220 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 95%;
+    --sidebar-accent-foreground: 220 20% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 220 70% 50%;
+
+    /* Custom tokens */
+    --agent-color: 210 90% 55%;
+    --tool-color: 30 90% 55%;
+    --pipeline-color: 270 60% 55%;
+    --success-color: 142 70% 45%;
+    --skill-color: 280 70% 55%;
+    --terminal-bg: 0 0% 5%;
+    --terminal-text: 142 70% 55%;
+  }
+
+  .dark {
+    --background: 220 20% 7%;
+    --foreground: 220 14% 90%;
+
+    --card: 220 20% 9%;
+    --card-foreground: 220 14% 90%;
+
+    --popover: 220 20% 9%;
+    --popover-foreground: 220 14% 90%;
+
+    --primary: 220 70% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 14% 14%;
+    --secondary-foreground: 220 14% 90%;
+
+    --muted: 220 14% 14%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 220 14% 16%;
+    --accent-foreground: 220 14% 90%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 16%;
+    --input: 220 14% 16%;
+    --ring: 220 70% 55%;
+
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 220 10% 70%;
+    --sidebar-primary: 220 70% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 13%;
+    --sidebar-accent-foreground: 220 14% 90%;
+    --sidebar-border: 220 14% 16%;
+    --sidebar-ring: 220 70% 55%;
+
+    --agent-color: 210 90% 60%;
+    --tool-color: 30 90% 60%;
+    --pipeline-color: 270 60% 60%;
+    --success-color: 142 70% 50%;
+    --skill-color: 280 70% 60%;
+    --terminal-bg: 0 0% 3%;
+    --terminal-text: 142 70% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace;
+  }
+}

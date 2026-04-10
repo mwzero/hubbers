@@ -1,0 +1,29 @@
+{
+  "executionId" : "20260410_124407-399cf4ae",
+  "artifactType" : "skill",
+  "artifactName" : "ner-extraction",
+  "status" : "SUCCESS",
+  "startedAt" : 1775817847749,
+  "endedAt" : 1775817899446,
+  "input" : {
+    "text" : "Elon Musk announced that Tesla will open a new factory in Berlin, Germany. The facility will produce electric vehicles using advanced AI technology."
+  },
+  "output" : {
+    "entities" : [ {
+      "entity" : "Elon Musk",
+      "type" : "PERSON"
+    }, {
+      "entity" : "Tesla",
+      "type" : "ORGANIZATION"
+    }, {
+      "entity" : "Berlin",
+      "type" : "LOCATION"
+    }, {
+      "entity" : "Germany",
+      "type" : "LOCATION"
+    } ]
+  },
+  "error" : null,
+  "details" : "skill=ner-extraction, mode=llm-prompt, latencyMs=51675",
+  "durationMs" : 51697
+}

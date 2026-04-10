@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260409_162609-4c19988e",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775744769638,
+  "endedAt" : 1775744824510,
+  "input" : {
+    "request" : "Your natural language request here"
+  },
+  "output" : null,
+  "error" : "Invalid type for field result, expected: object",
+  "details" : null,
+  "durationMs" : 54872
+}

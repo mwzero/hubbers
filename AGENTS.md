@@ -9,7 +9,7 @@ AI coding agent documentation for the Hubbers project.
 **Key Architecture:**
 - **RuntimeFacade**: Central execution entry point
 - **AgenticExecutor**: ReAct loop with function calling
-- **ArtifactRepository**: Manifest loading from `repo/`
+- **ArtifactRepository**: Manifest loading from `hubbers-repo/src/main/resources/repo/`
 - **Four artifact types**: Agents, Tools, Pipelines, Skills
 
 ## Setup Commands
@@ -99,12 +99,12 @@ hubbers skill validate <name>
 - Form-based user interaction
 - Multi-step orchestration with autonomous decision-making
 
-For simple prompt-based operations, create a **skill** instead (see `repo/skills/AGENTS.md`).
+For simple prompt-based operations, create a **skill** instead (see `hubbers-repo/src/main/resources/repo/skills/AGENTS.md`).
 
 Create an `AGENT.md` file with YAML frontmatter + Markdown body:
 
 ```bash
-cd repo/agents
+cd hubbers-repo/src/main/resources/repo/agents
 mkdir my-agent
 cd my-agent
 # Create AGENT.md with YAML frontmatter + Markdown body
@@ -117,14 +117,14 @@ cd my-agent
 - `output`: JSON Schema for output validation
 - `## Instructions` section in Markdown body for the system prompt
 
-See `repo/agents/AGENTS.md` for detailed agent creation guide.
+See `hubbers-repo/src/main/resources/repo/agents/AGENTS.md` for detailed agent creation guide.
 
 ### Creating a New Skill
 
 For simple prompt-based methodologies (sentiment analysis, translation, summarization):
 
 ```bash
-cd repo/skills
+cd hubbers-repo/src/main/resources/repo/skills
 mkdir my-skill
 cd my-skill
 # Create SKILL.md with YAML frontmatter + instructions
@@ -136,14 +136,14 @@ cd my-skill
 - Data transformation tasks
 - Simple classification or extraction
 
-See `repo/skills/AGENTS.md` for detailed skill creation guide.
+See `hubbers-repo/src/main/resources/repo/skills/AGENTS.md` for detailed skill creation guide.
 
 **Migration note**: Former simple agents (text.summarizer, rss.sentiment, rss.ner, rss.translate) are now skills. Use the `skill.executor` agent to invoke skills in pipelines.
 
 ### Adding a New Tool
 
 ```bash
-cd repo/tools
+cd hubbers-repo/src/main/resources/repo/tools
 mkdir my-tool
 cd my-tool
 # Create tool.yaml with type and config
@@ -163,7 +163,7 @@ Register in `Bootstrap.java`.
 ### Building a Pipeline
 
 ```bash
-cd repo/pipelines
+cd hubbers-repo/src/main/resources/repo/pipelines
 mkdir my-pipeline
 cd my-pipeline
 # Create pipeline.yaml with steps
@@ -174,14 +174,14 @@ Define sequential steps that call agents/tools/pipelines.
 ### Implementing a Skill
 
 ```bash
-cd repo/skills
+cd hubbers-repo/src/main/resources/repo/skills
 mkdir my-skill
 cd my-skill
 # Create SKILL.md with YAML frontmatter
 mkdir scripts  # Optional: executable scripts
 ```
 
-Follow agentskills.io specification (see `repo/skills/AGENTS.md`).
+Follow agentskills.io specification (see `hubbers-repo/src/main/resources/repo/skills/AGENTS.md`).
 
 ## Architecture Notes
 
@@ -228,7 +228,7 @@ Follow agentskills.io specification (see `repo/skills/AGENTS.md`).
 ### GraalVM Native Build Errors
 
 **Problem**: Reflection configuration missing
-**Solution**: Add classes to `reflect-config.json` in `src/main/resources/META-INF/native-image/`
+**Solution**: Add classes to `reflect-config.json` in `hubbers-framework/src/main/resources/META-INF/native-image/`
 
 ```json
 {
@@ -269,7 +269,7 @@ Ensure environment variable is set: `export OPENAI_API_KEY=sk-...`
 **Problem**: Agent exists but not found
 **Solution**: 
 - Check file name: `AGENT.md` (case-sensitive, all uppercase)
-- Verify directory structure: `repo/agents/<name>/AGENT.md`
+- Verify directory structure: `hubbers-repo/src/main/resources/repo/agents/<name>/AGENT.md`
 - Run `hubbers list agents` to see discovered agents
 
 ## Build and Deployment
@@ -288,7 +288,7 @@ mvn clean package -Pnative
 
 ### Native Image Configuration
 
-Located in `src/main/resources/META-INF/native-image/`:
+Located in `hubbers-framework/src/main/resources/META-INF/native-image/`:
 - `reflect-config.json` - Reflection classes
 - `resource-config.json` - Embedded resources
 - `jni-config.json` - JNI interfaces
@@ -306,7 +306,7 @@ Located in `src/main/resources/META-INF/native-image/`:
 ### Environment Variables
 
 - `OPENAI_API_KEY` - OpenAI API key (required for OpenAI models)
-- `HUBBERS_REPO` - Repository root path (default: `./repo`)
+- `HUBBERS_REPO` - Repository root path (default: `hubbers-repo/src/main/resources/repo` or external path via --repo flag)
 - `FIRECRAWL_API_KEY` - For Firecrawl web scraping (optional)
 
 ## CLI Commands Reference

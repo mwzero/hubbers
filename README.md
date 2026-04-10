@@ -263,11 +263,14 @@ The web UI will be available at `http://localhost:7070` (or the specified port).
 
 ## 🛠️ Installation
 
+Hubbers is organized as a multi-module Maven project. See [BUILD.md](BUILD.md) for detailed build instructions.
+
 ### Requirements
 
 **For JAR Distribution:**
 - Java 21+
 - Maven 3.9+
+- Node.js 20+ and npm 10+ (for UI build)
 - Docker (for docker-based tools)
 - OpenAI API key
 - Pinchtab (optional, for browser automation tools)
@@ -275,23 +278,26 @@ The web UI will be available at `http://localhost:7070` (or the specified port).
 **For Native Executable:**
 - GraalVM 21+ with native-image
 - Maven 3.9+
+- Node.js 20+ and npm 10+ (for UI build)
 - Docker (for docker-based tools)
 - OpenAI API key
 - Visual Studio Build Tools (Windows only)
 - Pinchtab (optional, for browser automation tools)
 
-### Build Options
+### Quick Start
 
 #### Option 1: JAR Distribution (JVM Required)
 
-Build the standard JAR:
+Build the entire project:
 ```bash
 mvn clean package
 ```
 
+The executable JAR will be in `hubbers-distribution/target/hubbers.jar`.
+
 Run:
 ```bash
-java -jar target/hubbers-0.1.0-SNAPSHOT.jar <command>
+java -jar hubbers-distribution/target/hubbers.jar <command>
 ```
 
 #### Option 2: Native Executable (Standalone)
@@ -308,11 +314,11 @@ Build a native executable that doesn't require JVM:
 build-native.bat
 ```
 
-The native executable will be created in `target/hubbers` (or `target/hubbers.exe` on Windows).
+The native executable will be created in `hubbers-framework/target/hubbers` (or `hubbers.exe` on Windows).
 
 Test it:
 ```bash
-./target/hubbers --help
+./hubbers-framework/target/hubbers --help
 ```
 
 ### Installation
@@ -335,6 +341,8 @@ sudo ./install.sh
 install.bat
 ```
 
+The install script automatically detects whether to install the native binary or create a JAR wrapper.
+
 After installation, the command is available directly:
 ```bash
 hubbers --help
@@ -352,6 +360,18 @@ If you don't have GraalVM installed:
    gu install native-image
    ```
 4. On Windows, ensure Visual Studio Build Tools are installed
+
+### Project Structure
+
+```
+hubbers/
+├── hubbers-framework/      # Core Java framework
+├── hubbers-ui/             # React web interface
+├── hubbers-repo/           # Default repository of artifacts
+└── hubbers-distribution/   # Executable JAR assembly
+```
+
+For more details, see [BUILD.md](BUILD.md).
 
 ## ⚙️ Configuration
 

@@ -1,0 +1,20 @@
+{
+  "executionId" : "20260409_152046-4d776517",
+  "artifactType" : "skill",
+  "artifactName" : "translation",
+  "status" : "SUCCESS",
+  "startedAt" : 1775740846063,
+  "endedAt" : 1775740883503,
+  "input" : {
+    "text" : "traduci questo",
+    "target_language" : "es"
+  },
+  "output" : {
+    "text" : "traduce esto",
+    "source_language" : "it",
+    "target_language" : "es"
+  },
+  "error" : null,
+  "details" : "skill=translation, mode=llm-prompt, latencyMs=37175",
+  "durationMs" : 37440
+}

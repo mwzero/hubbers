@@ -1,0 +1,15 @@
+{
+  "executionId" : "20260410_113255-ba573802",
+  "artifactType" : "agent",
+  "artifactName" : "universal.task",
+  "status" : "FAILED",
+  "startedAt" : 1775813575587,
+  "endedAt" : 1775813696009,
+  "input" : {
+    "request" : "estrai i primi 5 RSS feeds di ansa.it"
+  },
+  "output" : null,
+  "error" : "Ollama request timed out after 120s",
+  "details" : null,
+  "durationMs" : 120422
+}
