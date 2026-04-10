@@ -105,7 +105,8 @@ public class PipelineTest {
         // Access the repository to register your code-defined agents/pipelines
         hubbers.getArtifactRepository().addAgent(researcher);
         hubbers.getArtifactRepository().addAgent(writer);
-        hubbers.getArtifactRepository().addTool(tool);
+        hubbers.getArtifactRepository().addTool(serperSearch);
+        hubbers.getArtifactRepository().addTool(fileRead);
         hubbers.getArtifactRepository().addPipeline(pipeline);
 
         // Run the pipeline
