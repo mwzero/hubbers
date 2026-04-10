@@ -34,3 +34,6 @@ replay_pid*
 .DS_Store
 /target
 /repo/executions
+/hubbers-ui/dist
+/hubbers-ui/node
+/hubbers-ui/node_modules
