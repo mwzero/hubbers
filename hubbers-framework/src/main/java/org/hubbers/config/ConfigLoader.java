@@ -26,6 +26,7 @@ public class ConfigLoader {
     public AppConfig load() {
         Path configPath = Paths.get(repoPath, "application.yaml");
         log.info("Loading application config from: {}", configPath.toAbsolutePath());
+        
         if (!Files.exists(configPath)) {
             throw new IllegalStateException("application.yaml not found at: " + configPath.toAbsolutePath());
         }
