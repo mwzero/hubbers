@@ -143,8 +143,7 @@ public class AgentMdParser {
             throw new IOException("Missing required ## Instructions section in AGENT.md: " + agentPath);
         }
         
-        Instructions instructions = new Instructions();
-        instructions.setSystemPrompt(instructionsText.trim());
+        Instructions instructions = new Instructions(instructionsText.trim());
         manifest.setInstructions(instructions);
         
         // Extract ## Examples section (optional)

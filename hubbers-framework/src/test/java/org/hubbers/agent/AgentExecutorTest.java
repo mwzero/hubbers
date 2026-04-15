@@ -106,8 +106,7 @@ class AgentExecutorTest {
         model.setName("stub-model");
         manifest.setModel(model);
 
-        Instructions instructions = new Instructions();
-        instructions.setSystemPrompt("Return JSON");
+        Instructions instructions = new Instructions("Return JSON");
         manifest.setInstructions(instructions);
 
         InputDefinition inputDefinition = new InputDefinition();
