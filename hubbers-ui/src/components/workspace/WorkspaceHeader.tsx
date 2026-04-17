@@ -1,4 +1,4 @@
-import { Layout, PanelLeft, PanelLeftClose, MessageSquare } from 'lucide-react';
+import { Layout, PanelLeft, PanelLeftClose, MessageSquare, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +27,12 @@ export function WorkspaceHeader({ apiOnline, sidebarOpen, onToggleSidebar }: Wor
           <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
             <MessageSquare className="w-4 h-4" />
             Chat
+          </Button>
+        </Link>
+        <Link to="/settings">
+          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
+            <Settings className="w-4 h-4" />
+            Settings
           </Button>
         </Link>
         <span className="relative flex h-2.5 w-2.5">

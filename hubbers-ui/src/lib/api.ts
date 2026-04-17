@@ -1,4 +1,5 @@
 import type { ArtifactType, ValidationResult, Execution, Step, FormDef } from '@/types/workspace';
+import type { AppConfig } from '@/types/settings';
 
 const BASE = '';
 
@@ -121,4 +122,17 @@ export async function fetchStepOutput(executionId: string, stepName: string): Pr
 export async function fetchStepLog(executionId: string, stepName: string): Promise<string> {
   const res = await handleResponse(await fetch(`${BASE}/api/executions/${executionId}/steps/${stepName}/log`));
   return res.text();
+}
+
+export async function fetchSettings(): Promise<AppConfig> {
+  const res = await handleResponse(await fetch(`${BASE}/api/settings`));
+  return res.json();
+}
+
+export async function saveSettings(config: AppConfig): Promise<void> {
+  await handleResponse(await fetch(`${BASE}/api/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config),
+  }));
 }

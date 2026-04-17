@@ -1,0 +1,65 @@
+tool:
+  name: user.input
+  version: 1.0.0
+  description: Request input from the user during agent execution (Human-in-the-Loop). Use when you need clarification or missing information.
+
+type: user-interaction
+
+input:
+  schema:
+    type: object
+    properties:
+      prompt:
+        type: string
+        description: "The question or prompt to show to the user"
+        required: true
+      field_name:
+        type: string
+        description: "Internal name for the field (e.g., 'rss_url', 'file_path')"
+        required: true
+      field_type:
+        type: string
+        description: "Type of input: 'text', 'url', 'number', 'textarea'"
+        required: false
+        default: "text"
+      placeholder:
+        type: string
+        description: "Placeholder text for the input field"
+        required: false
+      validation:
+        type: string
+        description: "Validation hint (e.g., 'Must be a valid URL', 'Required field')"
+        required: false
+
+output:
+  schema:
+    type: object
+    properties:
+      user_input:
+        type: object
+        description: "The data provided by the user"
+        required: true
+
+examples:
+  - name: ask-for-url
+    description: Ask user for correct RSS feed URL
+    input:
+      prompt: "Please provide the correct RSS feed URL for the website"
+      field_name: "rss_url"
+      field_type: "url"
+      placeholder: "https://example.com/rss.xml"
+      validation: "Must be a valid URL"
+    output:
+      user_input:
+        rss_url: "https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"
+  
+  - name: ask-for-file-path
+    description: Ask user for a file path
+    input:
+      prompt: "Which file would you like to process?"
+      field_name: "file_path"
+      field_type: "text"
+      placeholder: "/path/to/file.txt"
+    output:
+      user_input:
+        file_path: "/home/user/documents/data.csv"

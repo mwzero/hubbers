@@ -1,19 +1,16 @@
-repoRoot: ./repo
-
+---
+repoRoot: "hubbers-repo\\src\\main\\resources\\repo"
 openai:
-  apiKey: ${OPENAI_API_KEY}
-  baseUrl: https://api.openai.com/v1
-  defaultModel: gpt-4.1-mini
-
+  apiKey: null
+  baseUrl: "https://api.openai.com/v1"
+  defaultModel: "gpt-4.1-mini"
 ollama:
-  baseUrl: http://localhost:11434
-  defaultModel: gemma4
-
+  baseUrl: "http://localhost:11434"
+  defaultModel: "qwen3:4b"
+  timeoutSeconds: 180  # Request timeout in seconds (3 minutes)
 tools:
-  firecrawl:
-    api_key: ${FIRECRAWL_API_KEY}
-
+  tools: {}
 executions:
-  path: ./_executions
+  path: "./_executions"
   retentionDays: 30
   maxConcurrent: 10

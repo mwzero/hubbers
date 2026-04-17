@@ -1,5 +1,6 @@
 package org.hubbers.app;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,9 +17,40 @@ import org.hubbers.validation.ManifestValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Central facade for executing agents, tools, pipelines, and skills.
+ * 
+ * <p>RuntimeFacade provides a unified API for all artifact execution types with
+ * automatic validation, tracing, and error handling. It's the main entry point
+ * for both CLI and web interfaces.</p>
+ * 
+ * <p>Key features:
+ * <ul>
+ *   <li>Unified execution API for all artifact types</li>
+ *   <li>Automatic input/output validation against schemas</li>
+ *   <li>Execution tracing and logging</li>
+ *   <li>Natural language task routing</li>
+ *   <li>Conversation management</li>
+ * </ul>
+ * </p>
+ * 
+ * <p>Example usage:
+ * <pre>{@code
+ * RuntimeFacade facade = Bootstrap.createRuntimeFacade();
+ * JsonNode input = mapper.readTree("{\"query\":\"search term\"}");
+ * RunResult result = facade.runAgent("demo.search", input);
+ * if (result.getStatus() == ExecutionStatus.SUCCESS) {
+ *     System.out.println("Output: " + result.getOutput());
+ * }
+ * }</pre>
+ * 
+ * @see Bootstrap#createRuntimeFacade()
+ * @since 0.1.0
+ */
 public class RuntimeFacade {
     
     private static final Logger logger = LoggerFactory.getLogger(RuntimeFacade.class);
@@ -156,8 +188,11 @@ public class RuntimeFacade {
                 return RunResult.failed(taskResult.getError());
             }
             
-        } catch (Exception e) {
-            logger.error("Natural language task execution failed for agent '{}'", name, e);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            logger.error("Invalid task configuration for agent '{}': {}", name, e.getMessage());
+            return RunResult.failed("Invalid task configuration: " + e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error("Task execution failed for agent '{}'", name, e);
             return RunResult.failed("Task execution failed: " + e.getMessage());
         }
     }
@@ -241,15 +276,51 @@ public class RuntimeFacade {
             // Save final metadata
             execLogger.saveMetadata(context);
             
-            logger.info("Execution {} completed with status: {} (duration: {}ms)", 
-                executionId, result.getStatus(), context.getDurationMs());
+            return result;
             
+        } catch (IllegalArgumentException e) {
+            // Handle invalid artifact names or configurations
+            context.markFailed("Invalid artifact: " + e.getMessage());
+            logger.error("Execution {} failed - invalid artifact configuration", executionId, e);
+            
+            ExecutionLogger execLogger = new ExecutionLogger(executionStorage, executionId);
+            execLogger.error("Invalid artifact configuration", e);
+            execLogger.saveMetadata(context);
+            
+            RunResult result = RunResult.failed("Invalid artifact: " + e.getMessage());
+            result.setExecutionId(executionId);
+            return result;
+            
+        } catch (IOException e) {
+            // Handle I/O errors (file system, network, etc.)
+            context.markFailed("I/O error: " + e.getMessage());
+            logger.error("Execution {} failed with I/O error", executionId, e);
+            
+            ExecutionLogger execLogger = new ExecutionLogger(executionStorage, executionId);
+            execLogger.error("I/O error during execution", e);
+            execLogger.saveMetadata(context);
+            
+            RunResult result = RunResult.failed("I/O error: " + e.getMessage());
+            result.setExecutionId(executionId);
+            return result;
+            
+        } catch (RuntimeException e) {
+            // Handle unexpected runtime errors
+            context.markFailed(e.getMessage());
+            logger.error("Execution {} failed with unexpected error", executionId, e);
+            
+            ExecutionLogger execLogger = new ExecutionLogger(executionStorage, executionId);
+            execLogger.error("Unexpected error during execution", e);
+            execLogger.saveMetadata(context);
+            
+            RunResult result = RunResult.failed("Unexpected error: " + e.getMessage());
+            result.setExecutionId(executionId);
             return result;
             
         } catch (Exception e) {
-            // Handle unexpected errors
+            // Handle any other unexpected exceptions
             context.markFailed(e.getMessage());
-            logger.error("Execution {} failed with exception", executionId, e);
+            logger.error("Execution {} failed with unexpected exception", executionId, e);
             
             try {
                 ExecutionLogger execLogger = new ExecutionLogger(executionStorage, executionId);

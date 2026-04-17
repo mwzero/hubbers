@@ -127,15 +127,13 @@ public class ArtifactToFunctionConverter {
         if (manifest.getPipeline() != null && manifest.getPipeline().getDescription() != null) {
             desc.append(manifest.getPipeline().getDescription());
         } else {
-            desc.append("Execute pipeline: ").append(extractPipelineName(manifest));
+            desc.append("Execute workflow: ").append(extractPipelineName(manifest));
         }
         
-        // Add context about it being a pipeline
-        desc.append(" [PIPELINE - Complete workflow");
+        // Present as a composite tool — no separate category marker
         if (manifest.getSteps() != null && !manifest.getSteps().isEmpty()) {
-            desc.append(" with ").append(manifest.getSteps().size()).append(" steps");
+            desc.append(" (complete workflow, ").append(manifest.getSteps().size()).append(" steps combined into a single call)");
         }
-        desc.append("]");
         
         return desc.toString();
     }

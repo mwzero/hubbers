@@ -5,30 +5,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.config.OllamaConfig;
-import org.hubbers.util.JacksonFactory;
+import org.hubbers.util.HttpRequestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 
+/**
+ * Model provider implementation for Ollama local models.
+ * 
+ * <p>Supports both single-shot requests and multi-turn conversations with
+ * function calling capabilities. Uses HttpRequestBuilder for clean HTTP
+ * operations.</p>
+ * 
+ * @since 0.1.0
+ */
 public class OllamaModelProvider implements ModelProvider {
     private static final Logger log = LoggerFactory.getLogger(OllamaModelProvider.class);
     private static final String DEFAULT_BASE_URL = "http://localhost:11434";
     private static final String DEFAULT_MODEL = "llama3.2:3b";
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(120); // 2 minutes
 
     private final HttpClient httpClient;
+    private final ObjectMapper mapper;
     private final OllamaConfig config;
-    private final ObjectMapper mapper = JacksonFactory.jsonMapper();
+    private final Duration requestTimeout;
 
     public OllamaModelProvider(HttpClient httpClient, OllamaConfig config) {
+        this(httpClient, config, org.hubbers.util.JacksonFactory.jsonMapper());
+    }
+
+    public OllamaModelProvider(HttpClient httpClient, OllamaConfig config, ObjectMapper mapper) {
         this.httpClient = httpClient;
         this.config = config;
+        this.mapper = mapper;
+        this.requestTimeout = Duration.ofSeconds(config.getTimeoutSeconds() != null ? config.getTimeoutSeconds() : 120);
     }
 
     @Override
@@ -63,11 +75,24 @@ public class OllamaModelProvider implements ModelProvider {
                 for (Message msg : request.getMessages()) {
                     ObjectNode msgNode = messages.addObject();
                     msgNode.put("role", msg.getRole());
-                    msgNode.put("content", msg.getContent());
+                    msgNode.put("content", msg.getContent() != null ? msg.getContent() : "");
                     
                     // Add tool_call_id for tool role messages
                     if ("tool".equals(msg.getRole()) && msg.getToolCallId() != null) {
                         msgNode.put("tool_call_id", msg.getToolCallId());
+                    }
+                    
+                    // Add tool_calls array for assistant messages with function calls
+                    if ("assistant".equals(msg.getRole()) && msg.getToolCalls() != null && !msg.getToolCalls().isEmpty()) {
+                        ArrayNode toolCallsArray = msgNode.putArray("tool_calls");
+                        for (FunctionCall fc : msg.getToolCalls()) {
+                            ObjectNode tcNode = toolCallsArray.addObject();
+                            tcNode.put("id", fc.getId());
+                            tcNode.put("type", "function");
+                            ObjectNode funcNode = tcNode.putObject("function");
+                            funcNode.put("name", fc.getName());
+                            funcNode.set("arguments", fc.getArguments());
+                        }
                     }
                 }
             } else {
@@ -88,7 +113,27 @@ public class OllamaModelProvider implements ModelProvider {
                     tool.put("type", "function");
                     ObjectNode function = tool.putObject("function");
                     function.put("name", func.getName());
-                    function.put("description", func.getDescription());
+                    
+                    // Enrich description with examples if available
+                    String description = func.getDescription();
+                    if (func.getExamples() != null && !func.getExamples().isEmpty()) {
+                        StringBuilder enriched = new StringBuilder(description);
+                        enriched.append("\n\nExamples:");
+                        for (int i = 0; i < Math.min(func.getExamples().size(), 2); i++) {
+                            var example = func.getExamples().get(i);
+                            enriched.append("\n").append(i + 1).append(". ");
+                            if (example.getDescription() != null) {
+                                enriched.append(example.getDescription()).append(": ");
+                            }
+                            try {
+                                enriched.append(mapper.writeValueAsString(example.getInput()));
+                            } catch (Exception e) {
+                                enriched.append(example.getInput().toString());
+                            }
+                        }
+                        description = enriched.toString();
+                    }
+                    function.put("description", description);
                     
                     // Add parameters schema (convert to proper JSON Schema format)
                     if (func.getParameters() != null) {
@@ -101,24 +146,17 @@ public class OllamaModelProvider implements ModelProvider {
             
             log.debug("Ollama request payload: {}", payload.toPrettyString());
 
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(URI.create(baseUrl + "/api/chat"))
-                    .header("Content-Type", "application/json")
-                    .timeout(REQUEST_TIMEOUT)  // Add timeout to prevent infinite waiting
-                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(payload)))
-                    .build();
+            log.debug("Sending HTTP request to Ollama (timeout={}s)...", requestTimeout.getSeconds());
             
-            log.debug("Sending HTTP request to Ollama (timeout={}s)...", REQUEST_TIMEOUT.getSeconds());
-            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            JsonNode root = new HttpRequestBuilder(httpClient, mapper)
+                    .post(baseUrl + "/api/chat")
+                    .timeout(requestTimeout)
+                    .body(payload)
+                    .executeForJson();
+            
             long elapsed = System.currentTimeMillis() - start;
-            log.debug("Ollama HTTP response received: statusCode={}, elapsedMs={}", response.statusCode(), elapsed);
+            log.debug("Ollama HTTP response received: elapsedMs={}", elapsed);
             
-            if (response.statusCode() >= 400) {
-                log.error("Ollama error {}: {}", response.statusCode(), response.body());
-                throw new IllegalStateException("Ollama error " + response.statusCode() + ": " + response.body());
-            }
-
-            JsonNode root = mapper.readTree(response.body());
             JsonNode messageNode = root.path("message");
             String content = messageNode.path("content").asText();
             
@@ -183,15 +221,11 @@ public class OllamaModelProvider implements ModelProvider {
             return modelResponse;
         } catch (java.net.http.HttpTimeoutException e) {
             long elapsed = System.currentTimeMillis() - start;
-            log.error("Ollama request timed out after {}ms (timeout={}s)", elapsed, REQUEST_TIMEOUT.getSeconds());
-            throw new IllegalStateException("Ollama request timed out after " + REQUEST_TIMEOUT.getSeconds() + "s", e);
+            log.error("Ollama request timed out after {}ms (timeout={}s)", elapsed, requestTimeout.getSeconds());
+            throw new IllegalStateException("Ollama request timed out after " + requestTimeout.getSeconds() + "s", e);
         } catch (IOException e) {
             log.error("Ollama call failed with IOException: {}", e.getMessage(), e);
             throw new IllegalStateException("Ollama call failed", e);
-        } catch (InterruptedException e) {
-            log.error("Ollama call interrupted: {}", e.getMessage());
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Ollama call interrupted", e);
         }
     }
 

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ChatMessage, SystemInfo } from '@/types/chat';
-import { executeTask, continueTask, getSystemInfo } from '@/lib/taskApi';
+import { executeTask, continueTask, getSystemInfo, getAgents } from '@/lib/taskApi';
 import { toast } from '@/components/ui/sonner';
 
 export function useChat() {
@@ -8,10 +8,13 @@ export function useChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
+  const [selectedAgent, setSelectedAgentState] = useState<string>('universal.task');
+  const [availableAgents, setAvailableAgents] = useState<string[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getSystemInfo().then(setSystemInfo).catch(() => {});
+    getAgents().then(setAvailableAgents).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -45,8 +48,8 @@ export function useChat() {
 
     try {
       const result = conversationId
-        ? await continueTask(request, conversationId, context)
-        : await executeTask(request, context);
+        ? await continueTask(request, conversationId, context, selectedAgent)
+        : await executeTask(request, context, selectedAgent);
 
       const elapsed = (Date.now() - startTime) / 1000;
 
@@ -66,6 +69,7 @@ export function useChat() {
         status: result.status,
         conversationId: result.conversationId,
         executionTime: elapsed,
+        executionTrace: result.executionTrace,
       };
 
       setMessages(prev => prev.map(m => m.id === loadingMsg.id ? agentMsg : m));
@@ -83,20 +87,28 @@ export function useChat() {
     } finally {
       setIsExecuting(false);
     }
-  }, [conversationId, isExecuting]);
+  }, [conversationId, isExecuting, selectedAgent]);
 
   const clearConversation = useCallback(() => {
     setMessages([]);
     setConversationId(null);
   }, []);
 
+  const setSelectedAgent = useCallback((agentName: string) => {
+    setSelectedAgentState(agentName);
+    clearConversation();
+  }, [clearConversation]);
+
   return {
     messages,
     conversationId,
     isExecuting,
     systemInfo,
+    selectedAgent,
+    availableAgents,
     scrollRef,
     sendMessage,
     clearConversation,
+    setSelectedAgent,
   };
 }

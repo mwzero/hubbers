@@ -1,26 +1,42 @@
-import { useState } from 'react';
-import { Send, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
-const EXAMPLES = [
-  "Fetch RSS from TechCrunch and count items",
-  "Check my Amazon shopping cart",
-  "Read the latest Hacker News headlines",
-  "What's in my downloads folder?",
-];
 
 interface ChatInputProps {
   onSend: (request: string, context?: object) => void;
   disabled: boolean;
   conversationId: string | null;
+  selectedAgent: string;
+  availableAgents: string[];
+  onAgentSelect: (agent: string) => void;
 }
 
-export function ChatInput({ onSend, disabled, conversationId }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, conversationId, selectedAgent, availableAgents, onAgentSelect }: ChatInputProps) {
   const [request, setRequest] = useState('');
   const [contextOpen, setContextOpen] = useState(false);
   const [contextJson, setContextJson] = useState('');
+  const [showAgentMenu, setShowAgentMenu] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Detect slash command at the start
+  useEffect(() => {
+    if (request === '/') {
+      setShowAgentMenu(true);
+      setSelectedIndex(0);
+    } else if (request.startsWith('/') && !request.includes(' ')) {
+      setShowAgentMenu(true);
+    } else {
+      setShowAgentMenu(false);
+    }
+  }, [request]);
+
+  const filteredAgents = request.startsWith('/') && request.length > 1
+    ? availableAgents.filter(agent => agent.toLowerCase().includes(request.slice(1).toLowerCase()))
+    : availableAgents;
 
   const handleSend = () => {
     if (!request.trim()) return;
@@ -34,7 +50,34 @@ export function ChatInput({ onSend, disabled, conversationId }: ChatInputProps) 
     setRequest('');
   };
 
+  const selectAgent = (agent: string) => {
+    onAgentSelect(agent);
+    setRequest('');
+    setShowAgentMenu(false);
+    textareaRef.current?.focus();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showAgentMenu) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(prev => (prev + 1) % filteredAgents.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(prev => (prev - 1 + filteredAgents.length) % filteredAgents.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (filteredAgents.length > 0) {
+          selectAgent(filteredAgents[selectedIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowAgentMenu(false);
+        setRequest('');
+      }
+      return;
+    }
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -42,23 +85,17 @@ export function ChatInput({ onSend, disabled, conversationId }: ChatInputProps) 
   };
 
   return (
-    <div className="border-t bg-card p-4 space-y-3">
-      {/* Example suggestions */}
-      {!conversationId && (
-        <div className="flex flex-wrap gap-2">
-          {EXAMPLES.map(ex => (
-            <button
-              key={ex}
-              onClick={() => setRequest(ex)}
-              disabled={disabled}
-              className="text-xs px-3 py-1.5 rounded-full border bg-background hover:bg-accent transition-colors disabled:opacity-50 flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3 h-3 text-primary" />
-              {ex}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="border-t bg-card px-4 pb-4 space-y-3">
+      {/* Agent badge */}
+      <div className="pt-3 flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Agent:</span>
+        <Badge variant="secondary" className="text-xs font-mono">
+          {selectedAgent}
+        </Badge>
+        <span className="text-[10px] text-muted-foreground italic">
+          Type <code className="px-1 py-0.5 rounded bg-muted font-mono">/</code> to change
+        </span>
+      </div>
 
       {/* Context JSON collapsible */}
       <Collapsible open={contextOpen} onOpenChange={setContextOpen}>
@@ -77,14 +114,40 @@ export function ChatInput({ onSend, disabled, conversationId }: ChatInputProps) 
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Main input */}
+      {/* Main input with agent menu */}
       <div className="flex gap-2 items-end">
         <div className="flex-1 relative">
+          {/* Agent selection menu */}
+          {showAgentMenu && filteredAgents.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-2 bg-popover border rounded-lg shadow-lg overflow-hidden z-50">
+              <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
+                {filteredAgents.map((agent, index) => (
+                  <button
+                    key={agent}
+                    onClick={() => selectAgent(agent)}
+                    className={`w-full text-left px-3 py-2 rounded text-sm transition-colors flex items-center justify-between ${
+                      index === selectedIndex
+                        ? 'bg-accent text-accent-foreground'
+                        : 'hover:bg-accent/50'
+                    }`}
+                  >
+                    <span className="font-mono">{agent}</span>
+                    {agent === selectedAgent && <Check className="w-4 h-4 text-primary" />}
+                  </button>
+                ))}
+              </div>
+              <div className="px-3 py-2 bg-muted/50 border-t text-[10px] text-muted-foreground">
+                Use ↑↓ to navigate, Enter to select, Esc to cancel
+              </div>
+            </div>
+          )}
+          
           <Textarea
+            ref={textareaRef}
             value={request}
             onChange={e => setRequest(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={conversationId ? "Continue the conversation..." : "Describe what you want to do..."}
+            placeholder={conversationId ? "Continue the conversation..." : "Type / to select agent, then describe your task..."}
             className="min-h-[56px] max-h-[160px] resize-none pr-12"
             disabled={disabled}
           />
@@ -94,7 +157,7 @@ export function ChatInput({ onSend, disabled, conversationId }: ChatInputProps) 
         </div>
         <Button
           onClick={handleSend}
-          disabled={disabled || !request.trim()}
+          disabled={disabled || !request.trim() || showAgentMenu}
           size="icon"
           className="h-[56px] w-[56px] shrink-0"
         >

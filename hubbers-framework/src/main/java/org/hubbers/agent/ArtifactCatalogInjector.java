@@ -238,7 +238,7 @@ public class ArtifactCatalogInjector {
         
         return scored.stream()
             .limit(topK)
-            .peek(s -> logger.debug("  Tool: {} (score: {:.2f})", s.item.getTool().getName(), s.score))
+            .peek(s -> logger.debug("  Tool: {} (score: {})", s.item.getTool().getName(), String.format("%.2f", s.score)))
             .map(s -> s.item)
             .collect(Collectors.toList());
     }
@@ -255,7 +255,7 @@ public class ArtifactCatalogInjector {
         
         return scored.stream()
             .limit(topK)
-            .peek(s -> logger.debug("  Agent: {} (score: {:.2f})", s.item.getAgent().getName(), s.score))
+            .peek(s -> logger.debug("  Agent: {} (score: {})", s.item.getAgent().getName(), String.format("%.2f", s.score)))
             .map(s -> s.item)
             .collect(Collectors.toList());
     }
@@ -272,7 +272,7 @@ public class ArtifactCatalogInjector {
         
         return scored.stream()
             .limit(topK)
-            .peek(s -> logger.debug("  Pipeline: {} (score: {:.2f})", s.item.getPipeline().getName(), s.score))
+            .peek(s -> logger.debug("  Pipeline: {} (score: {})", s.item.getPipeline().getName(), String.format("%.2f", s.score)))
             .map(s -> s.item)
             .collect(Collectors.toList());
     }
@@ -288,7 +288,7 @@ public class ArtifactCatalogInjector {
         
         return scored.stream()
             .limit(topK)
-            .peek(s -> logger.debug("  Skill: {} (score: {:.2f})", s.item.getName(), s.score))
+            .peek(s -> logger.debug("  Skill: {} (score: {})", s.item.getName(), String.format("%.2f", s.score)))
             .map(s -> s.item)
             .collect(Collectors.toList());
     }

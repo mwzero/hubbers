@@ -14,12 +14,21 @@ import com.firecrawl.models.ScrapeOptions;
 import com.firecrawl.models.SearchData;
 import com.firecrawl.models.SearchOptions;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hubbers.config.AppConfig;
 import org.hubbers.manifest.tool.ToolManifest;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tool driver for Firecrawl web scraping and crawling service.
+ * 
+ * <p>Supports scrape, crawl, search, and map operations using the Firecrawl API.</p>
+ * 
+ * @since 0.1.0
+ */
+@Slf4j
 @RequiredArgsConstructor
 public class FirecrawlToolDriver implements ToolDriver {
     private final ObjectMapper mapper;

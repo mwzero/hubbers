@@ -3,6 +3,7 @@ package org.hubbers.nlp;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.hubbers.execution.ExecutionMetadata;
 import org.hubbers.execution.ExecutionStatus;
+import org.hubbers.execution.ExecutionTrace;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class TaskExecutionResult {
     private String error;
     private ExecutionMetadata metadata;
     private String conversationId;
+    private ExecutionTrace executionTrace;
 
     public TaskExecutionResult() {
     }
@@ -111,5 +113,13 @@ public class TaskExecutionResult {
 
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
+    }
+
+    public ExecutionTrace getExecutionTrace() {
+        return executionTrace;
+    }
+
+    public void setExecutionTrace(ExecutionTrace executionTrace) {
+        this.executionTrace = executionTrace;
     }
 }

@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.hubbers.agent.ArtifactCatalogInjector;
-import org.hubbers.agent.ToolCatalogInjector;
 import org.hubbers.app.ArtifactRepository;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.execution.ExecutionStatus;
@@ -13,8 +14,6 @@ import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +24,9 @@ import java.util.UUID;
  * Handles dynamic tool injection, conversation management, and result processing.
  * Internal use only: prefer RuntimeFacade.runAgent() with {"request":"..."} pattern.
  */
+@Slf4j
 public class NaturalLanguageTaskService {
-    private static final Logger logger = LoggerFactory.getLogger(NaturalLanguageTaskService.class);
+    
     private static final String UNIVERSAL_AGENT_NAME = "universal.task";
 
     private final RuntimeFacade runtimeFacade;
@@ -68,7 +68,7 @@ public class NaturalLanguageTaskService {
         long startTime = System.currentTimeMillis();
         
         try {
-            logger.info("Executing task: '{}' (conversation: {})", 
+            log.info("Executing task: '{}' (conversation: {})", 
                 naturalLanguageRequest, conversationId);
             
             // Load universal task agent
@@ -84,8 +84,8 @@ public class NaturalLanguageTaskService {
                 .map(name -> {
                     try {
                         return repository.loadTool(name);
-                    } catch (Exception e) {
-                        logger.warn("Failed to load tool {}: {}", name, e.getMessage());
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        log.warn("Failed to load tool {}: {}", name, e.getMessage());
                         return null;
                     }
                 })
@@ -97,8 +97,8 @@ public class NaturalLanguageTaskService {
                 .map(name -> {
                     try {
                         return repository.loadAgent(name);
-                    } catch (Exception e) {
-                        logger.warn("Failed to load agent {}: {}", name, e.getMessage());
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        log.warn("Failed to load agent {}: {}", name, e.getMessage());
                         return null;
                     }
                 })
@@ -110,15 +110,15 @@ public class NaturalLanguageTaskService {
                 .map(name -> {
                     try {
                         return repository.loadPipeline(name);
-                    } catch (Exception e) {
-                        logger.warn("Failed to load pipeline {}: {}", name, e.getMessage());
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        log.warn("Failed to load pipeline {}: {}", name, e.getMessage());
                         return null;
                     }
                 })
                 .filter(p -> p != null)
                 .toList();
             
-            logger.info("Loaded {} tools, {} agents, {} pipelines for task execution", 
+            log.info("Loaded {} tools, {} agents, {} pipelines for task execution", 
                 allTools.size(), allAgents.size(), allPipelines.size());
             
             // Check if agent has pre-defined tools (no filtering needed)
@@ -129,7 +129,7 @@ public class NaturalLanguageTaskService {
             
             // Apply RAG-based filtering if agent doesn't have pre-defined tools
             if (!hasPreDefinedTools) {
-                logger.info("Applying RAG-based filtering for universal task agent");
+                log.info("Applying RAG-based filtering for universal task agent");
                 var filtered = artifactCatalogInjector.filterByRelevance(
                     naturalLanguageRequest,
                     allTools, 
@@ -145,7 +145,7 @@ public class NaturalLanguageTaskService {
                     filtered.pipelines(), filtered.skills()
                 );
             } else {
-                logger.info("Agent has pre-defined tools, skipping RAG filtering");
+                log.info("Agent has pre-defined tools, skipping RAG filtering");
                 // Inject all artifacts (respects pre-defined tools)
                 artifactCatalogInjector.injectAllArtifacts(
                     agent, allTools, allAgents, allPipelines, 
@@ -165,7 +165,10 @@ public class NaturalLanguageTaskService {
                 agent, input, conversationId);
             
             if ( runResult.getStatus() != ExecutionStatus.SUCCESS) {
-                return TaskExecutionResult.failed(runResult.getError(), conversationId);
+                TaskExecutionResult failedResult = TaskExecutionResult.failed(runResult.getError(), conversationId);
+                failedResult.setExecutionTrace(runResult.getExecutionTrace());
+                failedResult.setMetadata(runResult.getMetadata());
+                return failedResult;
             }
             
             // Parse agent output
@@ -189,8 +192,8 @@ public class NaturalLanguageTaskService {
                             details.indexOf("iterations=") + 11);
                         iterStr = iterStr.split(",")[0].trim();
                         iterations = Integer.parseInt(iterStr);
-                    } catch (Exception e) {
-                        logger.debug("Could not parse iteration count: {}", e.getMessage());
+                    } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                        log.debug("Could not parse iteration count: {}", e.getMessage());
                     }
                 }
             }
@@ -198,15 +201,21 @@ public class NaturalLanguageTaskService {
             TaskExecutionResult result = TaskExecutionResult.success(
                 resultNode, reasoning, toolsUsed, iterations, conversationId);
             result.setMetadata(runResult.getMetadata());
+            result.setExecutionTrace(runResult.getExecutionTrace());
             
             long duration = System.currentTimeMillis() - startTime;
-            logger.info("Task completed successfully in {}ms (iterations: {}, tools: {})", 
+            log.info("Task completed successfully in {}ms (iterations: {}, tools: {})", 
                 duration, iterations, toolsUsed.size());
             
             return result;
             
-        } catch (Exception e) {
-            logger.error("Task execution failed: {}", e.getMessage(), e);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Invalid task configuration: {}", e.getMessage(), e);
+            return TaskExecutionResult.failed(
+                "Invalid configuration: " + e.getMessage(), 
+                conversationId);
+        } catch (RuntimeException e) {
+            log.error("Task execution failed: {}", e.getMessage(), e);
             return TaskExecutionResult.failed(
                 "Task execution failed: " + e.getMessage(), 
                 conversationId);

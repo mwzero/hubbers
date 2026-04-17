@@ -5,6 +5,7 @@ import org.hubbers.config.ConfigLoader;
 import org.hubbers.config.AppConfig;
 import org.hubbers.config.ExecutionsConfig;
 import org.hubbers.execution.ExecutionStorageService;
+import org.hubbers.execution.ExecutorRegistry;
 import org.hubbers.model.ModelProviderRegistry;
 import org.hubbers.model.OllamaModelProvider;
 import org.hubbers.model.OpenAiModelProvider;
@@ -25,6 +26,7 @@ import org.hubbers.tool.ProcessManageToolDriver;
 import org.hubbers.tool.RssToolDriver;
 import org.hubbers.tool.ShellExecToolDriver;
 import org.hubbers.tool.ToolExecutor;
+import org.hubbers.tool.UserInputToolDriver;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.validation.SchemaValidator;
@@ -77,7 +79,8 @@ public class Bootstrap {
                 new CsvReadToolDriver(jsonMapper),
                 new FileOpsToolDriver(jsonMapper),
                 new ShellExecToolDriver(jsonMapper),
-                new ProcessManageToolDriver(jsonMapper)
+                new ProcessManageToolDriver(jsonMapper),
+                new UserInputToolDriver(jsonMapper)
         ), schemaValidator);
 
         // Agentic capabilities (tool calling + memory)
@@ -96,24 +99,32 @@ public class Bootstrap {
                 jsonMapper
         );
         
-        // Note: PipelineExecutor will be created after AgenticExecutor and passed separately
+        // Create ExecutorRegistry to break circular dependency between AgenticExecutor and PipelineExecutor
+        var executorRegistry = new ExecutorRegistry();
+        executorRegistry.register(ExecutorRegistry.ExecutorType.TOOL, toolExecutor);
+        
+        // Create AgenticExecutor with ExecutorRegistry (instead of direct PipelineExecutor reference)
         var agenticExecutor = new org.hubbers.agent.AgenticExecutor(
                 modelRegistry, 
                 toolExecutor,
                 repository, 
                 schemaValidator, 
                 conversationMemory,
-                null,  // PipelineExecutor - will be set after creation
+                executorRegistry,  // Uses registry to find PipelineExecutor
                 agentExecutor,
                 jsonMapper
         );
-
-        var pipelineExecutor = new PipelineExecutor(repository, agenticExecutor, toolExecutor, new InputMapper(jsonMapper));
         
-        // Set the PipelineExecutor reference in AgenticExecutor via reflection or setter
-        // For now, we'll accept that pipelines can't be called from agents until refactored
-        // TODO: Add setPipelineExecutor method to AgenticExecutor for proper initialization
+        // Register AgenticExecutor in registry
+        executorRegistry.register(ExecutorRegistry.ExecutorType.AGENT, agenticExecutor);
 
+        // Create PipelineExecutor with ExecutorRegistry (instead of direct AgenticExecutor reference)
+        var pipelineExecutor = new PipelineExecutor(repository, executorRegistry, toolExecutor, new InputMapper(jsonMapper));
+        
+        // Register PipelineExecutor in registry (completes the setup)
+        executorRegistry.register(ExecutorRegistry.ExecutorType.PIPELINE, pipelineExecutor);
+
+        
         // Initialize skill executor
         var skillExecutor = new org.hubbers.skill.SkillExecutor(
                 modelRegistry,
@@ -121,6 +132,9 @@ public class Bootstrap {
                 repository,
                 jsonMapper
         );
+        
+        // Register SkillExecutor in registry
+        executorRegistry.register(ExecutorRegistry.ExecutorType.SKILL, skillExecutor);
 
         // Initialize form support
         var formSessionStore = new org.hubbers.forms.FormSessionStore();

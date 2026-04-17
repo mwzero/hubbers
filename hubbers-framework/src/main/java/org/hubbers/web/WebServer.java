@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hubbers.app.RuntimeFacade;
+import org.hubbers.config.AppConfig;
+import org.hubbers.config.ConfigLoader;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
@@ -34,15 +36,24 @@ public class WebServer {
     private final ManifestValidator manifestValidator;
     private final ObjectMapper yamlMapper;
     private final ObjectMapper jsonMapper;
+    private final String repoPath;
 
     public WebServer(RuntimeFacade runtimeFacade,
                      ManifestFileService manifestFileService,
                      ManifestValidator manifestValidator) {
+        this(runtimeFacade, manifestFileService, manifestValidator, "hubbers-repo/src/main/resources/repo");
+    }
+
+    public WebServer(RuntimeFacade runtimeFacade,
+                     ManifestFileService manifestFileService,
+                     ManifestValidator manifestValidator,
+                     String repoPath) {
         this.runtimeFacade = runtimeFacade;
         this.manifestFileService = manifestFileService;
         this.manifestValidator = manifestValidator;
         this.yamlMapper = JacksonFactory.yamlMapper();
         this.jsonMapper = JacksonFactory.jsonMapper();
+        this.repoPath = repoPath;
     }
 
     public Javalin start(int port) {
@@ -72,6 +83,31 @@ public class WebServer {
         });
 
         app.get("/api/health", ctx -> ctx.json(Map.of("status", "ok")));
+        
+        // Settings endpoints
+        app.get("/api/settings", ctx -> {
+            try {
+                ConfigLoader configLoader = new ConfigLoader(repoPath);
+                AppConfig config = configLoader.load();
+                ctx.json(config);
+            } catch (Exception e) {
+                log.error("Failed to load settings", e);
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+            }
+        });
+        
+        app.post("/api/settings", ctx -> {
+            try {
+                AppConfig config = jsonMapper.readValue(ctx.body(), AppConfig.class);
+                ConfigLoader configLoader = new ConfigLoader(repoPath);
+                configLoader.save(config);
+                ctx.json(Map.of("success", true, "message", "Settings saved successfully"));
+            } catch (Exception e) {
+                log.error("Failed to save settings", e);
+                ctx.status(500).json(Map.of("success", false, "error", e.getMessage()));
+            }
+        });
+        
         app.get("/api/agents", ctx -> ctx.json(Map.of("items", runtimeFacade.listAgents())));
         app.get("/api/tools", ctx -> ctx.json(Map.of("items", runtimeFacade.listTools())));
         app.get("/api/pipelines", ctx -> ctx.json(Map.of("items", runtimeFacade.listPipelines())));
@@ -339,8 +375,9 @@ public class WebServer {
                 JsonNode body = jsonMapper.readTree(ctx.body());
                 String request = body.get("request").asText();
                 JsonNode context = body.has("context") ? body.get("context") : null;
+                String agentName = body.has("agentName") ? body.get("agentName").asText() : "universal.task";
                 
-                log.info("POST /api/task/execute - request: {}", request);
+                log.info("POST /api/task/execute - request: {}, agent: {}", request, agentName);
                 
                 // Build input JSON for natural language mode
                 var inputJson = jsonMapper.createObjectNode();
@@ -349,8 +386,8 @@ public class WebServer {
                     inputJson.set("context", context);
                 }
                 
-                // Execute via universal.task agent with intelligent routing
-                RunResult result = runtimeFacade.runAgent("universal.task", inputJson, null);
+                // Execute via specified agent (defaults to universal.task) with intelligent routing
+                RunResult result = runtimeFacade.runAgent(agentName, inputJson, null);
                 
                 // Convert to API response format
                 Map<String, Object> response = new HashMap<>();
@@ -378,9 +415,10 @@ public class WebServer {
                 String request = body.get("request").asText();
                 String conversationId = body.get("conversationId").asText();
                 JsonNode context = body.has("context") ? body.get("context") : null;
+                String agentName = body.has("agentName") ? body.get("agentName").asText() : "universal.task";
                 
-                log.info("POST /api/task/continue - conversation: {}, request: {}", 
-                    conversationId, request);
+                log.info("POST /api/task/continue - conversation: {}, request: {}, agent: {}", 
+                    conversationId, request, agentName);
                 
                 // Build input JSON for natural language mode
                 var inputJson = jsonMapper.createObjectNode();
@@ -389,8 +427,8 @@ public class WebServer {
                     inputJson.set("context", context);
                 }
                 
-                // Execute with conversation ID
-                RunResult result = runtimeFacade.runAgent("universal.task", inputJson, conversationId);
+                // Execute with conversation ID using specified agent
+                RunResult result = runtimeFacade.runAgent(agentName, inputJson, conversationId);
                 
                 // Convert to API response format
                 Map<String, Object> response = new HashMap<>();

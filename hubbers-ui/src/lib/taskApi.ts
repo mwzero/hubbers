@@ -15,9 +15,10 @@ async function handleResponse(res: Response) {
   return res;
 }
 
-export async function executeTask(request: string, context?: object): Promise<TaskExecutionResult> {
+export async function executeTask(request: string, context?: object, agentName?: string): Promise<TaskExecutionResult> {
   const body: any = { request };
   if (context && Object.keys(context).length > 0) body.context = context;
+  if (agentName) body.agentName = agentName;
   const res = await handleResponse(await fetch(`${BASE}/api/task/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,9 +27,10 @@ export async function executeTask(request: string, context?: object): Promise<Ta
   return res.json();
 }
 
-export async function continueTask(request: string, conversationId: string, context?: object): Promise<TaskExecutionResult> {
+export async function continueTask(request: string, conversationId: string, context?: object, agentName?: string): Promise<TaskExecutionResult> {
   const body: any = { request, conversationId };
   if (context && Object.keys(context).length > 0) body.context = context;
+  if (agentName) body.agentName = agentName;
   const res = await handleResponse(await fetch(`${BASE}/api/task/continue`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -40,4 +42,10 @@ export async function continueTask(request: string, conversationId: string, cont
 export async function getSystemInfo(): Promise<SystemInfo> {
   const res = await handleResponse(await fetch(`${BASE}/api/task/info`));
   return res.json();
+}
+
+export async function getAgents(): Promise<string[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/agents`));
+  const data = await res.json();
+  return data.items || [];
 }

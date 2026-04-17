@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hubbers.manifest.tool.ToolManifest;
+import org.hubbers.util.HttpRequestBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -15,12 +17,36 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Tool driver for fetching and parsing RSS/Atom feeds.
+ * 
+ * <p>Supports both RSS 2.0 and Atom feed formats. Fetches multiple feeds
+ * and aggregates items with configurable limits.</p>
+ * 
+ * <p>Configuration in tool.yaml:
+ * <pre>{@code
+ * type: rss
+ * config:
+ *   limit: 20  # Optional, default 20, max 200
+ * }</pre>
+ * 
+ * <p>Input format:
+ * <pre>{@code
+ * {
+ *   \"feeds\": [
+ *     \"https://example.com/feed.xml\",
+ *     \"https://another.com/rss\"
+ *   ],
+ *   \"limit\": 10  # Optional override
+ * }
+ * }</pre>
+ * 
+ * @since 0.1.0
+ */
+@Slf4j
 @RequiredArgsConstructor
 public class RssToolDriver implements ToolDriver {
     private static final int DEFAULT_LIMIT = 20;
@@ -61,18 +87,14 @@ public class RssToolDriver implements ToolDriver {
 
     private void collectFromFeed(String feedUrl, ArrayNode outputItems, int limit) {
         try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(feedUrl))
+            // Use HttpRequestBuilder for cleaner HTTP operations
+            HttpRequestBuilder builder = new HttpRequestBuilder(httpClient, mapper);
+            String xmlContent = builder.get(feedUrl)
                     .header("Accept", "application/rss+xml, application/xml, text/xml")
                     .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Hubbers/1.0")
-                    .GET()
-                    .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
-                throw new IllegalStateException("RSS fetch failed for " + feedUrl + ": " + response.statusCode());
-            }
+                    .executeForString();
 
-            Document document = parseXml(response.body());
+            Document document = parseXml(xmlContent, feedUrl);
             String source = firstText(document, "channel", "title");
             if (source == null || source.isBlank()) {
                 source = feedUrl;
@@ -113,13 +135,10 @@ public class RssToolDriver implements ToolDriver {
             }
         } catch (IOException e) {
             throw new IllegalStateException("RSS fetch failed for " + feedUrl, e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("RSS fetch interrupted for " + feedUrl, e);
         }
     }
 
-    private Document parseXml(String xml) {
+    private Document parseXml(String xml, String feedUrl) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -132,7 +151,10 @@ public class RssToolDriver implements ToolDriver {
             return factory.newDocumentBuilder().parse(
                     new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            throw new IllegalStateException("Invalid RSS/XML payload", e);
+            String hint = xml.toLowerCase().contains("<html") || xml.toLowerCase().contains("<!doctype html") 
+                ? " (received HTML instead of RSS/XML - check if the URL is correct)"
+                : "";
+            throw new IllegalStateException("Invalid RSS/XML from " + feedUrl + hint + ": " + e.getMessage(), e);
         }
     }
 

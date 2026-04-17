@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { CheckCircle2, XCircle, Copy, Download, ChevronDown, ChevronUp, RefreshCw, Bot } from 'lucide-react';
+import { CheckCircle2, XCircle, Copy, Download, ChevronDown, ChevronUp, RefreshCw, Bot, ListTree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ChatMessage } from '@/types/chat';
 import { toast } from '@/components/ui/sonner';
+import { PipelineStepTimeline } from '@/components/chat/PipelineStepTimeline';
+import { AgentIterationBreakdown } from '@/components/chat/AgentIterationBreakdown';
+import { SkillBadge } from '@/components/chat/SkillBadge';
 
 export function AgentMessage({ message }: { message: ChatMessage }) {
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(true);
+  const [traceOpen, setTraceOpen] = useState(false);
 
   if (message.isLoading) {
     return (
@@ -126,6 +130,48 @@ export function AgentMessage({ message }: { message: ChatMessage }) {
               <p className="mt-2 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {message.reasoning}
               </p>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        {/* Execution Trace */}
+        {message.executionTrace && (
+          message.executionTrace.pipelineSteps?.length > 0 || 
+          message.executionTrace.iterations?.length > 0 || 
+          message.executionTrace.skillInvocations?.length > 0
+        ) && (
+          <Collapsible open={traceOpen} onOpenChange={setTraceOpen}>
+            <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+              {traceOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              <ListTree className="w-3 h-3" />
+              Execution Details
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-3 space-y-4">
+                {/* Pipeline Steps */}
+                {message.executionTrace.pipelineSteps && message.executionTrace.pipelineSteps.length > 0 && (
+                  <PipelineStepTimeline steps={message.executionTrace.pipelineSteps} />
+                )}
+
+                {/* Agent Iterations */}
+                {message.executionTrace.iterations && message.executionTrace.iterations.length > 0 && (
+                  <AgentIterationBreakdown iterations={message.executionTrace.iterations} />
+                )}
+
+                {/* Skill Invocations */}
+                {message.executionTrace.skillInvocations && message.executionTrace.skillInvocations.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">
+                      Skills Used
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {message.executionTrace.skillInvocations.map((skill, idx) => (
+                        <SkillBadge key={idx} skill={skill} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </CollapsibleContent>
           </Collapsible>
         )}

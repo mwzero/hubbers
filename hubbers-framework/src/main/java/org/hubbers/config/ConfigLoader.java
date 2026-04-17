@@ -42,6 +42,18 @@ public class ConfigLoader {
         }
     }
 
+    public void save(AppConfig appConfig) {
+        Path configPath = Paths.get(repoPath, "application.yaml");
+        log.info("Saving application config to: {}", configPath.toAbsolutePath());
+        
+        try {
+            yamlMapper.writeValue(configPath.toFile(), appConfig);
+            log.info("Configuration saved successfully");
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot save application config to " + configPath, e);
+        }
+    }
+
     private void resolveEnv(AppConfig appConfig) {
         if (appConfig.getOpenai() != null) {
             OpenAiConfig openAi = appConfig.getOpenai();

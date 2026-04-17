@@ -15,6 +15,8 @@ import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.web.ManifestFileService;
 import org.hubbers.web.WebServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -40,6 +42,8 @@ import java.util.concurrent.Callable;
     }
 )
 public class HubbersCommand implements Callable<Integer> {
+
+    private static final Logger log = LoggerFactory.getLogger(HubbersCommand.class);
 
     @CommandLine.Option(
         names = {"-h", "--help"},
@@ -160,7 +164,7 @@ public class HubbersCommand implements Callable<Integer> {
             } catch (Exception e) {
                 System.err.println("❌ Execution failed: " + e.getMessage());
                 if (verbose) {
-                    e.printStackTrace();
+                    log.error("Failed to execute agent", e);
                 }
                 return 1;
             }
@@ -334,7 +338,7 @@ public class HubbersCommand implements Callable<Integer> {
             var appConfig = new ConfigLoader(root.repoPath).load();
             var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
 
-            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator()).start(port);
+            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator(), root.repoPath).start(port);
 
 
             System.out.println("Hubbers Web UI available at http://localhost:" + port);

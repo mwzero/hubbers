@@ -14,12 +14,32 @@ import org.hubbers.tool.ToolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * Main executor for skills with hybrid execution mode support.
- * Routes to appropriate handler based on skill's execution_mode metadata:
- * - llm-prompt: Pass SKILL.md body as system prompt to LLM
- * - script: Execute scripts from scripts/ directory
- * - hybrid: Let LLM decide between instructions and scripts
+ * 
+ * <p>Skills are reusable methodologies/instructions following the agentskills.io
+ * specification. They can be executed in three modes:</p>
+ * 
+ * <ul>
+ *   <li><b>llm-prompt</b>: Pass SKILL.md body as system prompt to LLM</li>
+ *   <li><b>script</b>: Execute scripts from scripts/ directory</li>
+ *   <li><b>hybrid</b>: Let LLM decide between instructions and scripts</li>
+ * </ul>
+ * 
+ * <p>Skills differ from agents in that they don't define model configuration
+ * and are meant to be invoked by agents or pipelines rather than executed directly.</p>
+ * 
+ * <p>Example usage:
+ * <pre>{@code
+ * SkillManifest skill = repository.loadSkill(\"sentiment-analysis\");
+ * JsonNode input = mapper.readTree(\"{\\\"text\\\":\\\"Great product!\\\"}\");
+ * RunResult result = skillExecutor.execute(skill, input);
+ * }</pre>
+ * 
+ * @see <a href="https://agentskills.io">agentskills.io specification</a>
+ * @since 0.1.0
  */
 public class SkillExecutor {
     private static final Logger log = LoggerFactory.getLogger(SkillExecutor.class);
@@ -85,7 +105,10 @@ public class SkillExecutor {
             result.setMetadata(metadata);
 
             return result;
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Invalid skill configuration for '{}': {}", manifest.getName(), e.getMessage());
+            return RunResult.failed("Invalid configuration: " + e.getMessage());
+        } catch (RuntimeException e) {
             log.error("Skill execution failed: {}", manifest.getName(), e);
             return RunResult.failed("Execution error: " + e.getMessage());
         }

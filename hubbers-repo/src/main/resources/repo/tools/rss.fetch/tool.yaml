@@ -14,9 +14,13 @@ input:
     properties:
       feeds:
         type: array
+        description: "Array of RSS/Atom feed URLs to fetch. Examples: ['https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml'] for ANSA.it, ['https://example.com/rss.xml'] for generic sites"
+        items:
+          type: string
         required: true
       limit:
         type: number
+        description: "Maximum number of items to return per feed (default: 20)"
         required: false
 
 output:
@@ -28,6 +32,20 @@ output:
         required: true
 
 examples:
+  - name: fetch-ansa-rss
+    description: Fetch latest news from ANSA.it RSS feed
+    input:
+      feeds:
+        - https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml
+      limit: 10
+    output:
+      items:
+        - source: ANSA.it
+          feed_url: https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml
+          title: Latest news title
+          link: https://www.ansa.it/sito/notizie/...
+          published_at: "2026-04-15T10:00:00Z"
+  
   - name: fetch-two-feeds
     description: Recupero ultimi item da due feed RSS
     input:

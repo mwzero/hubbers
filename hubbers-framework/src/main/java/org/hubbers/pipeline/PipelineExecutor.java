@@ -1,12 +1,8 @@
 package org.hubbers.pipeline;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.agent.AgenticExecutor;
 import org.hubbers.app.ArtifactRepository;
-import org.hubbers.execution.ExecutionContext;
-import org.hubbers.execution.ExecutionContextHolder;
-import org.hubbers.execution.ExecutionLogger;
-import org.hubbers.execution.RunResult;
+import org.hubbers.execution.*;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.pipeline.PipelineStep;
 import org.hubbers.tool.ToolExecutor;
@@ -16,16 +12,16 @@ import org.slf4j.LoggerFactory;
 public class PipelineExecutor {
     private static final Logger log = LoggerFactory.getLogger(PipelineExecutor.class);
     private final ArtifactRepository artifactRepository;
-    private final AgenticExecutor agentExecutor;
+    private final ExecutorRegistry executorRegistry;
     private final ToolExecutor toolExecutor;
     private final InputMapper inputMapper;
 
     public PipelineExecutor(ArtifactRepository artifactRepository,
-                            AgenticExecutor agentExecutor,
+                            ExecutorRegistry executorRegistry,
                             ToolExecutor toolExecutor,
                             InputMapper inputMapper) {
         this.artifactRepository = artifactRepository;
-        this.agentExecutor = agentExecutor;
+        this.executorRegistry = executorRegistry;
         this.toolExecutor = toolExecutor;
         this.inputMapper = inputMapper;
     }
@@ -37,6 +33,9 @@ public class PipelineExecutor {
         ExecutionContext context = ExecutionContextHolder.get();
         ExecutionLogger execLogger = context != null ? context.getLogger() : null;
         
+        // Create execution trace for pipeline
+        ExecutionTrace executionTrace = new ExecutionTrace("pipeline");
+        
         PipelineState state = new PipelineState();
         int stepNumber = 0;
         int totalSteps = manifest.getSteps().size();
@@ -47,6 +46,11 @@ public class PipelineExecutor {
             
             log.info("[{}/{}] Executing step '{}' → {} '{}'", 
                 stepNumber + 1, totalSteps, step.getId(), artifactType, artifactName);
+            
+            // Create step trace
+            PipelineStepTrace stepTrace = new PipelineStepTrace(stepNumber + 1, step.getId(), artifactType, artifactName);
+            long stepStartTime = System.currentTimeMillis();
+            stepTrace.setStartTime(stepStartTime);
             
             // Check if step has a form (human-in-the-loop)
             if (step.getForm() != null) {
@@ -75,6 +79,9 @@ public class PipelineExecutor {
             
             JsonNode stepInput = inputMapper.map(input, step.getInputMapping(), state);
             
+            // Set step input in trace
+            stepTrace.setInput(stepInput);
+            
             // Log step input
             if (stepLogger != null) {
                 stepLogger.saveInput(stepInput);
@@ -86,28 +93,52 @@ public class PipelineExecutor {
                 if (step.getTool() != null && !step.getTool().isBlank()) {
                     stepResult = toolExecutor.execute(artifactRepository.loadTool(step.getTool()), stepInput);
                 } else {
-                    stepResult = agentExecutor.execute(artifactRepository.loadAgent(step.getAgent()), stepInput, null);
+                    stepResult = executorRegistry.executeAgent(artifactRepository.loadAgent(step.getAgent()), stepInput, null);
                 }
             } catch (Exception e) {
                 String errorMsg = "Step execution failed: " + e.getMessage();
                 log.error("Step '{}' failed with exception", step.getId(), e);
                 
+                // Update step trace with error
+                long stepEndTime = System.currentTimeMillis();
+                stepTrace.setEndTime(stepEndTime);
+                stepTrace.setDurationMs(stepEndTime - stepStartTime);
+                stepTrace.setStatus(ExecutionStatus.FAILED);
+                stepTrace.setError(errorMsg);
+                executionTrace.addPipelineStep(stepTrace);
+                
                 if (stepLogger != null) {
                     stepLogger.error(errorMsg, e);
                 }
                 
-                return RunResult.failed(errorMsg);
+                RunResult failedResult = RunResult.failed(errorMsg);
+                failedResult.setExecutionTrace(executionTrace);
+                return failedResult;
             }
+            
+            // Update step trace with result
+            long stepEndTime = System.currentTimeMillis();
+            stepTrace.setEndTime(stepEndTime);
+            stepTrace.setDurationMs(stepEndTime - stepStartTime);
+            stepTrace.setStatus(stepResult.getStatus());
+            stepTrace.setOutput(stepResult.getOutput());
             
             if (stepResult.getStatus() != org.hubbers.execution.ExecutionStatus.SUCCESS) {
                 log.error("Step '{}' failed: {}", step.getId(), stepResult.getError());
+                
+                stepTrace.setError(stepResult.getError());
+                executionTrace.addPipelineStep(stepTrace);
                 
                 if (stepLogger != null) {
                     stepLogger.error("Step failed: " + stepResult.getError());
                 }
                 
+                stepResult.setExecutionTrace(executionTrace);
                 return stepResult;
             }
+            
+            // Add successful step to trace
+            executionTrace.addPipelineStep(stepTrace);
             
             log.info("[{}/{}] Step '{}' completed successfully", stepNumber + 1, totalSteps, step.getId());
             
@@ -128,6 +159,8 @@ public class PipelineExecutor {
         }
         
         String lastStepId = manifest.getSteps().get(manifest.getSteps().size() - 1).getId();
-        return RunResult.success(state.getStepOutput(lastStepId));
+        RunResult result = RunResult.success(state.getStepOutput(lastStepId));
+        result.setExecutionTrace(executionTrace);
+        return result;
     }
 }

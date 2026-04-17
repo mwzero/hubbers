@@ -1,4 +1,4 @@
-import { MessageSquare, Trash2, ArrowLeft, Link2 } from 'lucide-react';
+import { MessageSquare, Trash2, ArrowLeft, Link2, Sparkles, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,13 @@ import { UserMessage } from '@/components/chat/UserMessage';
 import { AgentMessage } from '@/components/chat/AgentMessage';
 import { useChat } from '@/hooks/useChat';
 import { Link } from 'react-router-dom';
+
+const EXAMPLES = [
+  "Fetch RSS from TechCrunch and count items",
+  "Check my Amazon shopping cart",
+  "Read the latest Hacker News headlines",
+  "What's in my downloads folder?",
+];
 
 export default function Chat() {
   const chat = useChat();
@@ -25,10 +32,12 @@ export default function Chat() {
             <MessageSquare className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold leading-tight">Task Agent Chat</h1>
+            <h1 className="text-sm font-semibold leading-tight">
+              {chat.selectedAgent || 'Task Agent Chat'}
+            </h1>
             {chat.systemInfo && (
               <p className="text-[10px] text-muted-foreground">
-                {chat.systemInfo.agentName} · {chat.systemInfo.availableTools} tools
+                {chat.systemInfo.availableTools} tools available
               </p>
             )}
           </div>
@@ -46,6 +55,11 @@ export default function Chat() {
               New
             </Button>
           )}
+          <Link to="/settings">
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -53,14 +67,40 @@ export default function Chat() {
       <ScrollArea className="flex-1" ref={chat.scrollRef}>
         <div className="max-w-3xl mx-auto p-4 space-y-4">
           {chat.messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <MessageSquare className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-lg font-semibold">Start a conversation</h2>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                Describe a task in natural language and the agent will execute it using available tools.
-              </p>
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold">Start a conversation</h2>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Type <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-xs">/</code> to select an agent, then describe your task.
+                </p>
+              </div>
+              {/* Prompt suggestions */}
+              <div className="w-full max-w-md space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Try these examples:</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {EXAMPLES.map(ex => (
+                    <button
+                      key={ex}
+                      onClick={() => {
+                        const input = document.querySelector('textarea') as HTMLTextAreaElement;
+                        if (input) {
+                          input.value = ex;
+                          input.dispatchEvent(new Event('input', { bubbles: true }));
+                          input.focus();
+                        }
+                      }}
+                      disabled={chat.isExecuting}
+                      className="text-left text-sm px-4 py-3 rounded-lg border bg-card hover:bg-accent transition-colors disabled:opacity-50 flex items-start gap-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                      <span>{ex}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           {chat.messages.map(msg =>
@@ -85,6 +125,9 @@ export default function Chat() {
         onSend={chat.sendMessage}
         disabled={chat.isExecuting}
         conversationId={chat.conversationId}
+        selectedAgent={chat.selectedAgent}
+        availableAgents={chat.availableAgents}
+        onAgentSelect={chat.setSelectedAgent}
       />
     </div>
   );

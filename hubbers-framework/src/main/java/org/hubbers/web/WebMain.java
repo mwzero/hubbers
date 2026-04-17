@@ -20,7 +20,7 @@ public class WebMain {
 
         ManifestFileService manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
 
-        new WebServer(facade, manifestFileService, new ManifestValidator()).start(port);
+        new WebServer(facade, manifestFileService, new ManifestValidator(), repoPath).start(port);
 
         System.out.println("Hubbers Web UI available at http://localhost:" + port);
     }
