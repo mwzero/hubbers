@@ -1,206 +1,93 @@
-# Agentic Architecture - Nomenclature Guide
-
-## Overview
-
-Il framework Hubbers ora supporta **agenti autonomi** che possono chiamare tools/task e mantenere memoria conversazionale. Per evitare confusione tra i diversi concetti, questa guida chiarisce la nomenclatura.
-
+---
+title: Agentic Architecture
 ---
 
-## Nomenclature Distinctions
+# Agentic Architecture
 
-### 1. **Tool / Task** (Framework Level)
-**Cosa Sono:** Capacità eseguibili del framework Hubbers (HTTP, RSS, CSV, File Ops, Shell, etc.)
+This page documents how Hubbers currently handles tool-calling and autonomous execution.
 
-**Dove Vivono:**
-- `ToolDriver` interface + implementations (e.g., `RssToolDriver`, `FileOpsToolDriver`)
-- `ToolManifest` YAML files in `repo/tools/*/tool.yaml`
-- `ToolExecutor` gestisce il registry e l'esecuzione
+## Terms
 
-**Esempio:**
-```java
-public class RssToolDriver implements ToolDriver {
-    public String type() { return "rss"; }
-    public JsonNode execute(ToolManifest manifest, JsonNode input) { ... }
+### Tool
+
+A Hubbers tool is a repository artifact defined by `tool.yaml` and executed through a Java `ToolDriver`.
+
+Example:
+
+- [hubbers-repo/src/main/resources/repo/tools/rss.fetch/tool.yaml](/Users/mauriziofarina/src/hubbers/hubbers-repo/src/main/resources/repo/tools/rss.fetch/tool.yaml:1)
+
+### Function definition
+
+At model-call time, tool manifests are converted into function definitions that the LLM can choose from.
+
+### Function call
+
+A function call is the LLM asking the runtime to execute a specific artifact with structured arguments.
+
+### Agentic executor
+
+`AgenticExecutor` is the runtime component that:
+
+- loads the agent manifest
+- builds the available function catalog
+- manages conversation state
+- executes tools and pipelines through the registry
+- loops until it reaches a final answer or a configured limit
+
+## Current Wiring
+
+The current design uses `ExecutorRegistry` as the execution mediator:
+
+- `ToolExecutor` is registered for tool execution
+- `AgenticExecutor` is registered for agent execution
+- `PipelineExecutor` is registered for pipeline execution
+- `SkillExecutor` is registered for skill execution
+
+This is important because older analysis documents described a circular dependency between agentic and pipeline execution. That is no longer the active design.
+
+Reference:
+
+- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:89)
+
+## Natural Language Mode
+
+`RuntimeFacade.runAgent()` detects the pattern:
+
+```json
+{
+  "request": "Fetch the latest AI headlines",
+  "context": {}
 }
 ```
 
-```yaml
-# repo/tools/rss.fetch/tool.yaml
-tool:
-  name: rss.fetch
-  description: Fetch and normalize RSS/Atom feed items
-type: rss
-```
+When present, execution is routed through `NaturalLanguageTaskService`.
 
-**Named "Tool" in codebase because:** Hubbers is a framework for executing AI agents and tools/tasks.
+Reference:
 
----
+- [RuntimeFacade.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/RuntimeFacade.java:117)
 
-### 2. **FunctionDefinition** (LLM Interface Level)
-**Cosa Sono:** Descrizioni di tool/task in formato JSON Schema per LLM function calling
+## Bundled Agent Types
 
-**Dove Vivono:**
-- `FunctionDefinition` model class
-- Generato da `ToolManifest` tramite `ToolToFunctionConverter`
-- Field `functions` in `ModelRequest`
+The bundled repo currently demonstrates two different styles:
 
-**Purpose:** Comunicare all'LLM quali tool/task sono disponibili.
+- `research.assistant`: an agent with an explicit tool list
+- `universal.task`: a task-style entry point that plans and selects artifacts dynamically
+- `demo.search`: a form-driven agent example
 
-**Esempio:**
-```java
-// Generated from ToolManifest
-FunctionDefinition function = new FunctionDefinition(
-    "rss.fetch",  // name from ToolManifest
-    "Fetch and parse RSS/Atom feeds",  // description
-    parametersSchema  // JSON Schema from ToolManifest.input
-);
-```
+## Practical Mental Model
 
-**Named "Function" because:** OpenAI API calls them "functions" in function calling feature.
+Use this model when reading or extending the code:
 
----
+1. Agent manifest defines the model, input/output, and instructions.
+2. Runtime builds the artifact/function catalog.
+3. Model chooses a tool or pipeline through function calling.
+4. Runtime executes the selected artifact.
+5. Results are appended to the interaction context.
+6. The loop ends when the model returns a final structured answer.
 
-### 3. **FunctionCall** (LLM Response Level)
-**Cosa Sono:** Richieste dell'LLM di eseguire un tool/task specifico
+## Related Docs
 
-**Dove Vivono:**
-- `FunctionCall` model class
-- Field `functionCalls` in `ModelResponse`
-- Restituito dall'LLM quando decide di chiamare un tool
-
-**Purpose:** L'LLM comunica "voglio eseguire questo tool con questi parametri".
-
-**Esempio:**
-```java
-// Returned by LLM in ModelResponse
-FunctionCall call = new FunctionCall(
-    "call_abc123",  // ID
-    "rss.fetch",    // tool name to execute
-    {               // arguments (JSON)
-        "feeds": ["https://example.com/rss"],
-        "limit": 10
-    }
-);
-```
-
-**Named "FunctionCall" because:** It's the LLM requesting to call a function (tool).
-
----
-
-## Data Flow
-
-```
-1. Agent Configuration (agent.yaml)
-   ↓
-   config.tools: ["rss.fetch", "file.ops"]  ← Tool/Task names
-
-2. AgenticExecutor Initialization
-   ↓
-   Load ToolManifests from repo/tools/
-   ↓
-   Convert to FunctionDefinitions via ToolToFunctionConverter
-   ↓
-   FunctionDefinition[] → ModelRequest.functions
-
-3. LLM Processing
-   ↓
-   Receives available functions
-   ↓
-   Decides to call a function
-   ↓
-   Returns FunctionCall[] in ModelResponse.functionCalls
-
-4. AgenticExecutor ReAct Loop
-   ↓
-   For each FunctionCall:
-     - Load ToolManifest by function name
-     - Execute via ToolExecutor.execute(ToolManifest, arguments)
-     - Get RunResult
-     - Add result to conversation history
-   ↓
-   Continue until final answer or max iterations
-```
-
----
-
-## Code Examples
-
-### Defining an Agentic Agent
-
-```yaml
-# repo/agents/research.assistant/agent.yaml
-agent:
-  name: research.assistant
-
-config:
-  # Specify which tools/tasks this agent can call
-  tools:
-    - rss.fetch     # References ToolManifest in repo/tools/rss.fetch/
-    - file.ops      # References ToolManifest in repo/tools/file.ops/
-    - csv.read      # References ToolManifest in repo/tools/csv.read/
-  
-  max_iterations: 10
-  timeout_seconds: 60
-```
-
-### Executing an Agentic Agent
-
-```java
-AgenticExecutor executor = ...;
-AgentManifest manifest = repository.loadAgent("research.assistant");
-
-JsonNode input = mapper.createObjectNode()
-    .put("query", "What are latest AI developments?");
-
-// Execute with ReAct loop
-RunResult result = executor.execute(manifest, input, null);
-```
-
-### Inside AgenticExecutor
-
-```java
-// 1. Convert ToolManifests to FunctionDefinitions
-List<String> toolNames = manifest.getConfig().get("tools");
-List<FunctionDefinition> functions = toolNames.stream()
-    .map(name -> repository.loadTool(name))
-    .map(toolManifest -> functionConverter.convert(toolManifest))
-    .collect(Collectors.toList());
-
-// 2. Send to LLM
-ModelRequest request = new ModelRequest();
-request.setFunctions(functions);  // Available tools as functions
-
-ModelResponse response = llm.generate(request);
-
-// 3. Execute function calls (tool invocations)
-for (FunctionCall call : response.getFunctionCalls()) {
-    ToolManifest toolManifest = repository.loadTool(call.getName());
-    RunResult toolResult = toolExecutor.execute(toolManifest, call.getArguments());
-    // Add result to conversation and continue
-}
-```
-
----
-
-## Summary Table
-
-| Concept | Level | Class | Purpose |
-|---------|-------|-------|---------|
-| **Tool/Task** | Framework | `ToolDriver`, `ToolManifest` | Executable capabilities (RSS, CSV, HTTP, etc.) |
-| **FunctionDefinition** | LLM Interface | `FunctionDefinition` | Describes tool to LLM in JSON Schema format |
-| **FunctionCall** | LLM Response | `FunctionCall` | LLM's request to execute a specific tool |
-| **AgenticExecutor** | Orchestration | `AgenticExecutor` | ReAct loop coordinator (calls LLM + executes tools) |
-| **ConversationMemory** | State | `ConversationMemory` | Persists conversation history and facts |
-
----
-
-## Key Insight
-
-**Tools are tasks** in Hubbers framework (what the system can DO).  
-**Functions are tools** as exposed to LLM (what the LLM can CALL).  
-**Function calls are tool invocations** requested by LLM (what the LLM WANTS to do).
-
-This three-layer separation provides:
-1. **Abstraction:** Framework tools independent of LLM API format
-2. **Flexibility:** Same tool can be called by agents, pipelines, or CLI
-3. **Clarity:** Distinct names for distinct concepts
+- [Software Architecture](SWA.md)
+- [Agents Guide](AGENTS.md)
+- [Tools Guide](Tools.md)
+- [Pipelines Guide](Pipelines.md)

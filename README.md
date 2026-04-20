@@ -1,462 +1,113 @@
-# Hubbers Runtime
+# Hubbers
 
-**Hubbers Runtime** is a lightweight, Git-native Java framework for executing **AI agents, tools, and pipelines** defined as YAML artifacts.
+Hubbers is a Git-native Java runtime for executing AI artifacts stored in a repository:
 
-It transforms a simple repository into an executable system:
+- `agents` for autonomous and prompt-driven execution
+- `tools` for deterministic capabilities backed by Java drivers
+- `pipelines` for declarative orchestration
+- `skills` for reusable methodologies and prompt assets
 
-> **Git repository → Agent runtime**
+The project is organized as a multi-module Maven build and ships both a CLI/runtime and a bundled artifact repository.
 
-## ✨ Key Features
+## What The Codebase Contains
 
-- **Git-native architecture**  
-  Agents, tools, and pipelines are defined as versioned YAML files.
+Current modules:
 
-- **Agent execution**  
-  Run AI agents powered by LLMs (starting with OpenAI).
+- `hubbers-framework`: core runtime, CLI, web server, executors, manifest parsing
+- `hubbers-repo`: bundled sample repository with agents, tools, pipelines, skills, and config
+- `hubbers-ui`: React/Vite frontend that is copied into framework resources during build
+- `hubbers-distribution`: shaded executable distribution
 
-- **Tool integration**  
-  Support for:
-  - HTTP APIs  
-  - Docker-based tools  
-  - Firecrawl web scraping/search/crawl  
+Current bundled artifacts in `hubbers-repo/src/main/resources/repo`:
 
-- **Pipeline orchestration**  
-  Compose agents and tools into sequential workflows.
+- 3 agents
+- 15 tools
+- 11 pipelines
+- 6 skills
 
-- **CLI-first**  
-  Execute everything via a simple command-line interface.
+## Architecture Snapshot
 
-- **Minimal dependencies**  
-  Pure Java — no Spring, no heavy frameworks.
+The current runtime centers on `RuntimeFacade`, which loads artifacts from `ArtifactRepository` and dispatches execution to:
 
-## 🧱 Core Concepts
+- `AgenticExecutor` for tool-calling agent execution
+- `ToolExecutor` for driver-based tool execution
+- `PipelineExecutor` for step orchestration
+- `SkillExecutor` for skill execution
 
-### Agent
-An agent defines how a task is executed using an LLM.
+The older circular dependency concern between `AgenticExecutor` and `PipelineExecutor` has already been addressed in code with `ExecutorRegistry` wiring in [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:45).
 
-```yaml
-agent:
-  name: text.summarizer
-  version: 1.0.0
+## Quick Start
 
-model:
-  provider: openai
-  name: gpt-4.1-mini
+Requirements:
 
-instructions:
-  system_prompt: |
-    Summarize the text in Italian.
-
-input:
-  schema:
-    type: object
-    properties:
-      text:
-        type: string
-
-output:
-  schema:
-    type: object
-    properties:
-      summary:
-        type: string
-```
-
-### Tool
-
-A tool represents an executable capability.
-
-HTTP Tool
-
-```yaml
-tool:
-  name: weather.lookup
-  version: 1.0.0
-
-type: http
-
-config:
-  base_url: https://api.example.com/weather
-  method: POST
-
-Docker Tool
-
-tool:
-  name: pdf.extract
-  version: 1.0.0
-
-type: docker
-
-config:
-  image: myorg/pdf-extract:1.0.0
-```
-
-### Storage Tool (Lucene Key-Value)
-
-A key-value store using Lucene as NoSQL database.
-
-```yaml
-tool:
-  name: lucene.kv
-  version: 1.0.0
-
-type: lucene.kv
-
-config:
-  index_path: ./datasets/lucene/kv-store
-```
-
-### Browser Automation (Pinchtab)
-
-Browser control and web scraping using Pinchtab.
-
-```yaml
-tool:
-  name: browser.pinchtab
-  version: 1.0.0
-
-type: browser.pinchtab
-
-config:
-  pinchtab_url: http://localhost:9867
-  profiles:
-    default:
-      name: default
-      mode: headless
-    authenticated:
-      name: work-profile
-      mode: headed
-```
-
-### Pipeline
-
-A pipeline composes agents and tools into workflows.
-
-```yaml
-pipeline:
-  name: pdf.summary
-
-steps:
-  - id: extract
-    tool: pdf.extract
-
-  - id: summarize
-    agent: text.summarizer
-    input_mapping:
-      text: ${steps.extract.output.text}
-```
-
-## 📁 Repository Structure
-
-repo/
-  agents/
-    text.summarizer/
-      agent.yaml
-  tools/
-    pdf.extract/
-      tool.yaml
-  pipelines/
-    pdf.summary/
-      pipeline.yaml
-  examples/
-
-## ⚙️ CLI Usage
-
-### General Options
-
-```
-hubbers --help                  # Show help
-hubbers --version              # Show version
-```
-
-### List Artifacts
-
-```
-hubbers list agents            # List all available agents
-hubbers list tools             # List all available tools
-hubbers list pipelines         # List all available pipelines
-```
-
-### Run Agent
-
-```
-hubbers agent run <name> --input <file.json>
-hubbers agent run <name> --input '<json-string>'
-```
-
-Examples:
-```
-# Using a file
-hubbers agent run text.summarizer --input examples/text.json
-
-# Using direct JSON
-hubbers agent run text.summarizer --input '{"text":"Your text here"}'
-```
-
-### Run Tool
-
-```
-hubbers tool run <name> --input <file.json>
-hubbers tool run <name> --input '<json-string>'
-```
-
-Examples:
-```
-# Using a file
-hubbers tool run pdf.extract --input examples/input.json
-
-# Using direct JSON
-hubbers tool run pdf.extract --input '{"file":"document.pdf"}'
-
-# Lucene KV store - put a record
-hubbers tool run lucene.kv --input "{\"operation\":\"put\",\"key\":\"user:1001\",\"value\":{\"name\":\"Mario Rossi\",\"email\":\"mario@example.com\"}}"
-
-# Lucene KV store - get a record
-hubbers tool run lucene.kv --input "{\"operation\":\"get\",\"key\":\"user:1001\"}"
-
-# Lucene KV store - list all keys
-hubbers tool run lucene.kv --input "{\"operation\":\"list_keys\",\"limit\":10}"
-
-# Browser automation - navigate (requires Pinchtab daemon running)
-hubbers tool run browser.pinchtab --input "{\"action\":\"navigate\",\"url\":\"https://example.com\"}"
-
-# Browser automation - get page snapshot
-hubbers tool run browser.pinchtab --input "{\"action\":\"snapshot\",\"filter\":\"interactive\"}"
-
-# Browser automation - extract text
-hubbers tool run browser.pinchtab --input "{\"action\":\"extract_text\"}"
-
-
-# Firecrawl - scrape a page (requires FIRECRAWL_API_KEY)
-hubbers tool run web.firecrawl --input "{\"action\":\"scrape\",\"url\":\"https://example.com\",\"formats\":[\"markdown\"]}"
-
-# Firecrawl - search the web
-hubbers tool run web.firecrawl --input "{\"action\":\"search\",\"query\":\"AI agents Java SDK\",\"limit\":5}"
-```
-
-### Run Pipeline
-
-```
-hubbers pipeline run <name> --input <file.json>
-hubbers pipeline run <name> --input '<json-string>'
-```
-
-Examples:
-```
-# Using a file
-hubbers pipeline run pdf.summary --input examples/input.json
-
-# Using direct JSON
-hubbers pipeline run pdf.summary --input '{"file":"document.pdf"}'
-```
-
-### Web UI
-
-Start the web user interface and API server:
-
-```
-hubbers web                    # Start on default port 7070
-hubbers web --port 8080        # Start on custom port
-```
-
-The web UI will be available at `http://localhost:7070` (or the specified port).
-
-## 🛠️ Installation
-
-Hubbers is organized as a multi-module Maven project. See [BUILD.md](BUILD.md) for detailed build instructions.
-
-### Requirements
-
-**For JAR Distribution:**
-- Java 21+
+- Java 21
 - Maven 3.9+
-- Node.js 20+ and npm 10+ (for UI build)
-- Docker (for docker-based tools)
-- OpenAI API key
-- Pinchtab (optional, for browser automation tools)
+- `OPENAI_API_KEY` only if you want to use OpenAI-backed models
+- Ollama if you want to use the default local model configuration
 
-**For Native Executable:**
-- GraalVM 21+ with native-image
-- Maven 3.9+
-- Node.js 20+ and npm 10+ (for UI build)
-- Docker (for docker-based tools)
-- OpenAI API key
-- Visual Studio Build Tools (Windows only)
-- Pinchtab (optional, for browser automation tools)
+Build the full project:
 
-### Quick Start
-
-#### Option 1: JAR Distribution (JVM Required)
-
-Build the entire project:
 ```bash
 mvn clean package
 ```
 
-The executable JAR will be in `hubbers-distribution/target/hubbers.jar`.
+Run the shaded distribution:
 
-Run:
 ```bash
-java -jar hubbers-distribution/target/hubbers.jar <command>
+java -jar hubbers-distribution/target/hubbers.jar --help
 ```
 
-#### Option 2: Native Executable (Standalone)
+Run a few common commands:
 
-Build a native executable that doesn't require JVM:
-
-**Linux/macOS:**
 ```bash
-./build-native.sh
+java -jar hubbers-distribution/target/hubbers.jar list agents
+java -jar hubbers-distribution/target/hubbers.jar list tools
+java -jar hubbers-distribution/target/hubbers.jar agent run universal.task --request "Fetch the latest items from an RSS feed"
+java -jar hubbers-distribution/target/hubbers.jar tool run rss.fetch --input '{"feeds":["https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml"],"limit":5}'
+java -jar hubbers-distribution/target/hubbers.jar web --port 7070
 ```
 
-**Windows:**
-```cmd
-build-native.bat
+## Repository Layout
+
+```text
+.
+├── hubbers-distribution/
+├── hubbers-framework/
+├── hubbers-repo/
+│   └── src/main/resources/repo/
+│       ├── agents/
+│       ├── tools/
+│       ├── pipelines/
+│       ├── skills/
+│       ├── application.yaml
+│       └── _executions/
+├── hubbers-ui/
+├── docs/
+└── CODEBASE_ANALYSIS.md
 ```
 
-The native executable will be created in `hubbers-framework/target/hubbers` (or `hubbers.exe` on Windows).
+## Documentation
 
-Test it:
-```bash
-./hubbers-framework/target/hubbers --help
-```
+The documentation set has been reorganized to be publishable from the `docs/` folder via GitHub Pages.
 
-### Installation
+Start here:
 
-#### Install Globally
+- [Documentation Home](docs/index.md)
+- [Software Architecture](docs/SWA.md)
+- [Agentic Architecture](docs/AGENTIC_ARCHITECTURE.md)
+- [Agents Guide](docs/AGENTS.md)
+- [Tools Guide](docs/Tools.md)
+- [Pipelines Guide](docs/Pipelines.md)
+- [Skills Guide](docs/Skills.md)
+- [Native Build Guide](docs/NATIVE_BUILD.md)
+- [GitHub Pages Publishing Guide](docs/GITHUB_PAGES.md)
+- [Codebase Analysis](CODEBASE_ANALYSIS.md)
 
-To make the `hubbers` command available system-wide:
+## Current Caveats
 
-**Linux/macOS:**
-```bash
-# System installation (copy to /usr/local/bin)
-sudo ./install.sh
+Two implementation details are worth knowing before publishing or packaging:
 
-# Development mode (symlink for easy updates)
-./install.sh --dev
-```
+- The embedded web assets in `hubbers-framework/src/main/resources/web` currently look stale: `index.html` references hashed files that are not present in the copied `assets/` directory. The runtime UI should be rebuilt and verified separately from the documentation site.
+- Repo-path defaults are not fully consistent across the codebase. The CLI defaults to `hubbers-repo/src/main/resources/repo`, while some lower-level constructors still default to `repo`.
 
-**Windows (as Administrator):**
-```cmd
-install.bat
-```
-
-The install script automatically detects whether to install the native binary or create a JAR wrapper.
-
-After installation, the command is available directly:
-```bash
-hubbers --help
-hubbers list agents
-```
-
-#### GraalVM Setup
-
-If you don't have GraalVM installed:
-
-1. Download GraalVM from: https://www.graalvm.org/downloads/
-2. Set `JAVA_HOME` to the GraalVM directory
-3. Install native-image:
-   ```bash
-   gu install native-image
-   ```
-4. On Windows, ensure Visual Studio Build Tools are installed
-
-### Project Structure
-
-```
-hubbers/
-├── hubbers-framework/      # Core Java framework
-├── hubbers-ui/             # React web interface
-├── hubbers-repo/           # Default repository of artifacts
-└── hubbers-distribution/   # Executable JAR assembly
-```
-
-For more details, see [BUILD.md](BUILD.md).
-
-## ⚙️ Configuration
-
-Create an application.yaml file:
-
-```yaml
-repoRoot: ./repo
-
-openai:
-  apiKey: ${OPENAI_API_KEY}
-  baseUrl: https://api.openai.com/v1
-  defaultModel: gpt-4.1-mini
-```
-
-Set your API key:
-```
-export OPENAI_API_KEY=your_key_here
-```
-
-### Pinchtab Setup (Optional)
-
-For browser automation tools, install Pinchtab:
-
-**macOS / Linux:**
-```bash
-curl -fsSL https://pinchtab.com/install.sh | bash
-```
-
-**Homebrew:**
-```bash
-brew install pinchtab/tap/pinchtab
-```
-
-**npm:**
-```bash
-npm install -g pinchtab
-```
-
-Start the Pinchtab daemon:
-```bash
-pinchtab daemon install
-pinchtab daemon
-```
-
-The browser control server will be available at `http://localhost:9867`.
-
-Verify installation:
-```bash
-pinchtab --help
-```
-
-## 🧠 Philosophy
-
-Agents are artifacts, not hidden logic
-Git is the source of truth
-The runtime is transparent and controllable
-No magic, no heavy frameworks
-
-## 🎯 Vision
-
-Hubbers Runtime is the foundation for a broader platform:
-
-> An ecosystem where AI agents become versioned, composable, and reusable assets
-
-## 🔮 Roadmap
-
-- Multi-provider support (OpenAI, open-source models)
-- Async execution
-- Cost tracking and budgeting
-- GitHub integration
-- Agent marketplace
-
-## 🚧 Status
-
-Early stage — MVP in development.
-
-## 🤝 Contributing
-
-Contributions are welcome.
-Feel free to open issues or submit pull requests.
-
-## 📄 License
-
-MIT License (or choose your preferred license)
-
-##💡 Tagline
-
-> Define agents, tools, and workflows as code — run them anywhere.
+Those observations are documented in more detail in [CODEBASE_ANALYSIS.md](CODEBASE_ANALYSIS.md).
