@@ -10,9 +10,13 @@ Hubbers is a multi-module Java 21 project that turns a repository of AI artifact
 
 | Module | Purpose |
 | --- | --- |
-| `hubbers-framework` | Runtime core, executors, manifest parsing, CLI, web API |
+| `hubbers-core` | Runtime core, executors, manifest parsing, validation, model providers |
+| `hubbers-tools-builtin` | Built-in tool drivers discovered through `ServiceLoader` |
+| `hubbers-framework` | Compatibility jar preserving the historical runtime coordinate |
+| `hubbers-web` | Web API and static asset serving |
+| `hubbers-cli` | Command-line interface and `org.hubbers.Main` |
 | `hubbers-repo` | Bundled repository with sample artifacts and runtime config |
-| `hubbers-ui` | React/Vite frontend copied into framework resources at build time |
+| `hubbers-ui` | React/Vite frontend packaged for the web module |
 | `hubbers-distribution` | Shaded executable distribution |
 
 ## Execution Model
@@ -42,11 +46,11 @@ Execution flow:
 
 ## Dependency Wiring
 
-The executor graph is now mediated through `ExecutorRegistry`, which removes the older direct circular dependency between agentic and pipeline execution.
+The executor graph is now mediated through `ExecutorRegistry`, which removes the older direct circular dependency between agentic and pipeline execution. Tool registration is also split: `hubbers-core` exposes the tool SPI and `hubbers-tools-builtin` contributes built-in drivers through `ServiceLoader`.
 
 Key wiring reference:
 
-- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:45)
+- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-core/src/main/java/org/hubbers/app/Bootstrap.java:1)
 
 ## Artifact Types
 
@@ -70,7 +74,6 @@ Hubbers currently supports four repository artifact categories:
 
 ## Known Architectural Constraints
 
-- The web UI bundle in framework resources should be rebuilt and verified before treating it as release-ready.
 - Repo-path defaults are not fully unified across all entry points.
 - The bundled repo contains checked-in execution artifacts under `_executions`, which is convenient for development but noisy for published samples.
 

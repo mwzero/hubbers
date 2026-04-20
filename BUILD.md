@@ -9,12 +9,11 @@ Hubbers is organized as a Maven multi-module project:
 ```
 hubbers/
 ├── pom.xml                      # Parent aggregator POM
-├── hubbers-framework/           # Core Java framework
-│   ├── pom.xml
-│   └── src/
-│       ├── main/java/           # Java source code
-│       ├── main/resources/      # Resources (web/, META-INF/)
-│       └── test/java/           # Unit tests
+├── hubbers-core/                # Runtime core, executors, manifests, validation
+├── hubbers-tools-builtin/       # Built-in tool drivers and Lucene support
+├── hubbers-framework/           # Compatibility runtime jar
+├── hubbers-web/                 # Web API and static asset packaging
+├── hubbers-cli/                 # CLI commands and Main entrypoint
 ├── hubbers-ui/                  # React web UI
 │   ├── pom.xml
 │   ├── package.json
@@ -67,13 +66,14 @@ mvn clean install -X
 
 **Build order** (automatic):
 1. `hubbers-ui` - React app compiled with Vite → outputs to `dist/`
-2. `hubbers-framework` - Java core compiled, UI copied from `../hubbers-ui/dist/` → `src/main/resources/web/`
-3. `hubbers-repo` - Repository artifacts packaged
-4. `hubbers-distribution` - Fat JAR assembled with all dependencies
+2. `hubbers-core` + `hubbers-tools-builtin` + `hubbers-framework` - runtime libraries compiled
+3. `hubbers-web` + `hubbers-cli` - web/CLI layers compiled, UI copied into `hubbers-web/target/classes/web/`
+4. `hubbers-repo` - Repository artifacts packaged
+5. `hubbers-distribution` - Fat JAR assembled with all dependencies
 
 ### Quick Build (Skip UI)
 
-When UI hasn't changed, skip the UI module for faster builds:
+When UI hasn't changed, skip the frontend rebuild for faster builds:
 
 ```bash
 # Linux/macOS
@@ -83,38 +83,44 @@ When UI hasn't changed, skip the UI module for faster builds:
 build-quick.bat
 
 # Or manually
-mvn clean package -pl hubbers-framework,hubbers-distribution -am -DskipTests
+mvn clean package -pl hubbers-distribution -am -DskipTests -Dhubbers.ui.skip.frontend=true
 ```
 
-This compiles only:
-- `hubbers-framework` (with existing UI assets)
-- `hubbers-distribution` (fat JAR)
+This compiles the runtime modules and distribution while reusing existing `hubbers-ui/dist` assets.
 
-**Use case:** Daily development when only Java code changes.
+**Use case:** Daily development when only Java code changes and frontend assets are already built.
 
 ### Build Individual Modules
 
 ```bash
-# Build only framework (requires UI already built)
-cd hubbers-framework
+# Build only core runtime
+cd hubbers-core
+mvn clean package
+
+# Build only built-in tool drivers
+cd ../hubbers-tools-builtin
+mvn clean package
+
+# Build only CLI
+cd ../hubbers-cli
 mvn clean package
 
 # Build only UI
-cd hubbers-ui
+cd ../hubbers-ui
 mvn clean compile
 
 # Build only repo
 cd hubbers-repo
 mvn clean package
 
-# Build only distribution (requires framework and repo)
+# Build only distribution (requires CLI and repo)
 cd hubbers-distribution
 mvn clean package
 ```
 
 ### Native Executable Build
 
-Build GraalVM native image (framework only):
+Build GraalVM native image from the distribution module:
 
 ```bash
 # Linux/macOS
@@ -124,11 +130,10 @@ Build GraalVM native image (framework only):
 build-native.bat
 
 # Or manually
-cd hubbers-framework
-mvn clean package -Pnative
+mvn clean package -pl hubbers-distribution -am -Pnative
 ```
 
-**Output**: `hubbers-framework/target/hubbers` (or `hubbers.exe` on Windows)
+**Output**: `hubbers-distribution/target/hubbers` (or `hubbers.exe` on Windows)
 
 **Note**: Native build takes 5-15 minutes and requires ~8GB RAM.
 
@@ -140,23 +145,26 @@ Activated with `-Pnative`:
 
 - Skips tests
 - Uses `native-maven-plugin` to compile to native executable
-- Only available in `hubbers-framework` module
+- Available in `hubbers-distribution`
 - Requires GraalVM with `native-image` installed
 
 ```bash
-cd hubbers-framework
-mvn package -Pnative
+mvn package -pl hubbers-distribution -am -Pnative
 ```
 
 ## Output Artifacts
 
 | Artifact | Location | Description |
 |----------|----------|-------------|
-| **Framework JAR** | `hubbers-framework/target/hubbers-framework-0.1.0-SNAPSHOT.jar` | Core library (not executable) |
-| **UI Assets** | `hubbers-framework/src/main/resources/web/` | Compiled React app |
+| **Core JAR** | `hubbers-core/target/hubbers-core-0.1.0-SNAPSHOT.jar` | Runtime core library |
+| **Builtins JAR** | `hubbers-tools-builtin/target/hubbers-tools-builtin-0.1.0-SNAPSHOT.jar` | Built-in tool drivers |
+| **Framework JAR** | `hubbers-framework/target/hubbers-framework-0.1.0-SNAPSHOT.jar` | Compatibility runtime jar |
+| **Web JAR** | `hubbers-web/target/hubbers-web-0.1.0-SNAPSHOT.jar` | Web server and bundled UI assets |
+| **CLI JAR** | `hubbers-cli/target/hubbers-cli-0.1.0-SNAPSHOT.jar` | CLI and `org.hubbers.Main` |
+| **UI Assets** | `hubbers-ui/dist/` | Compiled React app |
 | **Repo JAR** | `hubbers-repo/target/hubbers-repo-0.1.0-SNAPSHOT.jar` | Repository artifacts as JAR |
-| **Distribution JAR** | `hubbers-distribution/target/hubbers.jar` | Executable fat JAR (framework + repo + deps) |
-| **Native Executable** | `hubbers-framework/target/hubbers[.exe]` | GraalVM native binary |
+| **Distribution JAR** | `hubbers-distribution/target/hubbers.jar` | Executable fat JAR |
+| **Native Executable** | `hubbers-distribution/target/hubbers[.exe]` | GraalVM native binary |
 
 ## Running the Application
 
@@ -171,8 +179,8 @@ java -jar hubbers-distribution/target/hubbers.jar web --port 7070
 ### From Native Executable
 
 ```bash
-./hubbers-framework/target/hubbers --help
-./hubbers-framework/target/hubbers list tools
+./hubbers-distribution/target/hubbers --help
+./hubbers-distribution/target/hubbers list tools
 ```
 
 ### Install Globally
@@ -193,7 +201,8 @@ hubbers list agents
 
 ### Standard Java Development
 
-1. Make changes in `hubbers-framework/src/main/java/`
+1. Make changes in the relevant module:
+   `hubbers-core`, `hubbers-tools-builtin`, `hubbers-web`, or `hubbers-cli`.
 2. Quick build: `./build-quick.sh` (or `.bat` on Windows)
 3. Test: `java -jar hubbers-distribution/target/hubbers.jar`
 
@@ -205,8 +214,8 @@ hubbers list agents
 
 1. Make changes in `hubbers-ui/src/`
 2. Build UI: `cd hubbers-ui && mvn compile`
-3. UI automatically copied to `hubbers-framework/src/main/resources/web/`
-4. Build framework: `cd ../hubbers-framework && mvn package`
+3. UI packaged into `hubbers-ui/target/classes/web/`
+4. Build web/runtime layers: `cd .. && mvn package -pl hubbers-web,hubbers-cli,hubbers-distribution -am`
 5. Test: `java -jar ../hubbers-distribution/target/hubbers.jar web`
 
 **Or full rebuild:**
@@ -241,7 +250,7 @@ hubbers --repo /path/to/hubbers-repo/src/main/resources/repo list agents
 | **Java code change** | `./build-quick.sh` | 30 sec |
 | **UI change** | `mvn clean install -DskipTests` | 3-5 min |
 | **Repo artifacts change** | `mvn package -pl hubbers-repo,hubbers-distribution -am` | 20 sec |
-| **Test single module** | `cd hubbers-framework && mvn test` | 10 sec |
+| **Test single module** | `cd hubbers-core && mvn test` | 10 sec |
 
 ## Troubleshooting
 
@@ -253,9 +262,9 @@ Run `mvn clean install` from the project root to ensure all modules are built in
 
 Ensure build order is correct:
 1. `hubbers-ui` builds first (creates `dist/`)
-2. `hubbers-framework` copies UI assets during `process-classes` phase
+2. `hubbers-web` copies assets from `hubbers-ui/target/classes/web` during `process-resources`
 
-Check: `hubbers-framework/src/main/resources/web/index.html` should exist after build.
+Check: `hubbers-web/target/classes/web/index.html` should exist after build.
 
 ### Native build fails
 
@@ -263,7 +272,7 @@ Check: `hubbers-framework/src/main/resources/web/index.html` should exist after 
 - GraalVM not in PATH: Set `JAVA_HOME` to GraalVM directory
 - Missing `native-image`: Run `gu install native-image`
 - Out of memory: Add `-Xmx8g` to build args or reduce parallelism
-- Reflection errors: Update `reflect-config.json` in `hubbers-framework/src/main/resources/META-INF/native-image/`
+- Reflection errors: Update `reflect-config.json` in `hubbers-distribution/src/main/resources/META-INF/native-image/`
 
 **Windows-specific:**
 - Visual Studio Build Tools required
@@ -278,7 +287,7 @@ mvn clean package -DskipTests
 
 Run specific test:
 ```bash
-cd hubbers-framework
+cd hubbers-core
 mvn test -Dtest=AgenticExecutorTest
 ```
 
@@ -333,17 +342,28 @@ ENTRYPOINT ["java", "-jar", "/app/hubbers.jar"]
 ```
 hubbers-parent (aggregator)
   ├── hubbers-ui (no deps)
-  ├── hubbers-framework (no internal deps)
+  ├── hubbers-core (no internal deps)
+  ├── hubbers-tools-builtin
+  │   └── depends on: hubbers-core
+  ├── hubbers-framework
+  │   ├── depends on: hubbers-core
+  │   └── depends on: hubbers-tools-builtin
+  ├── hubbers-web
+  │   └── depends on: hubbers-framework
+  ├── hubbers-cli
+  │   ├── depends on: hubbers-framework
+  │   └── depends on: hubbers-web
   ├── hubbers-repo (no deps)
   └── hubbers-distribution
-      ├── depends on: hubbers-framework
+      ├── depends on: hubbers-cli
       └── depends on: hubbers-repo
 ```
 
 **Build execution order**:
-1. UI → Framework (UI assets copied)
-2. Repo (standalone)
-3. Distribution (assembles framework + repo)
+1. UI → Core/Builtins/Framework
+2. Web/CLI (UI assets copied into web classes)
+3. Repo
+4. Distribution
 
 ---
 

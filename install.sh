@@ -3,7 +3,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-NATIVE_BINARY="$SCRIPT_DIR/hubbers-framework/target/hubbers"
+NATIVE_BINARY="$SCRIPT_DIR/hubbers-distribution/target/hubbers"
 JAR_FILE="$SCRIPT_DIR/hubbers-distribution/target/hubbers.jar"
 INSTALL_DIR="/usr/local/bin"
 INSTALL_PATH="$INSTALL_DIR/hubbers"
@@ -55,25 +55,23 @@ else
 fi
 
 # Install
-if [ "$MODE" = "dev" ]; then
+if [ "$MODE" = "dev" ] && [ "$BINARY_TYPE" = "native" ]; then
     echo "Creating symlink: $INSTALL_PATH -> $BINARY_PATH"
-    $SUBINARY_TYPE" = "jar" ]; then
-    # For JAR, create a wrapper script
+    $SUDO rm -f "$INSTALL_PATH"
+    $SUDO ln -s "$BINARY_PATH" "$INSTALL_PATH"
+elif [ "$BINARY_TYPE" = "jar" ]; then
     echo "Installing JAR with wrapper script..."
     $SUDO mkdir -p "$INSTALL_DIR"
-    $SUDO cp "$BINARY_PATH" "$INSTALL_DIR/hubbers.jar"
-    
-    # Create wrapper script
-    cat > /tmp/hubbers << 'EOF'
-#!/bin/bash
-exec java -jar /usr/local/bin/hubbers.jar "$@"
-EOF
-    
-    $SUDO mv /tmp/hubbers "$INSTALL_PATH"
+    if [ "$MODE" = "dev" ]; then
+        HUBBERS_JAR_PATH="$BINARY_PATH"
+    else
+        HUBBERS_JAR_PATH="$INSTALL_DIR/hubbers.jar"
+        $SUDO cp "$BINARY_PATH" "$HUBBERS_JAR_PATH"
+    fi
+    TEMP_WRAPPER="$(mktemp)"
+    printf '#!/bin/bash\nexec java -jar "%s" "$@"\n' "$HUBBERS_JAR_PATH" > "$TEMP_WRAPPER"
+    $SUDO mv "$TEMP_WRAPPER" "$INSTALL_PATH"
     $SUDO chmod +x "$INSTALL_PATH"
-    
-elif [ "$DO rm -f "$INSTALL_PATH"
-    $SUDO ln -s "$BINARY_PATH" "$INSTALL_PATH"
 else
     echo "Copying binary to: $INSTALL_PATH"
     $SUDO cp "$BINARY_PATH" "$INSTALL_PATH"

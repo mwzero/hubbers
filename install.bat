@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
-set "NATIVE_BINARY=%SCRIPT_DIR%hubbers-framework\target\hubbers.exe"
+set "NATIVE_BINARY=%SCRIPT_DIR%hubbers-distribution\target\hubbers.exe"
 set "JAR_FILE=%SCRIPT_DIR%hubbers-distribution\target\hubbers.jar"
 set "INSTALL_DIR=%ProgramFiles%\Hubbers"
 set "INSTALL_PATH=%INSTALL_DIR%\hubbers.exe"

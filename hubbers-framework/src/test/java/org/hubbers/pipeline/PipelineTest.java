@@ -12,10 +12,12 @@ import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.pipeline.PipelineStep;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.util.JacksonFactory;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +26,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class PipelineTest {
 
     private final ObjectMapper mapper = JacksonFactory.jsonMapper();
+
+    @TempDir
+    Path tempDir;
 
     @BeforeEach
     void setUp() {
@@ -37,21 +42,26 @@ public class PipelineTest {
 
     @Test
     void executePipeline() throws Exception {
-        
-        // 1. Initialize the framework pointing to your 'repo' folder
-        RuntimeFacade hubbers = new RuntimeFacade(Path.of("./hubbers-repo"));
+        RuntimeFacade hubbers = new RuntimeFacade(Path.of("hubbers-repo/src/main/resources/repo"));
 
-        // 2. Prepare the input data
+        Path sourceDir = tempDir.resolve("source");
+        Path backupDir = tempDir.resolve("backup");
+        java.nio.file.Files.createDirectories(sourceDir);
+        java.nio.file.Files.writeString(sourceDir.resolve("sample.txt"), "backup me");
+
         Map<String, Object> inputs = Map.of(
-            "repository_path", "https://github.com/example/repo"
+            "source_dir", sourceDir.toString(),
+            "backup_dir", backupDir.toString(),
+            "file_pattern", ".*\\.txt",
+            "file_name", "sample.txt"
         );
 
-        // 3. Execute the pipeline (Replaces crew.kickoff())
         JsonNode inputsNode = mapper.convertValue(inputs, JsonNode.class);
-        RunResult result = hubbers.runPipeline("research.and.report", inputsNode);
+        RunResult result = hubbers.runPipeline("file.backup", inputsNode);
 
-        // 4. Print the final summary
-        System.out.println(result.getOutput());
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(org.hubbers.execution.ExecutionStatus.SUCCESS, result.getStatus());
+        Assertions.assertTrue(java.nio.file.Files.exists(backupDir.resolve("sample.txt")));
     }
 
     @Test

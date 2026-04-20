@@ -27,24 +27,22 @@ java -version
 echo ""
 
 # Clean and build with native profile
-echo "Building native executable from hubbers-framework module..."
+echo "Building native executable from hubbers-distribution module..."
 echo ""
-cd hubbers-framework
-mvn -Pnative clean package
-cd ..
+mvn -pl hubbers-distribution -am -Pnative clean package
 
 # Check if build was successful
-if [ -f "hubbers-framework/target/hubbers" ]; then
+if [ -f "hubbers-distribution/target/hubbers" ]; then
     echo ""
     echo "========================================="
     echo "Build successful!"
     echo "========================================="
     echo ""
-    echo "Native executable: hubbers-framework/target/hubbers"
-    echo "Size: $(du -h hubbers-framework/target/hubbers | cut -f1)"
+    echo "Native executable: hubbers-distribution/target/hubbers"
+    echo "Size: $(du -h hubbers-distribution/target/hubbers | cut -f1)"
     echo ""
     echo "To test the executable:"
-    echo "  ./hubbers-framework/target/hubbers --help"
+    echo "  ./hubbers-distribution/target/hubbers --help"
     echo ""
     echo "To install globally:"
     echo "  ./install.sh"

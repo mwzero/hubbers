@@ -55,7 +55,7 @@ After building, verify that the binary can at least start and list artifacts:
 ## Current Caveats
 
 - The web runtime depends on bundled frontend assets and should be tested separately after every UI rebuild.
-- If you change reflective manifest parsing or web serialization behavior, review the native-image configs under `hubbers-framework/src/main/resources/META-INF/native-image/`.
+- If you change reflective manifest parsing or web serialization behavior, review the native-image configs under `hubbers-distribution/src/main/resources/META-INF/native-image/`.
 
 ## Installation
 

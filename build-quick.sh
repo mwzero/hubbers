@@ -4,13 +4,13 @@
 set -e
 
 echo "========================================"
-echo "Hubbers Quick Build (Framework + Dist)"
+echo "Hubbers Quick Build"
 echo "========================================"
 echo ""
-echo "Skipping UI module (use 'mvn clean install' for full build)"
+echo "Skipping frontend rebuild (requires existing hubbers-ui/dist)"
 echo ""
 
-mvn clean package -pl hubbers-framework,hubbers-distribution -am -DskipTests
+mvn clean package -pl hubbers-distribution -am -DskipTests -Dhubbers.ui.skip.frontend=true
 
 echo ""
 echo "========================================"

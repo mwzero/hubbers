@@ -4,13 +4,13 @@ REM Quick build script - skips UI module
 setlocal
 
 echo ========================================
-echo Hubbers Quick Build (Framework + Dist)
+echo Hubbers Quick Build
 echo ========================================
 echo.
-echo Skipping UI module (use 'mvn clean install' for full build)
+echo Skipping frontend rebuild (requires existing hubbers-ui\dist)
 echo.
 
-call mvn clean package -pl hubbers-framework,hubbers-distribution -am -DskipTests
+call mvn clean package -pl hubbers-distribution -am -DskipTests -Dhubbers.ui.skip.frontend=true
 
 if %errorlevel% neq 0 (
     echo.

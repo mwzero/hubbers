@@ -65,7 +65,7 @@ The current manifests commonly include:
 
 ## Tool Type Dispatch
 
-The runtime maps manifest `type` values to Java tool drivers registered in `Bootstrap`.
+The runtime maps manifest `type` values to Java tool drivers loaded through the `ToolDriverProvider` SPI. `Bootstrap` discovers providers with `ServiceLoader`, and `hubbers-tools-builtin` contributes the default built-in set.
 
 Examples currently wired in the runtime include:
 
@@ -85,7 +85,7 @@ Examples currently wired in the runtime include:
 
 Reference:
 
-- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:63)
+- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-core/src/main/java/org/hubbers/app/Bootstrap.java:1)
 
 ## Forms
 
@@ -98,8 +98,8 @@ Example:
 ## Creating A New Tool
 
 1. Add `hubbers-repo/src/main/resources/repo/tools/<tool-name>/tool.yaml`.
-2. Choose a `type` that maps to an existing driver, or implement a new driver in `hubbers-framework`.
-3. Register the new driver in `Bootstrap` if you introduced a new type.
+2. Choose a `type` that maps to an existing driver, or implement a new driver in `hubbers-tools-builtin` or another runtime module.
+3. Register the new driver through a `ToolDriverProvider` implementation and `META-INF/services/org.hubbers.tool.ToolDriverProvider`.
 4. Add input/output schemas and examples.
 5. Add `forms.before` if the tool should be interactive in the web UI.
 

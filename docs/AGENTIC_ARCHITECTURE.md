@@ -47,7 +47,7 @@ This is important because older analysis documents described a circular dependen
 
 Reference:
 
-- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:89)
+- [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-core/src/main/java/org/hubbers/app/Bootstrap.java:1)
 
 ## Natural Language Mode
 
@@ -64,7 +64,7 @@ When present, execution is routed through `NaturalLanguageTaskService`.
 
 Reference:
 
-- [RuntimeFacade.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/RuntimeFacade.java:117)
+- [RuntimeFacade.java](/Users/mauriziofarina/src/hubbers/hubbers-core/src/main/java/org/hubbers/app/RuntimeFacade.java:1)
 
 ## Bundled Agent Types
 

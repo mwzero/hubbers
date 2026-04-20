@@ -13,9 +13,13 @@ The project is organized as a multi-module Maven build and ships both a CLI/runt
 
 Current modules:
 
-- `hubbers-framework`: core runtime, CLI, web server, executors, manifest parsing
+- `hubbers-core`: runtime core, executors, manifest parsing, model providers, validation
+- `hubbers-tools-builtin`: built-in Java tool drivers discovered through `ServiceLoader`
+- `hubbers-framework`: compatibility jar that preserves the historical runtime coordinate
+- `hubbers-web`: web server and packaged frontend resources
+- `hubbers-cli`: command-line interface and `org.hubbers.Main`
 - `hubbers-repo`: bundled sample repository with agents, tools, pipelines, skills, and config
-- `hubbers-ui`: React/Vite frontend that is copied into framework resources during build
+- `hubbers-ui`: React/Vite frontend packaged as build output for the web module
 - `hubbers-distribution`: shaded executable distribution
 
 Current bundled artifacts in `hubbers-repo/src/main/resources/repo`:
@@ -34,7 +38,7 @@ The current runtime centers on `RuntimeFacade`, which loads artifacts from `Arti
 - `PipelineExecutor` for step orchestration
 - `SkillExecutor` for skill execution
 
-The older circular dependency concern between `AgenticExecutor` and `PipelineExecutor` has already been addressed in code with `ExecutorRegistry` wiring in [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-framework/src/main/java/org/hubbers/app/Bootstrap.java:45).
+The older circular dependency concern between `AgenticExecutor` and `PipelineExecutor` has already been addressed in code with `ExecutorRegistry` wiring in [Bootstrap.java](/Users/mauriziofarina/src/hubbers/hubbers-core/src/main/java/org/hubbers/app/Bootstrap.java:1).
 
 ## Quick Start
 
@@ -72,7 +76,10 @@ java -jar hubbers-distribution/target/hubbers.jar web --port 7070
 ```text
 .
 ├── hubbers-distribution/
+├── hubbers-cli/
+├── hubbers-core/
 ├── hubbers-framework/
+├── hubbers-tools-builtin/
 ├── hubbers-repo/
 │   └── src/main/resources/repo/
 │       ├── agents/
@@ -82,6 +89,7 @@ java -jar hubbers-distribution/target/hubbers.jar web --port 7070
 │       ├── application.yaml
 │       └── _executions/
 ├── hubbers-ui/
+├── hubbers-web/
 ├── docs/
 └── CODEBASE_ANALYSIS.md
 ```
@@ -107,7 +115,7 @@ Start here:
 
 Two implementation details are worth knowing before publishing or packaging:
 
-- The embedded web assets in `hubbers-framework/src/main/resources/web` currently look stale: `index.html` references hashed files that are not present in the copied `assets/` directory. The runtime UI should be rebuilt and verified separately from the documentation site.
+- `hubbers-web` serves frontend assets copied from `hubbers-ui` build output during the Maven build; if you skip the frontend build, you need an existing `hubbers-ui/dist`.
 - Repo-path defaults are not fully consistent across the codebase. The CLI defaults to `hubbers-repo/src/main/resources/repo`, while some lower-level constructors still default to `repo`.
 
 Those observations are documented in more detail in [CODEBASE_ANALYSIS.md](CODEBASE_ANALYSIS.md).

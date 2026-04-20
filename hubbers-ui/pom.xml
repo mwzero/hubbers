@@ -29,6 +29,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
+                            <skip>${hubbers.ui.skip.frontend}</skip>
                             <nodeVersion>${node.version}</nodeVersion>
                             <npmVersion>${npm.version}</npmVersion>
                         </configuration>
@@ -42,6 +43,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
+                            <skip>${hubbers.ui.skip.frontend}</skip>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
@@ -54,25 +56,26 @@
                         </goals>
                         <phase>compile</phase>
                         <configuration>
+                            <skip>${hubbers.ui.skip.frontend}</skip>
                             <arguments>run build</arguments>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             
-            <!-- Copy built UI assets to framework resources -->
+            <!-- Package built UI assets into this module's jar under /web -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-ui-to-framework</id>
+                        <id>copy-ui-to-output</id>
                         <phase>process-classes</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/../hubbers-framework/src/main/resources/web</outputDirectory>
+                            <outputDirectory>${project.build.outputDirectory}/web</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/dist</directory>

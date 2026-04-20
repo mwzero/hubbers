@@ -17,9 +17,13 @@ The codebase is organized as a multi-module Maven project with a bundled artifac
 
 | Module | Purpose |
 | --- | --- |
-| `hubbers-framework` | Runtime core, executors, CLI, web server, validators |
+| `hubbers-core` | Runtime core, executors, validators, model providers |
+| `hubbers-tools-builtin` | Built-in Java tool drivers and Lucene support classes |
+| `hubbers-framework` | Compatibility jar preserving the historical runtime coordinate |
+| `hubbers-web` | Web server and packaged frontend resources |
+| `hubbers-cli` | CLI commands and `org.hubbers.Main` entrypoint |
 | `hubbers-repo` | Bundled sample repo with manifests and config |
-| `hubbers-ui` | React/Vite frontend copied into runtime resources |
+| `hubbers-ui` | React/Vite frontend packaged for the web module |
 | `hubbers-distribution` | Shaded jar packaging |
 
 ## Bundled Artifact Inventory

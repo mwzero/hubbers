@@ -1,10 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Set GraalVM JAVA_HOME
-set JAVA_HOME=C:\mwzero\res\graalvm-jdk-25.0.2+10.1
-set PATH=%JAVA_HOME%\bin;%PATH%
-
 echo =========================================
 echo Hubbers Native Build Script
 echo =========================================
@@ -32,24 +28,22 @@ java -version
 echo.
 
 REM Clean and build with native profile
-echo Building native executable from hubbers-framework module...
+echo Building native executable from hubbers-distribution module...
 echo.
-cd hubbers-framework
-call mvn -Pnative clean package
-cd ..
+call mvn -pl hubbers-distribution -am -Pnative clean package
 
 REM Check if build was successful
-if exist "hubbers-framework\target\hubbers.exe" (
+if exist "hubbers-distribution\target\hubbers.exe" (
     echo.
     echo =========================================
     echo Build successful!
     echo =========================================
     echo.
-    echo Native executable: hubbers-framework\target\hubbers.exe
-    for %%A in (hubbers-framework\target\hubbers.exe) do echo Size: %%~zA bytes
+    echo Native executable: hubbers-distribution\target\hubbers.exe
+    for %%A in (hubbers-distribution\target\hubbers.exe) do echo Size: %%~zA bytes
     echo.
     echo To test the executable:
-    echo   hubbers-framework\target\hubbers.exe --help
+    echo   hubbers-distribution\target\hubbers.exe --help
     echo.
     echo To install globally:
     echo   install.bat
