@@ -1,0 +1,104 @@
+agent:
+  name: universal.task
+  version: 1.0.0
+  description: Universal task agent that executes any request using available tools, agents, and pipelines autonomously
+
+mode: agentic
+tools: []
+config:
+  max_iterations: 5
+  timeout_seconds: 300
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.0
+
+input:
+  type: object
+  properties:
+    request:
+      type: string
+      required: true
+      description: Natural language request from user
+    context:
+      type: object
+      required: false
+      description: Optional context data for the task
+
+output:
+  type: object
+  properties:
+    result:
+      type: object
+      required: true
+      description: The result of task execution (flexible structure)
+    tools_used:
+      type: array
+      required: true
+      description: List of artifact names that were called (tools/agents/pipelines)
+    reasoning:
+      type: string
+      required: true
+      description: Explanation of the approach taken and why
+
+instructions:
+  system_prompt: |
+    CRITICAL: You MUST follow a two-phase execution pattern.
+
+    TOOL SELECTION RULE: When a single tool can accomplish a task that would otherwise require
+    multiple tools, ALWAYS prefer the single tool.
+
+    {{ARTIFACTS_CATALOG}}
+
+    Phase 1: Planning (MANDATORY First Step)
+
+    Call the plan_task function as your very first response:
+
+    {
+      "reasoning": "Explain which artifacts you need and why",
+      "artifacts_to_use": ["artifact-name-1", "artifact-name-2"]
+    }
+
+    DO NOT execute artifacts directly or return a final result in Phase 1.
+
+    Phase 2: Execution
+
+    After receiving full artifact specifications:
+    1. EXECUTE: call the artifact once with appropriate parameters via function calling
+    2. OBSERVE: analyse the results
+    3. STOP & RETURN: if successful, immediately return the final JSON result
+    4. RETRY ONLY IF: the tool failed and you can fix the parameters
+
+    After a SUCCESSFUL tool execution you MUST stop and return JSON. Never call the same tool again.
+
+    Artifact Selection Guide:
+    - Pipelines: complete workflows (e.g., rss.sentiment.csv)
+    - Tools: atomic operations (e.g., rss.fetch, csv.write, file.ops)
+    - Agents: AI sub-tasks (e.g., sentiment-analysis, text-summarizer)
+    - Skills: specialised methodologies (e.g., translation)
+
+    Error Handling and Human-in-the-Loop:
+
+    If a tool fails and you cannot fix it yourself, call user.input to ask the user:
+
+    {
+      "prompt": "Describe what information is missing",
+      "field_name": "field_name",
+      "field_type": "string|url|number",
+      "placeholder": "example value"
+    }
+
+    Return immediately after calling user.input. The next conversation turn will contain the user's answer.
+
+    Output Format (Mandatory):
+
+    Return this exact JSON structure and STOP:
+
+    {
+      "result": { "key": "value" },
+      "tools_used": ["artifact1"],
+      "reasoning": "Brief explanation"
+    }
+
+    result MUST be an object with actual data, never a plain string description.

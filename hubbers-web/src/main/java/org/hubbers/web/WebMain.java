@@ -5,6 +5,10 @@ import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.config.LogbackConfigurator;
 import org.hubbers.config.RepoPathResolver;
+import org.hubbers.mcp.McpPromptProvider;
+import org.hubbers.mcp.McpRequestHandler;
+import org.hubbers.mcp.McpToolProvider;
+import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 
 import java.nio.file.Path;
@@ -21,7 +25,16 @@ public class WebMain {
 
         ManifestFileService manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
 
-        new WebServer(facade, manifestFileService, new ManifestValidator(), repoPath).start(port);
+        WebServer webServer = new WebServer(facade, manifestFileService, new ManifestValidator(), repoPath);
+
+        // Wire MCP server
+        var objectMapper = JacksonFactory.jsonMapper();
+        var mcpToolProvider = new McpToolProvider(facade.getArtifactRepository(), objectMapper);
+        var mcpPromptProvider = new McpPromptProvider(facade.getArtifactRepository());
+        var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, facade, objectMapper);
+        webServer.setMcpRequestHandler(mcpHandler);
+
+        webServer.start(port);
 
         System.out.println("Hubbers Web UI available at http://localhost:" + port);
     }

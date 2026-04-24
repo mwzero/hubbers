@@ -1,16 +1,16 @@
 package org.hubbers.app;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.hubbers.manifest.agent.AgentManifest;
-import org.hubbers.manifest.agent.AgentMdParser;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.manifest.skill.SkillMetadata;
 import org.hubbers.skill.SkillMdParser;
 import org.hubbers.util.JacksonFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,14 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.stream.Stream;
 
+@Slf4j
 public class ArtifactRepository {
-
-    private static final Logger log = LoggerFactory.getLogger(ArtifactRepository.class);
 
     private final Path repoRoot;
     private final ObjectMapper yamlMapper = JacksonFactory.yamlMapper();
     private final SkillMdParser skillParser = new SkillMdParser();
-    private final AgentMdParser agentMdParser = new AgentMdParser();
     
     // Progressive disclosure: cache lightweight metadata, load full manifest on demand
     private final Map<String, SkillMetadata> skillMetadataCache = new ConcurrentHashMap<>();
@@ -44,9 +42,8 @@ public class ArtifactRepository {
     }
 
     public java.util.List<String> listAgents() {
-        // List agents with either agent.yaml or AGENT.md
         return Stream.concat(
-                listManifestNamesMultiFormat(repoRoot, "agents", "agent.yaml", "AGENT.md").stream(),
+                listManifestNames(repoRoot, "agents", "agent.yaml").stream(),
                 agentCache.keySet().stream())
             .distinct()
             .sorted()
@@ -72,9 +69,8 @@ public class ArtifactRepository {
     }
 
     /**
-     * Load an agent manifest.
-     * Supports both formats: AGENT.md (priority) and agent.yaml (fallback).
-     * 
+     * Load an agent manifest from agent.yaml.
+     *
      * @param name Agent name
      * @return Parsed AgentManifest
      */
@@ -84,29 +80,14 @@ public class ArtifactRepository {
             return cached;
         }
 
-        Path agentDir = repoRoot.resolve("agents").resolve(name);
-        Path agentMdPath = agentDir.resolve("AGENT.md");
-        Path agentYamlPath = agentDir.resolve("agent.yaml");
-        
-        // Prioritize AGENT.md if it exists
-        if (Files.exists(agentMdPath)) {
-            try {
-                log.debug("Loading agent {} from AGENT.md", name);
-                return agentMdParser.parse(agentDir);
-            } catch (IOException e) {
-                log.error("Failed to parse AGENT.md for {}, falling back to agent.yaml", name, e);
-                // Fall through to YAML if MD parsing fails
-            }
-        }
-        
-        // Fall back to agent.yaml
+        Path agentYamlPath = repoRoot.resolve("agents").resolve(name).resolve("agent.yaml");
         if (Files.exists(agentYamlPath)) {
             log.debug("Loading agent {} from agent.yaml", name);
             return read(agentYamlPath, AgentManifest.class);
         }
-        
+
         throw new IllegalStateException(
-            "Agent '" + name + "' not found. Expected AGENT.md or agent.yaml in: " + agentDir
+            "Agent '" + name + "' not found. Expected agent.yaml in: " + agentYamlPath.getParent()
         );
     }
 
@@ -184,40 +165,6 @@ public class ArtifactRepository {
         } catch (IOException e) {
             log.error("Failed to load skill metadata: {}", name, e);
             return null;
-        }
-    }
-
-    /**
-     * List manifest names supporting multiple file formats.
-     * Returns directories that contain at least one of the specified manifest files.
-     * 
-     * @param root Root path
-     * @param folder Subfolder name
-     * @param manifestNames Multiple possible manifest file names
-     * @return List of manifest names
-     */
-    private List<String> listManifestNamesMultiFormat(Path root, String folder, String... manifestNames) {
-        Path base = root.resolve(folder);
-        if (!Files.exists(base)) {
-            return List.of();
-        }
-        try (Stream<Path> paths = Files.list(base)) {
-            return paths
-                    .filter(Files::isDirectory)
-                    .filter(p -> {
-                        // Check if any of the manifest files exist
-                        for (String manifestName : manifestNames) {
-                            if (Files.exists(p.resolve(manifestName))) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .map(p -> p.getFileName().toString())
-                    .sorted(Comparator.naturalOrder())
-                    .toList();
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot scan artifacts in " + base, e);
         }
     }
 

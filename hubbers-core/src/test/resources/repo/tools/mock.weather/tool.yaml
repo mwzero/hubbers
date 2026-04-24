@@ -1,0 +1,29 @@
+tool:
+  name: mock.weather
+  version: 1.0.0
+  description: Returns mock weather data for a given city. Use this to get current weather conditions.
+
+type: mock.weather
+
+input:
+  schema:
+    type: object
+    properties:
+      city:
+        type: string
+        description: The city name to get weather for
+        required: true
+
+output:
+  schema:
+    type: object
+    properties:
+      city:
+        type: string
+        description: City name
+      temperature_celsius:
+        type: number
+        description: Temperature in Celsius
+      condition:
+        type: string
+        description: Weather condition (sunny, cloudy, rainy, etc.)

@@ -53,10 +53,16 @@ export interface FormDef {
   fields: FormField[];
 }
 
+export interface StepInputMapping {
+  key: string;
+  expression: string;
+}
+
 export interface PipelineStep {
   id: string;
   targetType: ArtifactType;
   target: string;
+  inputMapping: StepInputMapping[];
 }
 
 export interface ValidationResult {

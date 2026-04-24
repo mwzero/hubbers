@@ -25,4 +25,17 @@ public class RunResult {
         result.setError(error);
         return result;
     }
+
+    /**
+     * Creates a PAUSED result indicating the execution is waiting for external input.
+     *
+     * @param executionId the execution ID to use when resuming
+     * @return a RunResult with PAUSED status
+     */
+    public static RunResult pending(String executionId) {
+        RunResult result = new RunResult();
+        result.setStatus(ExecutionStatus.PAUSED);
+        result.setExecutionId(executionId);
+        return result;
+    }
 }

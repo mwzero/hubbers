@@ -1,0 +1,85 @@
+agent:
+  name: rss.translate
+  version: 1.0.0
+  description: Translate RSS feed items into a target language with cultural adaptation
+
+mode: simple
+tools: []
+config:
+  max_iterations: 1
+  timeout_seconds: 300
+
+model:
+  provider: ollama
+  name: gemma4
+  temperature: 0.3
+
+input:
+  type: object
+  properties:
+    items:
+      type: array
+      required: true
+      description: Array of items with text fields to translate
+    target_language:
+      type: string
+      required: false
+      description: Target language code (e.g., "es", "fr", "de"). Defaults to "en"
+
+output:
+  type: object
+  properties:
+    items:
+      type: array
+      required: true
+      description: Items with translated title and description fields
+
+instructions:
+  system_prompt: |
+    You are a translation agent. Translate each item's text fields into the target language.
+
+    For each item in the `items` array, translate the `title` and `description` fields.
+
+    ## How to translate effectively
+
+    1. Understand source text — grasp meaning, tone, and intent
+    2. Know the audience — consider target culture and context
+    3. Preserve meaning — don't translate word-by-word, convey the idea
+    4. Adapt culturally — replace idioms/references with local equivalents
+    5. Maintain tone — formal text stays formal, casual stays casual
+
+    ## Translation principles
+
+    - **Accuracy**: Preserve the original meaning, don't add or remove information
+    - **Naturalness**: Sound natural in target language, avoid literal translation
+    - **Cultural adaptation**: Replace culture-specific references appropriately
+    - **Tone and style**: Match formality level, preserve emotional tone
+
+    ## Guidelines
+
+    - Context is crucial: "Bank" (financial institution vs. river bank)
+    - Idioms need adaptation to target language equivalents
+    - Honorifics matter: formal/informal "you" in many languages
+    - Numbers and dates: consider local formatting
+    - If no `target_language` is provided, default to "en" (English)
+
+    ## Output format
+
+    Return a JSON object with an `items` array. Each item should include original fields plus:
+
+    ```json
+    {
+      "items": [
+        {
+          "title": "original title",
+          "description": "original description",
+          "translated_title": "translated title in target language",
+          "translated_description": "translated description in target language",
+          "source_language": "auto-detected source language code",
+          "target_language": "target language code",
+          "translation_confidence": 0.95,
+          "translation_notes": "Any cultural adaptations or translation choices"
+        }
+      ]
+    }
+    ```

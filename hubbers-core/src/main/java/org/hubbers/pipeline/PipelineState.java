@@ -15,4 +15,24 @@ public class PipelineState {
     public JsonNode getStepOutput(String stepId) {
         return stepOutputs.get(stepId);
     }
+
+    /**
+     * Returns a copy of all step outputs (for serialization when pausing).
+     *
+     * @return unmodifiable map of step ID to output
+     */
+    public Map<String, JsonNode> getAllStepOutputs() {
+        return Map.copyOf(stepOutputs);
+    }
+
+    /**
+     * Restores step outputs from a previously saved map (for resume after pause).
+     *
+     * @param outputs the outputs to restore
+     */
+    public void restoreOutputs(Map<String, JsonNode> outputs) {
+        if (outputs != null) {
+            stepOutputs.putAll(outputs);
+        }
+    }
 }

@@ -40,7 +40,7 @@ public class ArtifactToFunctionConverter {
         JsonNode parameters = extractAgentParameters(agentManifest);
         var examples = agentManifest.getExamples();
 
-        return new FunctionDefinition(name, description, parameters, examples);
+        return FunctionDefinition.builder().name(name).description(description).parameters(parameters).examples(examples).build();
     }
 
     /**
@@ -53,7 +53,7 @@ public class ArtifactToFunctionConverter {
         JsonNode parameters = extractPipelineParameters(pipelineManifest);
         var examples = pipelineManifest.getExamples();
 
-        return new FunctionDefinition(name, description, parameters, examples);
+        return FunctionDefinition.builder().name(name).description(description).parameters(parameters).examples(examples).build();
     }
 
     /**
@@ -67,7 +67,7 @@ public class ArtifactToFunctionConverter {
         JsonNode parameters = createGenericSkillParameters();
 
         // Skills don't have predefined examples in metadata (loaded on activation)
-        return new FunctionDefinition(name, description, parameters, null);
+        return FunctionDefinition.builder().name(name).description(description).parameters(parameters).build();
     }
 
     // Agent extraction methods

@@ -27,7 +27,7 @@ public class ToolToFunctionConverter {
         JsonNode parameters = extractParameters(toolManifest);
         var examples = toolManifest.getExamples();
 
-        return new FunctionDefinition(name, description, parameters, examples);
+        return FunctionDefinition.builder().name(name).description(description).parameters(parameters).examples(examples).build();
     }
 
     private String extractToolName(ToolManifest manifest) {

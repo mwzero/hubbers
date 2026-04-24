@@ -1,0 +1,55 @@
+agent:
+  name: simple.with.tools.agent
+  version: 1.0.0
+  description: Agentic weather agent that calls mock.weather tool
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.0
+  think: true
+  max_iterations: 1
+
+mode: simple
+
+tools:
+  - mock.weather
+
+input:
+  type: object
+  properties:
+    text:
+      type: string
+      required: true
+      description: Input text
+
+output:
+  type: object
+  properties:
+    results:
+      type: array
+      required: true
+      description: List of weather results, one entry per city
+      items:
+        type: object
+        properties:
+          city:
+            type: string
+            description: City name
+          temperature_celsius:
+            type: number
+            description: Temperature in Celsius
+          condition:
+            type: string
+            description: Weather condition
+
+instructions:
+  system_prompt: |
+    You are a weather assistant.
+    You MUST call the mock.weather tool to get weather data for every city requested. Do not guess or invent data.
+    After receiving all tool results, return a JSON object with a "results" array containing one entry per city.
+    Each entry must have the fields: city, temperature_celsius, condition.
+    Example: {"results": [{"city": "Rome", "temperature_celsius": 24.0, "condition": "sunny"}]}
+  user_prompt: |
+    {text}
+

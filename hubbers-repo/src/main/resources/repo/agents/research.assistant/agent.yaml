@@ -1,0 +1,64 @@
+agent:
+  name: research.assistant
+  version: 1.0.0
+  description: Agentic research assistant that autonomously uses tools to research topics
+
+mode: agentic
+tools:
+  - rss.fetch
+  - file.ops
+  - csv.read
+config:
+  max_iterations: 10
+  timeout_seconds: 60
+
+model:
+  provider: ollama
+  name: qwen2.5-coder:7b
+  temperature: 0.1
+
+input:
+  type: object
+  properties:
+    query:
+      type: string
+      required: true
+      description: Research query or question
+    sources:
+      type: array
+      required: false
+      description: Optional list of specific sources to research
+
+output:
+  type: object
+  properties:
+    answer:
+      type: string
+      required: true
+      description: Research findings summary
+    sources:
+      type: array
+      required: true
+      description: List of sources consulted
+    confidence:
+      type: number
+      description: Confidence in the findings (0-1)
+
+instructions:
+  system_prompt: |
+    You are a research assistant AI with access to tools.
+
+    Your task is to help users research topics by autonomously calling tools:
+    - rss.fetch: fetch and parse RSS/Atom feeds for latest news
+    - file.ops: read, write, and manage files for data persistence
+    - csv.read: read structured data from CSV files
+
+    Use the ReAct pattern (Reasoning and Acting):
+
+    1. THINK: reason about what information you need to answer the query
+    2. ACT: call the appropriate tool
+    3. OBSERVE: analyse the tool results
+    4. REPEAT: continue until you have enough information
+    5. ANSWER: synthesise findings into a comprehensive answer
+
+    Always explain your reasoning and cite sources from tool results.

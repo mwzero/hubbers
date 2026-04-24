@@ -1,4 +1,6 @@
-import { Activity, Save, RefreshCw, Plus, Trash2, Workflow, History, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { Activity, Save, RefreshCw, Plus, Trash2, Workflow, History, ArrowLeft, Play, ChevronDown, ChevronUp } from 'lucide-react';
+import { StepInputPanel } from '@/components/workspace/StepInputPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { Artifact, ArtifactType, Execution, Step, PipelineStep } from '@/types/workspace';
+import type { Artifact, ArtifactType, Execution, Step, PipelineStep, RepoModel, StepInputMapping } from '@/types/workspace';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 
@@ -82,10 +84,13 @@ interface EditorPanelProps {
   onManifestChange: (v: string) => void;
   editorTab: string;
   onEditorTabChange: (v: string) => void;
-  loading: { save: boolean; validate: boolean; manifest: boolean };
+  loading: { save: boolean; validate: boolean; manifest: boolean; run: boolean };
   onSave: () => void;
   onValidate: () => void;
+  onRun: () => void;
+  runDisabled: boolean;
   // Pipeline
+  repo: RepoModel;
   pipelineSteps: PipelineStep[];
   onPipelineStepsChange: (steps: PipelineStep[]) => void;
   onSyncSteps: () => void;
@@ -112,11 +117,28 @@ function formatTime(ts: number) {
 
 export function EditorPanel({
   selected, manifest, onManifestChange, editorTab, onEditorTabChange,
-  loading, onSave, onValidate,
-  pipelineSteps, onPipelineStepsChange, onSyncSteps,
+  loading, onSave, onValidate, onRun, runDisabled,
+  repo, pipelineSteps, onPipelineStepsChange, onSyncSteps,
   executions, onLoadExecutions, selectedExecution, executionDetail, execDetailTab, onExecDetailTabChange,
   onSelectExecution, onBackToList,
 }: EditorPanelProps) {
+  const [expandedInputs, setExpandedInputs] = useState<Set<number>>(new Set());
+
+  const toggleInput = (idx: number) => {
+    setExpandedInputs(prev => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+
+  const artifactOptions = (type: ArtifactType): string[] => {
+    if (type === 'tool') return repo.tools.map(a => a.name);
+    if (type === 'agent') return repo.agents.map(a => a.name);
+    if (type === 'pipeline') return repo.pipelines.map(a => a.name);
+    if (type === 'skill') return repo.skills.map(a => a.name);
+    return [];
+  };
   if (!selected) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
@@ -126,16 +148,33 @@ export function EditorPanel({
   }
 
   const addStep = () => {
-    onPipelineStepsChange([...pipelineSteps, { id: `step_${pipelineSteps.length + 1}`, targetType: 'tool', target: '' }]);
+    onPipelineStepsChange([...pipelineSteps, { id: `step_${pipelineSteps.length + 1}`, targetType: 'tool', target: '', inputMapping: [] }]);
   };
 
   const removeStep = (idx: number) => {
+    setExpandedInputs(prev => {
+      const next = new Set(prev);
+      next.delete(idx);
+      return next;
+    });
     onPipelineStepsChange(pipelineSteps.filter((_, i) => i !== idx));
   };
 
   const updateStep = (idx: number, field: keyof PipelineStep, value: string) => {
     const updated = [...pipelineSteps];
     updated[idx] = { ...updated[idx], [field]: value };
+    onPipelineStepsChange(updated);
+  };
+
+  const updateStepType = (idx: number, newType: string) => {
+    const updated = [...pipelineSteps];
+    updated[idx] = { ...updated[idx], targetType: newType as ArtifactType, target: '', inputMapping: [] };
+    onPipelineStepsChange(updated);
+  };
+
+  const updateStepMapping = (idx: number, mapping: StepInputMapping[]) => {
+    const updated = [...pipelineSteps];
+    updated[idx] = { ...updated[idx], inputMapping: mapping };
     onPipelineStepsChange(updated);
   };
 
@@ -166,6 +205,10 @@ export function EditorPanel({
             <Button size="sm" className="h-7 text-xs gap-1.5" onClick={onSave} disabled={loading.save}>
               {loading.save ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
               Save
+            </Button>
+            <Button size="sm" className="h-7 text-xs gap-1.5" onClick={onRun} disabled={runDisabled || loading.run}>
+              {loading.run ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+              Run
             </Button>
           </div>
         </div>
@@ -223,17 +266,48 @@ export function EditorPanel({
                         <Trash2 className="w-3 h-3 text-destructive" />
                       </Button>
                     </CardHeader>
-                    <CardContent className="py-2 px-3 grid grid-cols-3 gap-2">
-                      <Input value={step.id} onChange={e => updateStep(idx, 'id', e.target.value)} placeholder="ID" className="h-7 text-xs" />
-                      <Select value={step.targetType} onValueChange={v => updateStep(idx, 'targetType', v)}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="tool">Tool</SelectItem>
-                          <SelectItem value="agent">Agent</SelectItem>
-                          <SelectItem value="pipeline">Pipeline</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input value={step.target} onChange={e => updateStep(idx, 'target', e.target.value)} placeholder="Target" className="h-7 text-xs" />
+                    <CardContent className="py-2 px-3 space-y-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Input value={step.id} onChange={e => updateStep(idx, 'id', e.target.value)} placeholder="Step name" className="h-7 text-xs" />
+                        <Select value={step.targetType} onValueChange={v => updateStepType(idx, v)}>
+                          <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="tool">Tool</SelectItem>
+                            <SelectItem value="agent">Agent</SelectItem>
+                            <SelectItem value="pipeline">Pipeline</SelectItem>
+                            <SelectItem value="skill">Skill</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={step.target} onValueChange={v => updateStep(idx, 'target', v)}>
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue placeholder="Select artifact..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {artifactOptions(step.targetType).map(name => (
+                              <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                            {artifactOptions(step.targetType).length === 0 && (
+                              <div className="px-2 py-1.5 text-xs text-muted-foreground">No artifacts found</div>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <button
+                        className="w-full flex items-center justify-between text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors pt-1 border-t"
+                        onClick={() => toggleInput(idx)}
+                      >
+                        <span>INPUT</span>
+                        {expandedInputs.has(idx) ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                      {expandedInputs.has(idx) && (
+                        <StepInputPanel
+                          targetType={step.targetType}
+                          targetName={step.target}
+                          inputMapping={step.inputMapping}
+                          onInputMappingChange={mapping => updateStepMapping(idx, mapping)}
+                          prevStepIds={pipelineSteps.slice(0, idx).map(s => s.id).filter(Boolean)}
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 ))}

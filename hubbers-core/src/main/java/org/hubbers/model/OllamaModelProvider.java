@@ -60,7 +60,13 @@ public class OllamaModelProvider implements ModelProvider {
             ObjectNode payload = mapper.createObjectNode();
             payload.put("model", model);
             payload.put("stream", false);
-            
+
+            // Suppress reasoning chain for thinking models (e.g. qwen3).
+            // Must be top-level in the Ollama request, NOT inside "options".
+            if (request.getThink() != null) {
+                payload.put("think", request.getThink());
+            }
+
             // Only force JSON format if no functions are defined
             // (function calling requires flexible output format)
             if (request.getFunctions() == null || request.getFunctions().isEmpty()) {
@@ -71,7 +77,7 @@ public class OllamaModelProvider implements ModelProvider {
             
             // Support both single-request (systemPrompt/userPrompt) and multi-turn (messages) modes
             if (request.getMessages() != null && !request.getMessages().isEmpty()) {
-                // Multi-turn conversation mode (used by AgenticExecutor)
+                // Multi-turn conversation mode (used by AgentExecutor)
                 for (Message msg : request.getMessages()) {
                     ObjectNode msgNode = messages.addObject();
                     msgNode.put("role", msg.getRole());

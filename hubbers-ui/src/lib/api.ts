@@ -9,7 +9,7 @@ async function handleResponse(res: Response) {
     let msg = `API error ${res.status}`;
     try {
       const json = JSON.parse(text);
-      msg = json.message || json.errors?.join(', ') || msg;
+      msg = json.message || json.error || json.errors?.join(', ') || msg;
     } catch { msg = text || msg; }
     throw new Error(msg);
   }
@@ -56,6 +56,21 @@ export async function validateManifest(type: ArtifactType, yaml: string): Promis
     body: yaml,
   }));
   return res.json();
+}
+
+export async function fetchToolForm(name: string): Promise<FormDef | null> {
+  try {
+    const res = await fetch(`${BASE}/api/run/tools/${name}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.requiresForm && data.form ? data.form : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function runArtifact(type: ArtifactType, name: string, input: any): Promise<{ data?: any; result?: any; tools_used?: string[]; reasoning?: string; requiresForm?: boolean; formSessionId?: string; form?: FormDef }> {

@@ -85,8 +85,8 @@ public class TestUtils {
      * @param name the agent name
      * @return a valid AgentManifest for testing
      */
-    public static AgentManifest createTestAgentManifest(String name) {
-        return createTestAgentManifest(name, "Test agent description", "You are a test agent.");
+    public static AgentManifest createTestAgentManifest(String name, String userPrompt) {
+        return createTestAgentManifest(name, "Test agent description", "You are a test agent.", userPrompt, "ollama", "qwen3:4b", 0.7);
     }
     
     /**
@@ -95,9 +95,13 @@ public class TestUtils {
      * @param name the agent name
      * @param description the agent description
      * @param systemPrompt the system prompt
+     * @param provider the model provider
+     * @param model the model name
+     * @param temperature the model temperature
      * @return a valid AgentManifest for testing
      */
-    public static AgentManifest createTestAgentManifest(String name, String description, String systemPrompt) {
+    public static AgentManifest createTestAgentManifest(String name, String description, String systemPrompt, String userPrompt, String provider, String model, double temperature) {
+        
         AgentManifest manifest = new AgentManifest();
         
         // Set metadata
@@ -109,13 +113,13 @@ public class TestUtils {
         
         // Set model config
         ModelConfig modelConfig = new ModelConfig();
-        modelConfig.setProvider("test");
-        modelConfig.setName("test-model");
-        modelConfig.setTemperature(0.7);
+        modelConfig.setProvider(provider);
+        modelConfig.setName(model);
+        modelConfig.setTemperature(temperature);
         manifest.setModel(modelConfig);
         
         // Set instructions
-        Instructions instructions = new Instructions(systemPrompt);
+        Instructions instructions = new Instructions(systemPrompt, userPrompt);
         manifest.setInstructions(instructions);
         
         // Set input/output schemas
@@ -248,7 +252,7 @@ public class TestUtils {
     public static FunctionDefinition createFunctionDefinition(String name, String description) {
         JsonNode parameters = MAPPER.createObjectNode()
             .put("type", "object");
-        return new FunctionDefinition(name, description, parameters);
+        return FunctionDefinition.builder().name(name).description(description).parameters(parameters).build();
     }
     
     /**

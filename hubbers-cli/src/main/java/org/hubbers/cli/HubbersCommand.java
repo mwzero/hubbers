@@ -4,14 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.hubbers.app.Bootstrap;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.config.RepoPathResolver;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
-import org.hubbers.forms.FormDefinition;
 import org.hubbers.forms.FormTrigger;
+import org.hubbers.mcp.McpPromptProvider;
+import org.hubbers.mcp.McpRequestHandler;
+import org.hubbers.mcp.McpToolProvider;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.web.ManifestFileService;
@@ -19,7 +20,6 @@ import org.hubbers.web.WebServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
 
 import java.io.File;
 import java.io.IOException;
@@ -339,7 +339,16 @@ public class HubbersCommand implements Callable<Integer> {
             var appConfig = new ConfigLoader(root.repoPath).load();
             var manifestFileService = new ManifestFileService(Path.of(appConfig.getRepoRoot()));
 
-            new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator(), root.repoPath).start(port);
+            WebServer webServer = new WebServer(root.runtimeFacade, manifestFileService, new ManifestValidator(), root.repoPath);
+
+            // Wire MCP server
+            var objectMapper = JacksonFactory.jsonMapper();
+            var mcpToolProvider = new McpToolProvider(root.runtimeFacade.getArtifactRepository(), objectMapper);
+            var mcpPromptProvider = new McpPromptProvider(root.runtimeFacade.getArtifactRepository());
+            var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, root.runtimeFacade, objectMapper);
+            webServer.setMcpRequestHandler(mcpHandler);
+
+            webServer.start(port);
 
 
             System.out.println("Hubbers Web UI available at http://localhost:" + port);

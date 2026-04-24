@@ -14,11 +14,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RequiredArgsConstructor
 public class ShellExecToolDriver implements ToolDriver {
     private final ObjectMapper mapper;
     private static final int DEFAULT_TIMEOUT_SECONDS = 60;
+
+    /** Patterns that are always blocked to prevent destructive operations. */
+    private static final List<Pattern> BLOCKED_PATTERNS = List.of(
+            Pattern.compile("\\brm\\s+-rf\\b", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("\\bmkfs\\b", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("\\bdd\\s+if=", Pattern.CASE_INSENSITIVE),
+            Pattern.compile(":\\(\\)\\{\\s*:\\|:", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("\\bformat\\s+[a-z]:", Pattern.CASE_INSENSITIVE),
+            Pattern.compile("\\b(shutdown|reboot|halt|poweroff)\\b", Pattern.CASE_INSENSITIVE),
+            Pattern.compile(">\\s*/dev/sd[a-z]", Pattern.CASE_INSENSITIVE)
+    );
 
     @Override
     public String type() {
@@ -30,6 +45,17 @@ public class ShellExecToolDriver implements ToolDriver {
         String command = input.path("command").asText();
         if (command.isEmpty()) {
             throw new IllegalArgumentException("Missing required field: command");
+        }
+
+        // Block dangerous patterns
+        validateCommandSafety(command);
+
+        // Validate against allowed-commands whitelist if configured
+        if (manifest != null && manifest.getConfig() != null) {
+            Object allowedCmds = manifest.getConfig().get("allowed_commands");
+            if (allowedCmds instanceof List<?> patterns) {
+                validateAllowedCommands(command, patterns);
+            }
         }
 
         List<String> cmdList = buildCommandList(command, input.path("args"));
@@ -89,6 +115,39 @@ public class ShellExecToolDriver implements ToolDriver {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Command execution interrupted: " + command, e);
+        }
+    }
+
+    /**
+     * Validate that the command does not match any blocked dangerous patterns.
+     *
+     * @param command the command string to validate
+     * @throws SecurityException if a dangerous pattern is detected
+     */
+    private void validateCommandSafety(String command) {
+        for (Pattern blocked : BLOCKED_PATTERNS) {
+            if (blocked.matcher(command).find()) {
+                log.warn("Blocked dangerous command pattern '{}' in: {}", blocked.pattern(), command);
+                throw new SecurityException("Command blocked by security policy: matches dangerous pattern");
+            }
+        }
+    }
+
+    /**
+     * Validate that the command matches at least one of the allowed command patterns.
+     *
+     * @param command the command string to validate
+     * @param patterns the allowed regex patterns
+     * @throws SecurityException if the command doesn't match any allowed pattern
+     */
+    private void validateAllowedCommands(String command, List<?> patterns) {
+        boolean matched = patterns.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .anyMatch(pattern -> Pattern.matches(pattern, command));
+        if (!matched) {
+            log.warn("Command '{}' does not match any allowed pattern", command);
+            throw new SecurityException("Command not in allowed commands whitelist");
         }
     }
 

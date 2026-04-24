@@ -1,16 +1,15 @@
 package org.hubbers.pipeline;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 
+import org.hubbers.annotation.Agent;
+import org.hubbers.annotation.Pipeline;
+import org.hubbers.annotation.Task;
 import org.hubbers.app.RuntimeFacade;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
-import org.hubbers.manifest.agent.Instructions;
-import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.pipeline.PipelineStep;
-import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.util.JacksonFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -65,64 +64,58 @@ public class PipelineTest {
     }
 
     @Test
-    @Disabled("This test demonstrates how to define and execute a pipeline entirely from code, without relying on manifest files. It's useful for testing or dynamic pipeline creation scenarios.")
+    @Disabled("Demonstrates @Pipeline DSL for code-defined pipelines. Requires live LLM and tool access.")
     void executePipelineFromCode() throws Exception {
-        
-        ToolManifest serperSearch = new ToolManifest();
-        serperSearch.getTool().setName("serper.search"); 
 
-        ToolManifest fileRead = new ToolManifest();
-        fileRead.getTool().setName("file.read"); 
+        // ------------------------------------------------------------------ //
+        // Define the pipeline using the @Pipeline / @Agent / @Task DSL.       //
+        // All wiring is handled by FlowRunner — no manual manifest assembly.  //
+        // ------------------------------------------------------------------ //
+        @Pipeline("research-pipeline")
+        class ResearchFlow {
 
+            @Agent
+            AgentManifest researcher() {
+                return AgentManifest.builder()
+                    .name("Senior Research Analyst")
+                    .instructions("you are a researcher analyst", "Uncover developments in AI frameworks. Find 3 key innovations.")
+                    .tools("serper.search", "file.read")
+                    .build();
+            }
 
-        // Define the Researcher Agent
-        AgentManifest researcher = new AgentManifest();
-        //researcher.setId("researcher");
-        researcher.getAgent().setName("Senior Research Analyst");
-        researcher.setInstructions(new Instructions(
-            "Uncover developments in AI frameworks. Find 3 key innovations."
-        ));
-        researcher.setTools(List.of("serper.search", "file.read")); // IDs of existing tools
+            @Agent
+            AgentManifest writer() {
+                return AgentManifest.builder()
+                    .name("Technical Content Strategist")
+                    .instructions("You are Technical Content Strategist", "Translate technical concepts into executive summaries in Markdown.")
+                    .build();
+            }
 
-        // Define the Writer Agent
-        AgentManifest writer = new AgentManifest();
-        //writer.setId("writer");
-        writer.getAgent().setName("Technical Content Strategist");
-        writer.setInstructions(new Instructions(
-            "Translate technical concepts into executive summaries in Markdown."
-        ));
+            @Task(order = 1)
+            PipelineStep researchTask() {
+                return PipelineStep.builder()
+                    .id("research_task")
+                    .agent("Senior Research Analyst")
+                    .input("query", "Analyze the repository for innovations.")
+                    .build();
+            }
 
-        PipelineManifest pipeline = new PipelineManifest();
-        pipeline.getPipeline().setName("research-pipeline");
+            @Task(order = 2)
+            PipelineStep reportTask() {
+                return PipelineStep.builder()
+                    .id("report_task")
+                    .agent("Technical Content Strategist")
+                    .input("content", "${steps.research_task.output}")
+                    .build();
+            }
+        }
 
-        // Step 1: Research
-        PipelineStep step1 = new PipelineStep();
-        step1.setId("research_task");
-        step1.setAgent("Senior Research Analyst");
-        step1.setInputMapping(Map.of("query", "Analyze the repository for innovations."));
-
-        // Step 2: Report (using output from step 1)
-        PipelineStep step2 = new PipelineStep();
-        step2.setId("report_task");
-        step2.setAgent("Technical Content Strategist");
-        step2.setInputMapping(Map.of("content", "${steps.research_task.output}"));
-
-        pipeline.setSteps(List.of(step1, step2));
-
-        // Initialize pointing to a workspace directory for logs/executions
         RuntimeFacade hubbers = new RuntimeFacade(Path.of("./workspace"));
-        
-        // Access the repository to register your code-defined agents/pipelines
-        hubbers.getArtifactRepository().addAgent(researcher);
-        hubbers.getArtifactRepository().addAgent(writer);
-        hubbers.getArtifactRepository().addTool(serperSearch);
-        hubbers.getArtifactRepository().addTool(fileRead);
-        hubbers.getArtifactRepository().addPipeline(pipeline);
+        JsonNode input = mapper.convertValue(Map.of(), JsonNode.class);
 
-        // Run the pipeline
-        JsonNode inputsNode = mapper.convertValue(Map.of(), JsonNode.class);
-        RunResult result = hubbers.runPipeline("research-pipeline", inputsNode);
+        RunResult result = hubbers.runFlow(new ResearchFlow(), input);
+
+        Assertions.assertNotNull(result);
         System.out.println("Result: " + result.getOutput());
     }
-
 }
