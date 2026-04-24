@@ -9,7 +9,11 @@ public class AppConfig {
     private String repoRoot;
     private OpenAiConfig openai;
     private OllamaConfig ollama;
+    private AzureOpenAiConfig azureOpenai;
+    private AnthropicConfig anthropic;
+    private LlamaCppConfig llamaCpp;
     private ToolsConfig tools;
     private ExecutionsConfig executions;
+    private SecurityConfig security;
 
 }

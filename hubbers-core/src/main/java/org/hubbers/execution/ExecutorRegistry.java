@@ -1,7 +1,7 @@
 package org.hubbers.execution;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.agent.AgenticExecutor;
+import org.hubbers.agent.AgentExecutor;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.skill.SkillManifest;
@@ -19,7 +19,7 @@ import java.util.Map;
  * Central registry for artifact executors.
  * 
  * <p>This class acts as a mediator to break circular dependencies between
- * AgenticExecutor and PipelineExecutor. Instead of executors holding direct
+ * AgentExecutor and PipelineExecutor. Instead of executors holding direct
  * references to each other, they can look up executors through this registry.</p>
  * 
  * <p>Pattern: Mediator + Registry</p>
@@ -35,7 +35,7 @@ public class ExecutorRegistry {
      * Types of executors that can be registered.
      */
     public enum ExecutorType {
-        AGENT,      // AgenticExecutor
+        AGENT,      // AgentExecutor
         TOOL,       // ToolExecutor
         PIPELINE,   // PipelineExecutor
         SKILL       // SkillExecutor
@@ -53,15 +53,15 @@ public class ExecutorRegistry {
     }
     
     /**
-     * Get the AgenticExecutor.
-     * 
-     * @return the AgenticExecutor instance
+     * Get the AgentExecutor.
+     *
+     * @return the AgentExecutor instance
      * @throws IllegalStateException if not registered
      */
-    public AgenticExecutor getAgenticExecutor() {
-        AgenticExecutor executor = (AgenticExecutor) executors.get(ExecutorType.AGENT);
+    public AgentExecutor getAgentExecutor() {
+        AgentExecutor executor = (AgentExecutor) executors.get(ExecutorType.AGENT);
         if (executor == null) {
-            throw new IllegalStateException("AgenticExecutor not registered");
+            throw new IllegalStateException("AgentExecutor not registered");
         }
         return executor;
     }
@@ -128,7 +128,7 @@ public class ExecutorRegistry {
      * @return the execution result
      */
     public RunResult executeAgent(AgentManifest agentManifest, JsonNode input, String conversationId) {
-        return getAgenticExecutor().execute(agentManifest, input, conversationId);
+        return getAgentExecutor().execute(agentManifest, input, conversationId);
     }
     
     /**

@@ -12,14 +12,16 @@ import org.hubbers.app.RuntimeFacade;
 import org.hubbers.config.AppConfig;
 import org.hubbers.config.ConfigLoader;
 import org.hubbers.config.RepoPathResolver;
+import org.hubbers.config.SecurityConfig;
 import org.hubbers.execution.ExecutionStatus;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.manifest.tool.ToolManifest;
-import org.hubbers.nlp.NaturalLanguageTaskService;
-import org.hubbers.nlp.TaskExecutionResult;
+import org.hubbers.mcp.McpRequestHandler;
+import org.hubbers.mcp.protocol.McpRequest;
+import org.hubbers.mcp.protocol.McpResponse;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.validation.ValidationResult;
@@ -38,6 +40,7 @@ public class WebServer {
     private final ObjectMapper yamlMapper;
     private final ObjectMapper jsonMapper;
     private final String repoPath;
+    private McpRequestHandler mcpRequestHandler;
 
     public WebServer(RuntimeFacade runtimeFacade,
                      ManifestFileService manifestFileService,
@@ -57,6 +60,15 @@ public class WebServer {
         this.repoPath = repoPath;
     }
 
+    /**
+     * Sets the MCP request handler for Model Context Protocol support.
+     *
+     * @param mcpRequestHandler the MCP handler to use for /mcp endpoint
+     */
+    public void setMcpRequestHandler(McpRequestHandler mcpRequestHandler) {
+        this.mcpRequestHandler = mcpRequestHandler;
+    }
+
     public Javalin start(int port) {
         Javalin app = Javalin.create(config -> {
             
@@ -71,6 +83,35 @@ public class WebServer {
         app.exception(IllegalArgumentException.class, (e, ctx) -> writeError(ctx, 400, e.getMessage()));
         app.exception(IllegalStateException.class, (e, ctx) -> writeError(ctx, 500, e.getMessage()));
         app.exception(Exception.class, (e, ctx) -> writeError(ctx, 500, e.getMessage()));
+
+        // API key authentication middleware
+        app.before("/api/*", ctx -> {
+            // Skip auth for health check and static settings endpoints
+            String path = ctx.path();
+            if ("/api/health".equals(path)) {
+                return;
+            }
+            try {
+                ConfigLoader configLoader = new ConfigLoader(repoPath);
+                AppConfig config = configLoader.loadRaw();
+                SecurityConfig security = config.getSecurity();
+                if (security != null && security.getApiKey() != null && !security.getApiKey().isBlank()) {
+                    String authHeader = ctx.header("Authorization");
+                    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                        ctx.status(401).json(Map.of("error", "Unauthorized: missing Bearer token"));
+                        return;
+                    }
+                    String token = authHeader.substring("Bearer ".length());
+                    if (!security.getApiKey().equals(token)) {
+                        ctx.status(401).json(Map.of("error", "Unauthorized: invalid API key"));
+                        return;
+                    }
+                }
+            } catch (Exception e) {
+                // If config can't be loaded, allow request (no security config = open)
+                log.debug("Could not load security config, allowing request: {}", e.getMessage());
+            }
+        });
 
         app.get("/", ctx -> serveStatic(ctx, "index.html", "text/html; charset=utf-8"));
         app.get("/app.js", ctx -> serveStatic(ctx, "app.js", "application/javascript; charset=utf-8"));
@@ -218,6 +259,40 @@ public class WebServer {
             String sessionId = ctx.pathParam("sessionId");
             runtimeFacade.getFormService().cancelSession(sessionId);
             ctx.json(Map.of("cancelled", true));
+        });
+
+        // Resume a paused pipeline execution with form data
+        app.post("/api/pipeline/{executionId}/resume", ctx -> {
+            String executionId = ctx.pathParam("executionId");
+            JsonNode formData = parseInput(ctx);
+            try {
+                var pipelineExecutor = runtimeFacade.getPipelineExecutor();
+                var result = pipelineExecutor.resume(executionId, formData);
+                ctx.status(result.getStatus() == ExecutionStatus.SUCCESS ? 200 : 400);
+                ctx.json(toRunPayload(result));
+            } catch (IllegalStateException e) {
+                log.error("Failed to resume pipeline execution '{}'", executionId, e);
+                writeError(ctx, 404, e.getMessage());
+            }
+        });
+
+        // Async execution endpoint — returns immediately with execution ID
+        app.post("/api/run/{type}/{name}/async", ctx -> {
+            String type = ctx.pathParam("type");
+            String name = ctx.pathParam("name");
+            JsonNode input = parseInput(ctx);
+            String conversationId = ctx.queryParam("conversationId");
+            String executionId = java.util.UUID.randomUUID().toString();
+
+            switch (type) {
+                case "agent" -> runtimeFacade.runAgentAsync(name, input, conversationId);
+                case "pipeline" -> runtimeFacade.runPipelineAsync(name, input);
+                default -> {
+                    writeError(ctx, 400, "Async execution not supported for type: " + type);
+                    return;
+                }
+            }
+            ctx.json(Map.of("executionId", executionId, "status", "RUNNING"));
         });
 
         // Execution history endpoints
@@ -462,6 +537,30 @@ public class WebServer {
             ctx.json(info);
         });
 
+        // ── MCP (Model Context Protocol) endpoint ──
+        // Streamable HTTP transport: external chat UIs (Open WebUI, etc.)
+        // discover and invoke Hubbers artifacts via JSON-RPC 2.0.
+        app.post("/mcp", ctx -> {
+            if (mcpRequestHandler == null) {
+                writeError(ctx, 501, "MCP server not configured");
+                return;
+            }
+            try {
+                McpRequest mcpReq = jsonMapper.readValue(ctx.body(), McpRequest.class);
+                var response = mcpRequestHandler.handle(mcpReq);
+                if (response.isPresent()) {
+                    ctx.contentType("application/json").result(jsonMapper.writeValueAsString(response.get()));
+                } else {
+                    // Notifications return 202 with no body
+                    ctx.status(202).result("");
+                }
+            } catch (Exception e) {
+                log.error("MCP request failed", e);
+                McpResponse errorResp = McpResponse.internalError(null, e.getMessage());
+                ctx.contentType("application/json").result(jsonMapper.writeValueAsString(errorResp));
+            }
+        });
+
         app.start(port);
         return app;
     }
@@ -530,6 +629,9 @@ public class WebServer {
         payload.put("output", result.getOutput());
         payload.put("error", result.getError());
         payload.put("metadata", result.getMetadata());
+        if (result.getExecutionTrace() != null) {
+            payload.put("executionTrace", result.getExecutionTrace());
+        }
         return payload;
     }
 

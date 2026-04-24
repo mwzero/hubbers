@@ -19,6 +19,7 @@
         <module>hubbers-web</module>
         <module>hubbers-cli</module>
         <module>hubbers-repo</module>
+        <module>hubbers-mcp</module>
         <module>hubbers-distribution</module>
     </modules>
 
@@ -161,6 +162,11 @@
             <dependency>
                 <groupId>org.hubbers</groupId>
                 <artifactId>hubbers-repo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hubbers</groupId>
+                <artifactId>hubbers-mcp</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

@@ -1,0 +1,37 @@
+agent:
+  name: test.agent
+  version: 1.0.0
+  description: Test agent for unit tests
+
+mode: simple
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.7
+  think: false
+  
+input:
+  type: object
+  properties:
+    text:
+      type: string
+      required: true
+      description: Input text
+
+output:
+  type: object
+  properties:
+    cities:
+      type: array
+      items:
+        type: string
+      description: List of city names 
+
+instructions:
+  system_prompt: |
+    You are a helpful assistant that outputs only valid JSON.
+    Always return a JSON object with a "cities" field containing an array of city name strings.
+    Example: {"cities": ["New York City", "London", "Tokyo", "Paris", "Sydney"]}
+  user_prompt: |
+    {text}

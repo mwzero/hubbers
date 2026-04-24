@@ -6,6 +6,8 @@ import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;
 
+import org.hubbers.security.ToolPermissionService;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +52,7 @@ import java.util.Map;
 public class ToolExecutor {
     private final Map<String, ToolDriver> drivers = new HashMap<>();
     private final SchemaValidator schemaValidator;
+    private ToolPermissionService permissionService;
 
     /**
      * Create a new ToolExecutor with given drivers.
@@ -68,6 +71,15 @@ public class ToolExecutor {
     }
 
     /**
+     * Set the tool permission service for enforcing allow/deny lists.
+     *
+     * @param permissionService the permission service
+     */
+    public void setPermissionService(ToolPermissionService permissionService) {
+        this.permissionService = permissionService;
+    }
+
+    /**
      * Execute a tool with given manifest and input.
      * 
      * <p>Performs complete validation and execution flow:</p>
@@ -83,6 +95,11 @@ public class ToolExecutor {
      * @return RunResult with success status and output, or failure with error message
      */
     public RunResult execute(ToolManifest manifest, JsonNode input) {
+        // Check tool permissions before executing
+        if (permissionService != null && !permissionService.isAllowed(manifest.getType())) {
+            return RunResult.failed("Tool '" + manifest.getType() + "' is not permitted by security policy");
+        }
+
         ValidationResult inputValidation = schemaValidator.validate(input, manifest.getInput().getSchema());
         if (!inputValidation.isValid()) {
             return RunResult.failed(String.join(", ", inputValidation.getErrors()));

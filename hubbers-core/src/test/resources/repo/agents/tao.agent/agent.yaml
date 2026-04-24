@@ -1,0 +1,63 @@
+agent:
+  name: tao.agent
+  version: 1.0.0
+  description: Thought Action Observation loop (TAO)
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.0
+  think: true
+
+mode: agentic
+
+config:
+  timeout_seconds: 300
+
+tools:
+  - "*"
+
+input:
+  type: object
+  properties:
+    text:
+      type: string
+      required: true
+      description: Input text
+
+output:
+  type: object
+  properties:
+    results:
+      type: array
+      required: true
+      description: List of results, one entry per city
+      items:
+        type: object
+        properties:
+          city:
+            type: string
+          temperature_celsius:
+            type: number
+          condition:
+            type: string
+
+instructions:
+  system_prompt: |
+    You are an autonomous agent operating in a real environment.
+    You have access to tools — USE them. Do not guess or invent data.
+
+    Available tools:
+    {{ARTIFACTS_CATALOG}}
+
+    RULES:
+    - Call the required tools using the provided function-calling interface.
+    - After receiving ALL tool results, produce your final answer.
+    - Your final answer MUST be a valid JSON object with a "results" array, one entry per city.
+    - Each entry must have: city, temperature_celsius, condition.
+
+  user_prompt: |
+    {text}
+
+
+

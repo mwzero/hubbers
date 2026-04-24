@@ -1,7 +1,7 @@
 package org.hubbers.web;
 
 public enum ManifestType {
-    AGENT("agents", "agent.md"),
+    AGENT("agents", "agent.yaml"),
     TOOL("tools", "tool.yaml"),
     PIPELINE("pipelines", "pipeline.yaml"),
     SKILL("skills", "SKILL.md");

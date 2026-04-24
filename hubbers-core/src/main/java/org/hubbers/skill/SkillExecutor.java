@@ -14,8 +14,6 @@ import org.hubbers.tool.ToolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  * Main executor for skills with hybrid execution mode support.
  * 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { Artifact, ArtifactType, RepoModel, Execution, Step, PipelineStep, FormDef } from '@/types/workspace';
+import type { Artifact, ArtifactType, RepoModel, Execution, Step, PipelineStep, StepInputMapping, FormDef } from '@/types/workspace';
 import * as api from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -27,6 +27,7 @@ export function useWorkspace() {
 
   // Pipeline steps
   const [pipelineSteps, setPipelineSteps] = useState<PipelineStep[]>([]);
+  const [pipelineInputParams, setPipelineInputParams] = useState<string[]>([]);
 
   const healthRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -85,19 +86,48 @@ export function useWorkspace() {
   const parsePipelineSteps = (yaml: string) => {
     const steps: PipelineStep[] = [];
     const normalized = yaml.replace(/\t/g, '  ');
+
+    // Parse pipeline-level input params from `input:` list
+    const inputSection = normalized.match(/^input:\s*\n((?:[ \t]+-[ \t]+\S+\n?)*)(?=\n|$)/m);
+    if (inputSection) {
+      const params = [...inputSection[1].matchAll(/^\s+-\s+(\S+)/gm)].map(m => m[1]);
+      setPipelineInputParams(params);
+    } else {
+      setPipelineInputParams([]);
+    }
+
     const match = normalized.match(/steps:\s*\n([\s\S]*?)(?=\n\S|\n*$)/);
     if (match) {
       const block = match[1];
       const stepBlocks = block.split(/\n\s*-\s+/).filter(Boolean);
       for (const sb of stepBlocks) {
         const idMatch = sb.match(/id:\s*(.+)/);
-        const targetMatch = sb.match(/(tool|agent|pipeline):\s*(.+)/);
+        const targetMatch = sb.match(/(tool|agent|pipeline|skill):\s*(.+)/);
         if (idMatch) {
-          steps.push({
+          const step: PipelineStep = {
             id: idMatch[1].trim(),
             targetType: (targetMatch?.[1] as ArtifactType) || 'tool',
             target: targetMatch?.[2]?.trim() || '',
-          });
+            inputMapping: [],
+          };
+          // Parse input_mapping block
+          const mappingMatch = sb.match(/input_mapping:\s*\n((?:[ \t]+\S[^\n]*\n?)*)/);
+          if (mappingMatch) {
+            const mappingLines = mappingMatch[1].split('\n').filter(l => l.trim());
+            const minIndent = Math.min(...mappingLines.map(l => (l.match(/^(\s*)/) || ['', ''])[1].length));
+            for (const line of mappingLines) {
+              const kvMatch = line.slice(minIndent).match(/^([\w._-]+):\s*(.*)$/);
+              if (kvMatch) {
+                // Strip surrounding double-quotes added by previous versions or present in hand-written YAML
+                const raw = kvMatch[2].trim();
+                const expression = raw.startsWith('"') && raw.endsWith('"')
+                  ? raw.slice(1, -1).replace(/\\"/g, '"')
+                  : raw;
+                if (expression) step.inputMapping.push({ key: kvMatch[1], expression });
+              }
+            }
+          }
+          steps.push(step);
         }
       }
     }
@@ -110,13 +140,23 @@ export function useWorkspace() {
     for (const s of steps) {
       lines.push(`  - id: ${s.id}`);
       lines.push(`    ${s.targetType}: ${s.target}`);
+      const activeMapping = s.inputMapping.filter(m => m.key.trim() && m.expression.trim());
+      if (activeMapping.length > 0) {
+        lines.push(`    input_mapping:`);
+        for (const m of activeMapping) {
+          // Use unquoted expressions - matches backend InputMapper expected format
+          // ${...} references are valid unquoted YAML plain scalars
+          lines.push(`      ${m.key}: ${m.expression}`);
+        }
+      }
     }
     return lines.join('\n') + '\n';
   };
 
   const syncStepsToYaml = useCallback(() => {
-    const newStepsYaml = buildYamlFromSteps(pipelineSteps);
     const normalized = manifest.replace(/\t/g, '  ');
+    const newStepsYaml = buildYamlFromSteps(pipelineSteps);
+    // Only replace the steps block; leave the rest of the YAML (schema, input, examples) intact
     const updated = normalized.replace(/steps:[\s\S]*?(?=\n\S|$)/, newStepsYaml.trimEnd());
     setManifest(updated);
     toast.success('Steps synced to YAML');
@@ -253,7 +293,7 @@ export function useWorkspace() {
     runInput, setRunInput, runOutput,
     formModal, setFormModal, submitFormModal,
     executions, selectedExecution, executionDetail, execDetailTab, setExecDetailTab,
-    pipelineSteps, setPipelineSteps, syncStepsToYaml,
+    pipelineSteps, setPipelineSteps, pipelineInputParams, setPipelineInputParams, syncStepsToYaml,
     loadRepo, selectArtifact, saveManifest, validateManifest, runArtifact,
     loadExecutions, loadExecutionDetail, setSelectedExecution,
     createArtifact,

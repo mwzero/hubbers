@@ -1,14 +1,14 @@
 package org.hubbers.app;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.hubbers.agent.AgenticExecutor;
+import org.hubbers.agent.AgentExecutor;
+import org.hubbers.agent.ArtifactCatalogInjector;
 import org.hubbers.execution.*;
+import org.hubbers.manifest.agent.AgentManifest;
+import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.skill.SkillManifest;
-import org.hubbers.nlp.NaturalLanguageTaskService;
-import org.hubbers.nlp.TaskExecutionResult;
+import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.pipeline.PipelineExecutor;
 import org.hubbers.skill.SkillExecutor;
 import org.hubbers.tool.ToolExecutor;
@@ -19,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Central facade for executing agents, tools, pipelines, and skills.
@@ -56,7 +58,7 @@ public class RuntimeFacade {
     private static final Logger logger = LoggerFactory.getLogger(RuntimeFacade.class);
     
     private final ArtifactRepository artifactRepository;
-    private final AgenticExecutor agentExecutor;
+    private final AgentExecutor agentExecutor;
     private final ToolExecutor toolExecutor;
     private final PipelineExecutor pipelineExecutor;
     private final SkillExecutor skillExecutor;
@@ -64,11 +66,10 @@ public class RuntimeFacade {
     private final ExecutionStorageService executionStorage;
     private final org.hubbers.forms.JuiFormService formService;
     
-    // Lazy-initialized for natural language task execution
-    private NaturalLanguageTaskService taskService;
+    private final ArtifactCatalogInjector artifactCatalogInjector = new ArtifactCatalogInjector();
 
     public RuntimeFacade(ArtifactRepository artifactRepository,
-                         AgenticExecutor agentExecutor,
+                         AgentExecutor agentExecutor,
                          ToolExecutor toolExecutor,
                          PipelineExecutor pipelineExecutor,
                          SkillExecutor skillExecutor,
@@ -100,15 +101,14 @@ public class RuntimeFacade {
             delegate.executionStorage,
             delegate.formService
         );
-        this.taskService = delegate.taskService;
     }
 
     /**
      * Execute an agent with optional conversation support and intelligent mode detection.
      * 
-     * If input contains {"request": "natural language string"}, automatically routes through
-     * NaturalLanguageTaskService for enhanced orchestration with dynamic tool injection.
-     * Otherwise, executes the agent directly with its configured tools.
+     * If input contains {"request": "natural language string"}, automatically loads
+     * all artifacts, applies RAG-based filtering, injects them into the agent, and
+     * executes via the agentic (ReAct) loop. Otherwise, executes the agent directly.
      * 
      * @param name Agent name
      * @param input Input JSON (either direct schema or {"request": "..."})
@@ -127,22 +127,16 @@ public class RuntimeFacade {
      * @return RunResult with execution status and output
      */
     public RunResult runAgent(String name, JsonNode input, String conversationId) {
-        // Detect if input is a natural language task request
-        boolean isNaturalLanguageMode = isNaturalLanguageRequest(input);
-        
-        if (isNaturalLanguageMode) {
-            // Natural language task execution mode
-            logger.info("Detected natural language request for agent '{}', routing through task service", name);
+        if (isNaturalLanguageRequest(input)) {
+            logger.info("Detected natural language request for agent '{}', routing through agentic executor", name);
             return executeNaturalLanguageTask(name, input, conversationId);
-        } else {
-            // Direct agent execution mode
-            return executeWithTracking("agent", name, input, () -> {
-                var manifest = artifactRepository.loadAgent(name);
-                var validation = manifestValidator.validateAgent(manifest);
-                if (!validation.isValid()) return RunResult.failed(String.join(", ", validation.getErrors()));
-                return agentExecutor.execute(manifest, input, conversationId);
-            });
         }
+        return executeWithTracking("agent", name, input, () -> {
+            var manifest = artifactRepository.loadAgent(name);
+            var validation = manifestValidator.validateAgent(manifest);
+            if (!validation.isValid()) return RunResult.failed(String.join(", ", validation.getErrors()));
+            return agentExecutor.execute(manifest, input, conversationId);
+        });
     }
     
     /**
@@ -155,46 +149,84 @@ public class RuntimeFacade {
                input.get("request").isTextual() &&
                !input.get("request").asText().trim().isEmpty();
     }
-    
+
     /**
-     * Execute agent via NaturalLanguageTaskService for enhanced orchestration.
+     * Execute a natural language task request with RAG-based artifact discovery and injection.
      */
-    private RunResult executeNaturalLanguageTask(String name, JsonNode input, String conversationId) {
-        try {
-            // Lazy-initialize task service
-            if (taskService == null) {
-                ObjectMapper mapper = JacksonFactory.jsonMapper();
-                taskService = new NaturalLanguageTaskService(this, mapper);
+    private RunResult executeNaturalLanguageTask(String agentName, JsonNode input, String conversationId) {
+        String request = input.get("request").asText();
+        JsonNode context = input.has("context") ? input.get("context") : null;
+        String convId = (conversationId != null && !conversationId.isEmpty())
+            ? conversationId : UUID.randomUUID().toString();
+
+        return executeWithTracking("agent", agentName, input, () -> {
+            AgentManifest agent = artifactRepository.loadAgent(agentName);
+            if (agent == null) {
+                return RunResult.failed("Agent not found: " + agentName);
             }
-            
-            // Extract request and context from input
-            String request = input.get("request").asText();
-            JsonNode context = input.has("context") ? input.get("context") : null;
-            
-            // Execute via task service
-            TaskExecutionResult taskResult;
-            if (conversationId != null && !conversationId.isEmpty()) {
-                taskResult = taskService.executeTaskWithConversation(request, context, conversationId);
+
+            // Load all available artifacts
+            List<ToolManifest> allTools = loadAll(artifactRepository.listTools(),
+                name -> artifactRepository.loadTool(name), "tool");
+            List<AgentManifest> allAgents = loadAll(artifactRepository.listAgents(),
+                name -> artifactRepository.loadAgent(name), "agent");
+            List<PipelineManifest> allPipelines = loadAll(artifactRepository.listPipelines(),
+                name -> artifactRepository.loadPipeline(name), "pipeline");
+
+            logger.info("Loaded {} tools, {} agents, {} pipelines for NL task execution",
+                allTools.size(), allAgents.size(), allPipelines.size());
+
+            // Check if agent has pre-defined tools
+            @SuppressWarnings("unchecked")
+            List<String> preDefinedTools = agent.getConfig() != null
+                ? (List<String>) agent.getConfig().get("tools") : null;
+            boolean hasPreDefinedTools = preDefinedTools != null && !preDefinedTools.isEmpty();
+
+            if (!hasPreDefinedTools) {
+                logger.info("Applying RAG-based filtering for agent '{}'", agentName);
+                var filtered = artifactCatalogInjector.filterByRelevance(
+                    request, allTools, allAgents, allPipelines,
+                    artifactRepository.getAllSkillMetadata(), 5);
+                artifactCatalogInjector.injectAllArtifacts(
+                    agent, filtered.tools(), filtered.agents(),
+                    filtered.pipelines(), filtered.skills());
             } else {
-                taskResult = taskService.executeTask(request, context);
+                logger.info("Agent '{}' has pre-defined tools, skipping RAG filtering", agentName);
+                artifactCatalogInjector.injectAllArtifacts(
+                    agent, allTools, allAgents, allPipelines,
+                    artifactRepository.getAllSkillMetadata());
             }
-            
-            // Convert TaskExecutionResult to RunResult
-            if (taskResult.isSuccess()) {
-                RunResult result = RunResult.success(taskResult.getResult());
-                result.setMetadata(taskResult.getMetadata());
-                return result;
-            } else {
-                return RunResult.failed(taskResult.getError());
+
+            // Build input with request + optional context
+            com.fasterxml.jackson.databind.node.ObjectNode agentInput =
+                JacksonFactory.jsonMapper().createObjectNode();
+            agentInput.put("request", request);
+            if (context != null) {
+                agentInput.set("context", context);
             }
-            
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            logger.error("Invalid task configuration for agent '{}': {}", name, e.getMessage());
-            return RunResult.failed("Invalid task configuration: " + e.getMessage());
-        } catch (RuntimeException e) {
-            logger.error("Task execution failed for agent '{}'", name, e);
-            return RunResult.failed("Task execution failed: " + e.getMessage());
+
+            return agentExecutor.execute(agent, agentInput, convId);
+        });
+    }
+
+    @FunctionalInterface
+    private interface ArtifactLoader<T> {
+        T load(String name) throws Exception;
+    }
+
+    private <T> List<T> loadAll(List<String> names, ArtifactLoader<T> loader, String type) {
+        List<T> result = new ArrayList<>();
+        for (String name : names) {
+            try {
+                T artifact = loader.load(name);
+                if (artifact != null) result.add(artifact);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                logger.warn("Failed to load {} {}: {}", type, name, e.getMessage());
+            } catch (Exception e) {
+                logger.warn("Failed to load {} {}: {}", type, name, e.getMessage());
+            }
         }
+        return result;
     }
 
     public RunResult runTool(String name, JsonNode input) {
@@ -349,15 +381,37 @@ public class RuntimeFacade {
     public List<String> listPipelines() { return artifactRepository.listPipelines(); }
     public List<String> listSkills() { return artifactRepository.listSkills(); }
     public ArtifactRepository getArtifactRepository() { return artifactRepository; }
+
+    /**
+     * Executes a {@link org.hubbers.annotation.Pipeline}-annotated flow object.
+     *
+     * <p>Discovers all {@link org.hubbers.annotation.Agent} and {@link org.hubbers.annotation.Task}
+     * methods on the flow class, registers the agents and the assembled pipeline in the
+     * artifact repository, then executes the pipeline.</p>
+     *
+     * <pre>{@code
+     * RunResult result = hubbers.runFlow(new ResearchFlow(), inputsNode);
+     * }</pre>
+     *
+     * @param flow  an instance of a {@code @Pipeline}-annotated class
+     * @param input pipeline input as JSON
+     * @return the execution result
+     * @see org.hubbers.annotation.FlowRunner
+     */
+    public RunResult runFlow(Object flow, JsonNode input) {
+        return new org.hubbers.annotation.FlowRunner(this).run(flow, input);
+    }
     
     public ExecutionStorageService getExecutionStorage() { return executionStorage; }
     public org.hubbers.forms.JuiFormService getFormService() { return formService; }
+    public PipelineExecutor getPipelineExecutor() { return pipelineExecutor; }
 
     /**
-     * Execute an agent with ReAct loop using a pre-configured manifest and conversation ID.
-     * This is used for advanced scenarios where the agent manifest has been dynamically modified
-     * (e.g., tool injection for universal task agent).
-     * 
+     * Execute an agent using a pre-configured manifest and conversation ID.
+     * The manifest's {@code mode} determines simple vs agentic execution.
+     * Used for advanced scenarios where the manifest has been dynamically modified
+     * (e.g., artifact injection for the universal task agent).
+     *
      * @param manifest Pre-configured agent manifest (tools already injected if needed)
      * @param input Input JSON for the agent
      * @param conversationId Conversation ID for multi-turn dialogue (or null for new conversation)
@@ -371,4 +425,42 @@ public class RuntimeFacade {
             return agentExecutor.execute(manifest, input, conversationId);
         });
     }
+
+    /**
+     * Execute an agent asynchronously, returning a {@link java.util.concurrent.CompletableFuture}.
+     *
+     * <p>The execution runs on a shared virtual thread executor, freeing the calling
+     * thread immediately.</p>
+     *
+     * @param name the agent name to execute
+     * @param input input data for the agent
+     * @param conversationId conversation ID (or null)
+     * @return a CompletableFuture that completes with the RunResult
+     */
+    public java.util.concurrent.CompletableFuture<RunResult> runAgentAsync(
+            String name, JsonNode input, String conversationId) {
+        return java.util.concurrent.CompletableFuture.supplyAsync(
+                () -> runAgent(name, input, conversationId),
+                ASYNC_EXECUTOR
+        );
+    }
+
+    /**
+     * Execute a pipeline asynchronously.
+     *
+     * @param name the pipeline name
+     * @param input input data
+     * @return a CompletableFuture that completes with the RunResult
+     */
+    public java.util.concurrent.CompletableFuture<RunResult> runPipelineAsync(
+            String name, JsonNode input) {
+        return java.util.concurrent.CompletableFuture.supplyAsync(
+                () -> runPipeline(name, input),
+                ASYNC_EXECUTOR
+        );
+    }
+
+    /** Shared executor for async operations — uses virtual threads (Java 21). */
+    private static final java.util.concurrent.ExecutorService ASYNC_EXECUTOR =
+            java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor();
 }

@@ -1,0 +1,43 @@
+agent:
+  name: agentic.weather.agent
+  version: 1.0.0
+  description: Agentic weather agent that calls mock.weather tool to retrieve weather data
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.0
+  think: false
+
+tools:
+  - mock.weather
+
+input:
+  type: object
+  properties:
+    city:
+      type: string
+      required: true
+      description: City name to get weather for
+
+output:
+  type: object
+  properties:
+    city:
+      type: string
+      required: true
+      description: City name
+    temperature_celsius:
+      type: number
+      required: true
+      description: Temperature in Celsius
+    condition:
+      type: string
+      required: true
+      description: Weather condition
+
+instructions:
+  system_prompt: |
+    You are a weather assistant.
+    You MUST call the mock.weather tool to get weather data. Do not guess or make up weather data.
+    After receiving the tool result, return it as a JSON object with fields: city, temperature_celsius, condition.

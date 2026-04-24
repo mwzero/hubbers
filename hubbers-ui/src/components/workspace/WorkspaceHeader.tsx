@@ -15,7 +15,12 @@ export function WorkspaceHeader({ apiOnline, sidebarOpen, onToggleSidebar }: Wor
         <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
           <Layout className="w-4 h-4 text-primary-foreground" />
         </div>
-        <h1 className="font-semibold text-sm tracking-tight">Hubbers Dev Workspace</h1>
+        <div className="flex flex-col">
+          <h1 className="font-semibold text-sm tracking-tight leading-none">Hubbers Dev Workspace</h1>
+          <span className="text-[9px] font-mono text-muted-foreground/60 leading-none mt-0.5">
+            v{__APP_VERSION__} &middot; {__APP_BUILD_DATE__} &middot; #{__APP_BUILD_SERIAL__}
+          </span>
+        </div>
       </div>
 
       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleSidebar}>

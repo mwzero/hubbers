@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>org.hubbers</groupId>
+            <artifactId>hubbers-mcp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.hubbers</groupId>
             <artifactId>hubbers-ui</artifactId>
             <optional>true</optional>
         </dependency>

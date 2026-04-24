@@ -1,0 +1,56 @@
+agent:
+  name: demo.search
+  version: 1.0.0
+  description: Demo agent for testing form-based human-in-the-loop input collection
+
+mode: simple
+tools: []
+config:
+  max_iterations: 1
+  timeout_seconds: 120
+
+model:
+  provider: ollama
+  name: qwen2.5-coder:7b
+  temperature: 0.7
+
+input:
+  type: object
+  properties:
+    query:
+      type: string
+      description: User search query (from form)
+    depth:
+      type: string
+      description: Search depth level (quick / standard / deep)
+    maxResults:
+      type: integer
+      description: Maximum number of results to return
+    includeExamples:
+      type: boolean
+      description: Whether to include usage examples in the response
+
+output:
+  type: object
+  properties:
+    analysis:
+      type: string
+      description: Analysis of the search query
+    searchTerms:
+      type: array
+      description: Identified key search terms
+    strategy:
+      type: string
+      description: Recommended search strategy
+
+instructions:
+  system_prompt: |
+    Given the user's search parameters — `{query}`, depth `{depth}`, max results `{maxResults}` —
+    analyse the query, extract key search terms, and recommend a search strategy.
+
+    Return a JSON object with `analysis`, `searchTerms`, and `strategy`.
+
+    Analyze the query and provide search strategy recommendations:
+    - Query analysis: break down the intent
+    - Identified search terms: extract keywords
+    - Recommended search strategy: approach to take

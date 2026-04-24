@@ -1,0 +1,47 @@
+agent:
+  name: simple.agent
+  version: 1.0.0
+  description: A simple agent that answers a single request with one LLM call
+
+mode: simple
+tools: []
+config:
+  max_iterations: 1
+  timeout_seconds: 300
+
+model:
+  provider: ollama
+  name: qwen3:4b
+  temperature: 0.0
+
+input:
+  type: object
+  properties:
+    request:
+      type: string
+      required: true
+      description: Natural language request from user
+    context:
+      type: object
+      required: false
+      description: Optional context data for the task
+
+output:
+  type: object
+  properties:
+    result:
+      type: object
+      required: true
+      description: The result of task execution
+    reasoning:
+      type: string
+      required: true
+      description: Explanation of the approach taken
+
+instructions:
+  system_prompt: |
+    Answer the user's `{request}` clearly and concisely.
+
+    Return a JSON object with:
+    - `result`: your answer (as an object or string)
+    - `reasoning`: a short explanation of your approach

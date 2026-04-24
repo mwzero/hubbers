@@ -1,0 +1,48 @@
+tool:
+  name: sql.query
+  version: 1.0.0
+  description: >
+    Executes a read-only SQL SELECT query against a JDBC-compatible database and returns
+    the results as structured JSON. Supports parameterized queries to prevent SQL injection.
+
+type: sql.query
+
+input:
+  schema:
+    type: object
+    properties:
+      connection_url:
+        type: string
+        description: JDBC connection URL (e.g., jdbc:sqlite:data.db, jdbc:postgresql://host/db)
+      query:
+        type: string
+        description: The SQL SELECT query to execute. Only read-only queries are allowed.
+      params:
+        type: array
+        description: Optional positional parameters for the prepared statement
+        items:
+          type: string
+      max_rows:
+        type: integer
+        description: Maximum number of rows to return (default 1000)
+    required:
+      - connection_url
+      - query
+
+output:
+  schema:
+    type: object
+    properties:
+      columns:
+        type: array
+        description: Column names from the result set
+        items:
+          type: string
+      rows:
+        type: array
+        description: Array of row objects with column names as keys
+        items:
+          type: object
+      row_count:
+        type: integer
+        description: Number of rows returned

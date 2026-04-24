@@ -27,7 +27,9 @@ public class BuiltinToolDriverProvider implements ToolDriverProvider {
                 new FileOpsToolDriver(context.jsonMapper()),
                 new ShellExecToolDriver(context.jsonMapper()),
                 new ProcessManageToolDriver(context.jsonMapper()),
-                new UserInputToolDriver(context.jsonMapper())
+                new UserInputToolDriver(context.jsonMapper()),
+                new SqlQueryToolDriver(context.jsonMapper()),
+                new WebhookToolDriver(context.jsonMapper())
         );
     }
 }

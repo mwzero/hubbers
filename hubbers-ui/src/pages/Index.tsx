@@ -44,6 +44,9 @@ export default function Index() {
             loading={ws.loading}
             onSave={ws.saveManifest}
             onValidate={ws.validateManifest}
+            onRun={ws.runArtifact}
+            runDisabled={!ws.selected}
+            repo={ws.repo}
             pipelineSteps={ws.pipelineSteps}
             onPipelineStepsChange={ws.setPipelineSteps}
             onSyncSteps={ws.syncStepsToYaml}
@@ -66,8 +69,6 @@ export default function Index() {
             onRunInputChange={ws.setRunInput}
             runOutput={ws.runOutput}
             running={ws.loading.run}
-            disabled={!ws.selected}
-            onRun={ws.runArtifact}
           />
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -80,6 +81,7 @@ export default function Index() {
         onSubmit={ws.submitFormModal}
         onCancel={() => ws.setFormModal({ open: false, data: {} })}
       />
+
     </div>
   );
 }

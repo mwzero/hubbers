@@ -2,135 +2,168 @@ package org.hubbers.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.hubbers.agent.memory.ConversationMemory;
+import org.hubbers.agent.memory.InMemoryConversationStore;
+import org.hubbers.app.ArtifactRepository;
+import org.hubbers.config.OllamaConfig;
 import org.hubbers.execution.ExecutionStatus;
+import org.hubbers.execution.ExecutorRegistry;
 import org.hubbers.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
-import org.hubbers.manifest.agent.InputDefinition;
-import org.hubbers.manifest.agent.Instructions;
-import org.hubbers.manifest.agent.ModelConfig;
-import org.hubbers.manifest.agent.OutputDefinition;
-import org.hubbers.manifest.common.Metadata;
-import org.hubbers.manifest.common.PropertyDefinition;
-import org.hubbers.manifest.common.SchemaDefinition;
-import org.hubbers.model.ModelProvider;
 import org.hubbers.model.ModelProviderRegistry;
-import org.hubbers.model.ModelRequest;
-import org.hubbers.model.ModelResponse;
+import org.hubbers.model.OllamaModelProvider;
+import org.hubbers.tool.ToolDriver;
+import org.hubbers.tool.ToolDriverContext;
+import org.hubbers.tool.ToolDriverProvider;
+import org.hubbers.tool.ToolExecutor;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.SchemaValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.ServiceLoader;
+
+@Slf4j
 class AgentExecutorTest {
 
-    private final ObjectMapper mapper = JacksonFactory.jsonMapper();
+    ObjectMapper mapper;
+    ObjectMapper yamlMapper;
 
-    @Test
-    void returnsSuccessWhenModelReturnsValidJson() throws Exception {
-        AgentManifest manifest = buildManifest();
-        ModelProviderRegistry registry = new ModelProviderRegistry(List.of(
-                providerReturning("{\"result\":\"ok\"}")
+    SchemaValidator schemaValidator = new SchemaValidator();
+    ModelProviderRegistry modelRegistry;
+    HttpClient  httpClient;
+    ArtifactRepository repository;
+    AgentExecutor agentExecutor;
+    ExecutorRegistry executorRegistry;
+    ConversationMemory conversationMemory = new InMemoryConversationStore();
+    ToolExecutor toolExecutor;
+    AgentPromptBuilder agentPromptBuilder = new AgentPromptBuilder();
+
+    @BeforeEach
+    void setUp() throws URISyntaxException {
+        
+        mapper = JacksonFactory.jsonMapper();
+        yamlMapper = JacksonFactory.yamlMapper();
+
+        var repo = Path.of(getClass().getClassLoader()
+                .getResource("repo").toURI());
+
+        OllamaConfig ollamaConfig = new OllamaConfig();
+        ollamaConfig.setBaseUrl("http://localhost:11434");
+        ollamaConfig.setTimeoutSeconds(300);
+
+        httpClient = HttpClient.newHttpClient();
+        modelRegistry = new ModelProviderRegistry(List.of(
+                new OllamaModelProvider(httpClient, ollamaConfig)
         ));
 
-        AgentExecutor executor = new AgentExecutor(registry, new AgentPromptBuilder(), new SchemaValidator(), mapper);
-        JsonNode input = mapper.readTree("{\"text\":\"hello\"}");
-        RunResult result = executor.execute(manifest, input);
+        repository = new ArtifactRepository(repo);
+        List<ToolDriver> drivers = loadToolDrivers(new ToolDriverContext(mapper, HttpClient.newHttpClient(), null));
+        toolExecutor = new ToolExecutor(drivers, schemaValidator);
+        conversationMemory = new InMemoryConversationStore();
+        executorRegistry = new ExecutorRegistry();
+
+        agentExecutor = new AgentExecutor(
+            modelRegistry,
+            agentPromptBuilder,
+            schemaValidator,
+            mapper,
+            toolExecutor,
+            repository,
+            conversationMemory,
+            executorRegistry
+        );
+        executorRegistry.register(ExecutorRegistry.ExecutorType.AGENT, agentExecutor);
+
+    }
+    
+    @Test
+    void executeSimpleAgent() throws Exception {
+        
+        AgentManifest manifest = repository.loadAgent("simple.agent");
+
+        JsonNode input = mapper.readTree("{\"text\":\"list five cities in Europe\"}");
+        RunResult result = agentExecutor.execute(manifest, input, null);
 
         assertEquals(ExecutionStatus.SUCCESS, result.getStatus());
-        assertEquals("ok", result.getOutput().path("result").asText());
+        System.out.println("Model output: " + result.getOutput().toPrettyString());
+        assertTrue(result.getOutput().path("cities").isArray());
+        assertTrue(result.getOutput().path("cities").size() > 0);
+    }
+
+
+    @Test
+    void testExecute_WithToolCall_ExecutesTool() throws Exception {
+        
+        AgentManifest manifest = repository.loadAgent("simple.with.tools.agent");
+
+        JsonNode input = mapper.readTree("{\"text\":\"What is the weather in Rome?\"}");
+        RunResult result = agentExecutor.execute(manifest, input, null);
+
+        assertEquals(ExecutionStatus.SUCCESS, result.getStatus());
+        System.out.println("Model output: " + result.getOutput().toPrettyString());
+        assertTrue(result.getOutput().path("results").isArray());
+        assertEquals(1, result.getOutput().path("results").size());
+        JsonNode firstResult = result.getOutput().path("results").get(0);
+        assertEquals("Rome", firstResult.path("city").asText());
+        assertTrue(firstResult.path("temperature_celsius").isNumber());
+        assertFalse(firstResult.path("condition").asText().isBlank());
+
+
     }
 
     @Test
-    void returnsFailureWhenModelReturnsInvalidJson() throws Exception {
-        AgentManifest manifest = buildManifest();
-        ModelProviderRegistry registry = new ModelProviderRegistry(List.of(
-                providerReturning("not-json")
-        ));
+    void testExecute_WithToolCall_ExecutesTool2() throws Exception {
+        
+        AgentManifest manifest = repository.loadAgent("simple.with.tools.agent");
 
-        AgentExecutor executor = new AgentExecutor(registry, new AgentPromptBuilder(), new SchemaValidator(), mapper);
-        JsonNode input = mapper.readTree("{\"text\":\"hello\"}");
-        RunResult result = executor.execute(manifest, input);
+        JsonNode input = mapper.readTree("{\"text\":\"che temperature ci sono a Roma, Bologna e Napoli?\"}");
+        RunResult result = agentExecutor.execute(manifest, input, null);
 
-        assertEquals(ExecutionStatus.FAILED, result.getStatus());
-        assertTrue(result.getError().contains("Model output is not valid JSON"));
+        assertEquals(ExecutionStatus.SUCCESS, result.getStatus());
+        System.out.println("Model output: " + result.getOutput().toPrettyString());
+        assertTrue(result.getOutput().path("results").isArray());
+        assertEquals(3, result.getOutput().path("results").size());
     }
 
     @Test
-    void returnsFailureWhenJsonDoesNotMatchOutputSchema() throws Exception {
-        AgentManifest manifest = buildManifest();
-        ModelProviderRegistry registry = new ModelProviderRegistry(List.of(
-                providerReturning("{\"result\":123}")
-        ));
+    void testExecute_Agentic_WithToolCall() throws Exception {
+        
+        AgentManifest manifest = repository.loadAgent("tao.agent");
 
-        AgentExecutor executor = new AgentExecutor(registry, new AgentPromptBuilder(), new SchemaValidator(), mapper);
-        JsonNode input = mapper.readTree("{\"text\":\"hello\"}");
-        RunResult result = executor.execute(manifest, input);
+        JsonNode input = mapper.readTree("{\"text\":\"che temperature ci sono a Roma, Bologna e Napoli?\"}");
+        RunResult result = agentExecutor.execute(manifest, input, null);
 
-        assertEquals(ExecutionStatus.FAILED, result.getStatus());
-        assertTrue(result.getError().contains("Invalid type for field result"));
+        assertEquals(ExecutionStatus.SUCCESS, result.getStatus());
+        System.out.println("Model output: " + result.getOutput().toPrettyString());
+        assertTrue(result.getOutput().path("results").isArray());
+        assertEquals(3, result.getOutput().path("results").size());
     }
 
-    private ModelProvider providerReturning(String content) {
-        return new ModelProvider() {
-            @Override
-            public String providerName() {
-                return "stub";
-            }
+    private static List<ToolDriver> loadToolDrivers(ToolDriverContext context) {
+        List<ToolDriverProvider> providers = ServiceLoader.load(ToolDriverProvider.class)
+                .stream()
+                .map(ServiceLoader.Provider::get)
+                .toList();
 
-            @Override
-            public ModelResponse generate(ModelRequest request) {
-                ModelResponse response = new ModelResponse();
-                response.setContent(content);
-                response.setModel("stub-model");
-                response.setLatencyMs(1L);
-                return response;
-            }
-        };
+        List<ToolDriver> drivers = providers.stream()
+                .flatMap(provider -> provider.createDrivers(context).stream())
+                .toList();
+
+        log.info("Loaded {} tool drivers from {} provider(s)", drivers.size(), providers.size());
+        return drivers;
     }
 
-    private AgentManifest buildManifest() {
-        AgentManifest manifest = new AgentManifest();
-
-        Metadata metadata = new Metadata();
-        metadata.setName("test.agent");
-        metadata.setVersion("1.0.0");
-        manifest.setAgent(metadata);
-
-        ModelConfig model = new ModelConfig();
-        model.setProvider("stub");
-        model.setName("stub-model");
-        manifest.setModel(model);
-
-        Instructions instructions = new Instructions("Return JSON");
-        manifest.setInstructions(instructions);
-
-        InputDefinition inputDefinition = new InputDefinition();
-        SchemaDefinition inputSchema = new SchemaDefinition();
-        inputSchema.setType("object");
-        inputSchema.setProperties(new LinkedHashMap<>());
-        PropertyDefinition text = new PropertyDefinition();
-        text.setType("string");
-        text.setRequired(true);
-        inputSchema.getProperties().put("text", text);
-        inputDefinition.setSchema(inputSchema);
-        manifest.setInput(inputDefinition);
-
-        OutputDefinition outputDefinition = new OutputDefinition();
-        SchemaDefinition outputSchema = new SchemaDefinition();
-        outputSchema.setType("object");
-        outputSchema.setProperties(new LinkedHashMap<>());
-        PropertyDefinition result = new PropertyDefinition();
-        result.setType("string");
-        result.setRequired(true);
-        outputSchema.getProperties().put("result", result);
-        outputDefinition.setSchema(outputSchema);
-        manifest.setOutput(outputDefinition);
-
-        return manifest;
-    }
 }
+

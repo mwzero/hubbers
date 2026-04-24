@@ -1,0 +1,42 @@
+tool:
+  name: http.webhook
+  version: 1.0.0
+  description: >
+    Opens a temporary HTTP listener that waits for a single incoming POST request.
+    Useful for receiving webhook callbacks from external services during a pipeline execution.
+    The listener captures the request body, responds with an acknowledgement, and returns the data.
+
+type: http.webhook
+
+input:
+  schema:
+    type: object
+    properties:
+      port:
+        type: integer
+        description: The port to listen on for the incoming webhook POST request
+      path:
+        type: string
+        description: The URL path to listen on (default /webhook)
+      timeout_seconds:
+        type: integer
+        description: Maximum time in seconds to wait for a request (default 60)
+    required:
+      - port
+
+output:
+  schema:
+    type: object
+    properties:
+      received:
+        type: boolean
+        description: Whether a POST request was received before timeout
+      body:
+        type: object
+        description: The parsed request body (JSON if possible, raw string otherwise)
+      content_type:
+        type: string
+        description: The Content-Type header from the incoming request
+      error:
+        type: string
+        description: Error message if the webhook timed out
