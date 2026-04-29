@@ -8,6 +8,7 @@ import { toast } from '@/components/ui/sonner';
 import { PipelineStepTimeline } from '@/components/chat/PipelineStepTimeline';
 import { AgentIterationBreakdown } from '@/components/chat/AgentIterationBreakdown';
 import { SkillBadge } from '@/components/chat/SkillBadge';
+import { MarkdownContent } from '@/components/chat/MarkdownContent';
 
 export function AgentMessage({ message }: { message: ChatMessage }) {
   const [reasoningOpen, setReasoningOpen] = useState(false);
@@ -91,9 +92,15 @@ export function AgentMessage({ message }: { message: ChatMessage }) {
             📋 Result
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <pre className="mt-2 p-3 rounded-lg bg-muted/50 text-xs font-mono whitespace-pre-wrap max-h-[300px] overflow-auto break-all">
-              {resultStr}
-            </pre>
+            {isJson ? (
+              <pre className="mt-2 p-3 rounded-lg bg-muted/50 text-xs font-mono whitespace-pre-wrap max-h-[300px] overflow-auto break-all">
+                {resultStr}
+              </pre>
+            ) : (
+              <div className="mt-2">
+                <MarkdownContent content={resultStr} />
+              </div>
+            )}
             <div className="flex gap-1.5 mt-1.5">
               <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={copyResult}>
                 <Copy className="w-3 h-3" /> Copy

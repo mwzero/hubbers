@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:7070',
         changeOrigin: true,
       },
+      
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

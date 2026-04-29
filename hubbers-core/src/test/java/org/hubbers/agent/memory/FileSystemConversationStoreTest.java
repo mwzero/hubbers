@@ -196,4 +196,27 @@ class FileSystemConversationStoreTest {
         // Then — message is stored and retrievable (ID sanitized internally)
         assertEquals(1, history.size());
     }
+
+    @Test
+    @DisplayName("Should list conversation IDs from stored conversations")
+    void testListConversations_ReturnsStoredIds() {
+        // Given
+        store.saveMessage("conv-alpha", Message.user("Hello alpha"));
+        store.saveMessage("conv-beta", Message.user("Hello beta"));
+
+        // When
+        List<String> conversations = store.listConversations();
+
+        // Then
+        assertEquals(2, conversations.size());
+        assertTrue(conversations.contains("conv-alpha"));
+        assertTrue(conversations.contains("conv-beta"));
+    }
+
+    @Test
+    @DisplayName("Should return empty list when no conversations exist")
+    void testListConversations_Empty_ReturnsEmptyList() {
+        List<String> conversations = store.listConversations();
+        assertTrue(conversations.isEmpty());
+    }
 }

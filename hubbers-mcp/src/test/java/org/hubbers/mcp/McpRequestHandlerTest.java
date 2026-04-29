@@ -139,18 +139,19 @@ class McpRequestHandlerTest {
     }
 
     @Test
-    @DisplayName("Should handle tools/call with skill prefix")
-    void testToolsCall_WithSkillPrefix_RoutesToSkill() throws Exception {
-        stubFacade.setSkillResult(RunResult.success(mapper.readTree("{\"output\": \"skill done\"}")));
-
+    @DisplayName("Should reject skill prefix in tools/call (skills are prompts, not tools)")
+    void testToolsCall_WithSkillPrefix_ReturnsError() throws Exception {
         ObjectNode params = mapper.createObjectNode();
         params.put("name", "skill.code.review");
         params.set("arguments", mapper.createObjectNode().put("input", "review this"));
 
         McpRequest request = buildRequest(6, "tools/call", params);
-        handler.handle(request);
 
-        assertEquals("code.review", stubFacade.getLastSkillName());
+        Optional<McpResponse> response = handler.handle(request);
+
+        assertTrue(response.isPresent());
+        JsonNode resultNode = mapper.valueToTree(response.get().getResult());
+        assertTrue(resultNode.get("isError").asBoolean());
     }
 
     @Test
@@ -313,6 +314,12 @@ class McpRequestHandlerTest {
 
         @Override
         public RunResult runAgent(String name, JsonNode input) {
+            this.lastAgentName = name;
+            return agentResult != null ? agentResult : RunResult.success(null);
+        }
+
+        @Override
+        public RunResult runAgent(String name, JsonNode input, String conversationId) {
             this.lastAgentName = name;
             return agentResult != null ? agentResult : RunResult.success(null);
         }

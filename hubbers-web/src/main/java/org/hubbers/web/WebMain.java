@@ -7,6 +7,7 @@ import org.hubbers.config.LogbackConfigurator;
 import org.hubbers.config.RepoPathResolver;
 import org.hubbers.mcp.McpPromptProvider;
 import org.hubbers.mcp.McpRequestHandler;
+import org.hubbers.mcp.McpResourceProvider;
 import org.hubbers.mcp.McpToolProvider;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
@@ -31,7 +32,8 @@ public class WebMain {
         var objectMapper = JacksonFactory.jsonMapper();
         var mcpToolProvider = new McpToolProvider(facade.getArtifactRepository(), objectMapper);
         var mcpPromptProvider = new McpPromptProvider(facade.getArtifactRepository());
-        var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, facade, objectMapper);
+        var mcpResourceProvider = new McpResourceProvider(facade.getArtifactRepository(), Path.of(appConfig.getRepoRoot()));
+        var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, mcpResourceProvider, facade, objectMapper);
         webServer.setMcpRequestHandler(mcpHandler);
 
         webServer.start(port);

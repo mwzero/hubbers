@@ -69,3 +69,25 @@ export interface ValidationResult {
   valid: boolean;
   errors?: string[];
 }
+
+export interface ToolDriverInfo {
+  type: string;
+  label: string;
+  description: string;
+  risk: 'network' | 'filesystem' | 'high-risk' | 'data' | 'interactive' | 'storage' | string;
+}
+
+export interface ModelProviderInfo {
+  id: string;
+  label: string;
+  local: boolean;
+  configured: boolean;
+  defaultModel?: string;
+}
+
+export interface ArtifactStatus {
+  status: 'draft' | 'valid' | 'invalid' | 'certified' | 'deprecated' | string;
+  certified: boolean;
+  valid: boolean;
+  errors: string[];
+}

@@ -1,0 +1,1184 @@
+{
+  "info": {
+    "name": "Hubbers API",
+    "description": "Complete API collection for the Hubbers framework — a Git-native Java runtime for AI agents, tools, pipelines, and skills.\n\nBase URL: http://localhost:7070\n\nAuthentication: Bearer token via Authorization header (skip for /api/health).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{apiKey}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7070",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "executionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Configuration",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Returns server health status. No authentication required."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"status\": \"ok\"}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        },
+        {
+          "name": "Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "settings"]
+            },
+            "description": "Retrieve the current application configuration (AppConfig)."
+          },
+          "response": []
+        },
+        {
+          "name": "Save Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ollama\": {\n    \"baseUrl\": \"http://localhost:11434\",\n    \"model\": \"llama3\"\n  },\n  \"security\": {\n    \"apiKey\": \"\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "settings"]
+            },
+            "description": "Save/update the application configuration."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"success\": true, \"message\": \"Settings saved successfully\"}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        },
+        {
+          "name": "List Models",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/models",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models"]
+            },
+            "description": "List available LLM models from all configured providers (Ollama, OpenAI, Anthropic, etc.)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Artifact Discovery",
+      "item": [
+        {
+          "name": "List Agents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/agents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "agents"]
+            },
+            "description": "List all available agent manifests."
+          },
+          "response": []
+        },
+        {
+          "name": "List Tools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tools",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tools"]
+            },
+            "description": "List all available tool manifests."
+          },
+          "response": []
+        },
+        {
+          "name": "List Pipelines",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pipelines",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pipelines"]
+            },
+            "description": "List all available pipeline manifests."
+          },
+          "response": []
+        },
+        {
+          "name": "List Skills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/skills",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "skills"]
+            },
+            "description": "List all available skill manifests."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Manifest",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/manifest/:type/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "manifest", ":type", ":name"],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "agents",
+                  "description": "Artifact type: agents, tools, pipelines, or skills"
+                },
+                {
+                  "key": "name",
+                  "value": "hello-world",
+                  "description": "Name of the artifact"
+                }
+              ]
+            },
+            "description": "Retrieve the raw YAML manifest for a specific artifact."
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Manifest",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "name: my-tool\ndescription: A sample tool\ndriver:\n  type: http\n  method: GET\n  url: https://example.com/api"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/validate/:type",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "validate", ":type"],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "tools",
+                  "description": "Artifact type to validate: agents, tools, pipelines, or skills"
+                }
+              ]
+            },
+            "description": "Validate an artifact manifest YAML against its schema."
+          },
+          "response": [
+            {
+              "name": "200 OK - Valid",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"valid\": true, \"errors\": []}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        },
+        {
+          "name": "Save Manifest",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "name: my-tool\ndescription: A sample tool\ndriver:\n  type: http\n  method: GET\n  url: https://example.com/api"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/manifest/:type/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "manifest", ":type", ":name"],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "tools",
+                  "description": "Artifact type: agents, tools, pipelines, or skills"
+                },
+                {
+                  "key": "name",
+                  "value": "my-tool",
+                  "description": "Name of the artifact to save"
+                }
+              ]
+            },
+            "description": "Save or update an artifact manifest."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"saved\": true, \"errors\": []}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Execution - Synchronous",
+      "item": [
+        {
+          "name": "Run Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"Hello, world!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/run/agents/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "run", "agents", ":name"],
+              "variable": [
+                {
+                  "key": "name",
+                  "value": "hello-world",
+                  "description": "Name of the agent to execute"
+                }
+              ]
+            },
+            "description": "Execute an agent synchronously. Returns the full execution result."
+          },
+          "response": []
+        },
+        {
+          "name": "Run Tool",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"test\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/run/tools/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "run", "tools", ":name"],
+              "variable": [
+                {
+                  "key": "name",
+                  "value": "example-tool",
+                  "description": "Name of the tool to execute"
+                }
+              ]
+            },
+            "description": "Execute a tool synchronously."
+          },
+          "response": []
+        },
+        {
+          "name": "Run Pipeline",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"pipeline input data\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/run/pipelines/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "run", "pipelines", ":name"],
+              "variable": [
+                {
+                  "key": "name",
+                  "value": "example-pipeline",
+                  "description": "Name of the pipeline to execute"
+                }
+              ]
+            },
+            "description": "Execute a pipeline synchronously."
+          },
+          "response": []
+        },
+        {
+          "name": "Run Skill",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"skill input\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/run/skills/:name",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "run", "skills", ":name"],
+              "variable": [
+                {
+                  "key": "name",
+                  "value": "example-skill",
+                  "description": "Name of the skill to execute"
+                }
+              ]
+            },
+            "description": "Execute a skill synchronously."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Execution - Asynchronous",
+      "item": [
+        {
+          "name": "Run Async",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"async input data\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/run/:type/:name/async?conversationId={{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "run", ":type", ":name", "async"],
+              "query": [
+                {
+                  "key": "conversationId",
+                  "value": "{{conversationId}}",
+                  "description": "Optional conversation ID for context",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "type",
+                  "value": "agents",
+                  "description": "Artifact type: agents or pipelines"
+                },
+                {
+                  "key": "name",
+                  "value": "hello-world",
+                  "description": "Name of the artifact to execute"
+                }
+              ]
+            },
+            "description": "Start asynchronous execution of an agent or pipeline. Returns immediately with an execution ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"executionId\": \"abc-123\", \"status\": \"RUNNING\"}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Execution History",
+      "item": [
+        {
+          "name": "List Executions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions"]
+            },
+            "description": "List all execution history entries."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Execution Metadata",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}"]
+            },
+            "description": "Get metadata for a specific execution."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Execution Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/log",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "log"]
+            },
+            "description": "Get execution logs (plain text)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Execution Input",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/input",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "input"]
+            },
+            "description": "Get the input that was provided to an execution."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Execution Output",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/output",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "output"]
+            },
+            "description": "Get the output from an execution."
+          },
+          "response": []
+        },
+        {
+          "name": "List Execution Steps",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/steps",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "steps"]
+            },
+            "description": "List all steps in a pipeline execution."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Step Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/steps/:stepName/log",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "steps", ":stepName", "log"],
+              "variable": [
+                {
+                  "key": "stepName",
+                  "value": "step-1",
+                  "description": "Name of the pipeline step"
+                }
+              ]
+            },
+            "description": "Get log for a specific pipeline step."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Step Input",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/steps/:stepName/input",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "steps", ":stepName", "input"],
+              "variable": [
+                {
+                  "key": "stepName",
+                  "value": "step-1",
+                  "description": "Name of the pipeline step"
+                }
+              ]
+            },
+            "description": "Get input for a specific pipeline step."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Step Output",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/executions/{{executionId}}/steps/:stepName/output",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "executions", "{{executionId}}", "steps", ":stepName", "output"],
+              "variable": [
+                {
+                  "key": "stepName",
+                  "value": "step-1",
+                  "description": "Name of the pipeline step"
+                }
+              ]
+            },
+            "description": "Get output for a specific pipeline step."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Token Usage",
+      "item": [
+        {
+          "name": "Get Usage Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "usage"]
+            },
+            "description": "Get LLM token usage statistics grouped by provider."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Form Handling",
+      "item": [
+        {
+          "name": "Get Form Session",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{sessionId}}"]
+            },
+            "description": "Get form session information."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"field1\": \"value1\",\n  \"field2\": \"value2\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{sessionId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{sessionId}}", "submit"]
+            },
+            "description": "Submit form data and trigger artifact execution."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Form Session",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/forms/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "forms", "{{sessionId}}"]
+            },
+            "description": "Cancel a form session."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"cancelled\": true}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pipeline Control",
+      "item": [
+        {
+          "name": "Resume Pipeline",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"formField1\": \"value1\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pipeline/{{executionId}}/resume",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pipeline", "{{executionId}}", "resume"]
+            },
+            "description": "Resume a paused pipeline execution by submitting form data."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Task Execution (Universal Agent)",
+      "item": [
+        {
+          "name": "Execute Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.executionId) {",
+                  "    pm.collectionVariables.set('executionId', jsonData.executionId);",
+                  "}",
+                  "if (jsonData.conversationId) {",
+                  "    pm.collectionVariables.set('conversationId', jsonData.conversationId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request\": \"Summarize the latest news\",\n  \"context\": null,\n  \"agentName\": null,\n  \"model\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/task/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "task", "execute"]
+            },
+            "description": "Execute a natural language request via the universal task agent."
+          },
+          "response": []
+        },
+        {
+          "name": "Continue Task Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request\": \"Tell me more about item 3\",\n  \"conversationId\": \"{{conversationId}}\",\n  \"context\": null,\n  \"agentName\": null,\n  \"model\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/task/continue",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "task", "continue"]
+            },
+            "description": "Continue an existing task conversation with follow-up request."
+          },
+          "response": []
+        },
+        {
+          "name": "Stream Task (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request\": \"Analyze this data\",\n  \"context\": null,\n  \"agentName\": null,\n  \"conversationId\": null,\n  \"model\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/task/stream",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "task", "stream"]
+            },
+            "description": "Stream task execution events via Server-Sent Events (SSE) for real-time chat rendering."
+          },
+          "response": []
+        },
+        {
+          "name": "Task Service Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/task/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "task", "info"]
+            },
+            "description": "Get task service info including available tool/agent/pipeline/skill counts."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"available_tools\": 10, \"available_agents\": 5, \"available_pipelines\": 3, \"available_skills\": 4, \"agent\": \"universal.task\", \"status\": \"ready\"}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conversations"]
+            },
+            "description": "List all stored conversations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations/{{conversationId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conversations", "{{conversationId}}", "messages"]
+            },
+            "description": "Get all messages in a conversation."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "conversations", "{{conversationId}}"]
+            },
+            "description": "Delete a conversation and its history."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"deleted\": true}",
+              "header": [{ "key": "Content-Type", "value": "application/json" }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MCP (Model Context Protocol)",
+      "item": [
+        {
+          "name": "MCP - Initialize",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2024-11-05\",\n    \"capabilities\": {},\n    \"clientInfo\": {\n      \"name\": \"postman-client\",\n      \"version\": \"1.0.0\"\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "Initialize MCP connection via JSON-RPC 2.0 (Streamable HTTP transport)."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP - List Tools",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/list\",\n  \"params\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "List all available MCP tools."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP - Call Tool",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 3,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"tool-name\",\n    \"arguments\": {\n      \"key\": \"value\"\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "Call an MCP tool by name with arguments."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP - List Prompts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 4,\n  \"method\": \"prompts/list\",\n  \"params\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "List all available MCP prompts."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP - List Resources",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 5,\n  \"method\": \"resources/list\",\n  \"params\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "List all available MCP resources."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP - Read Resource",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 6,\n  \"method\": \"resources/read\",\n  \"params\": {\n    \"uri\": \"resource://example\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp"]
+            },
+            "description": "Read a specific MCP resource by URI."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP SSE - Connect",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/mcp/sse",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp", "sse"]
+            },
+            "description": "Establish SSE connection for MCP (backward-compatible transport). Returns endpoint URL for sending messages."
+          },
+          "response": []
+        },
+        {
+          "name": "MCP SSE - Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/list\",\n  \"params\": {}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mcp/messages?sessionId={{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["mcp", "messages"],
+              "query": [
+                {
+                  "key": "sessionId",
+                  "value": "{{sessionId}}",
+                  "description": "SSE session ID obtained from /mcp/sse connection"
+                }
+              ]
+            },
+            "description": "Send JSON-RPC message via SSE transport (requires active /mcp/sse connection)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OpenAI-Compatible Proxy",
+      "item": [
+        {
+          "name": "List Models (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/models",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "models"]
+            },
+            "description": "List available models in OpenAI-compatible format. Returns a virtual model with Hubbers tool capabilities."
+          },
+          "response": []
+        },
+        {
+          "name": "Chat Completions",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"hubbers\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"What tools are available?\"\n    }\n  ],\n  \"tool_choice\": \"auto\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/chat/completions",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "chat", "completions"]
+            },
+            "description": "OpenAI-compatible chat completions endpoint with function calling support. Routes tool calls to Hubbers artifacts."
+          },
+          "response": []
+        },
+        {
+          "name": "List Tools (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tools",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "tools"]
+            },
+            "description": "Get all Hubbers artifacts (agents, tools, pipelines, skills) as OpenAI function tool definitions."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

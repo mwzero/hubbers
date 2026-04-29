@@ -1,5 +1,11 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive",
-    "java.format.settings.url": ".vscode/java-formatter.xml"
+    "java.format.settings.url": ".vscode/java-formatter.xml",
+    "java.autobuild.enabled": false,
+    "chat.tools.terminal.autoApprove": {
+        "mvn clean": true,
+        ".\\node\\npm.cmd": true,
+        "mvn.cmd": true
+    }
 }

@@ -46,6 +46,8 @@ export default function Index() {
             onValidate={ws.validateManifest}
             onRun={ws.runArtifact}
             runDisabled={!ws.selected}
+            validationResult={ws.validationResult}
+            artifactStatus={ws.artifactStatus}
             repo={ws.repo}
             pipelineSteps={ws.pipelineSteps}
             onPipelineStepsChange={ws.setPipelineSteps}

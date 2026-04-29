@@ -13,6 +13,7 @@
 
     <modules>
         <module>hubbers-ui</module>
+        <module>hubbers-tools-api</module>
         <module>hubbers-core</module>
         <module>hubbers-tools-builtin</module>
         <module>hubbers-framework</module>
@@ -132,6 +133,11 @@
             <dependency>
                 <groupId>org.hubbers</groupId>
                 <artifactId>hubbers-ui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hubbers</groupId>
+                <artifactId>hubbers-tools-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

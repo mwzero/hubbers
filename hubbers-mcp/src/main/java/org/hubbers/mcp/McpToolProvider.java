@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.hubbers.app.ArtifactRepository;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
-import org.hubbers.manifest.skill.SkillMetadata;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.mcp.protocol.McpToolInfo;
 
@@ -25,7 +24,6 @@ import java.util.List;
  *   <li>{@code tool.<name>} — e.g., {@code tool.web.search}</li>
  *   <li>{@code pipeline.<name>} — e.g., {@code pipeline.file.backup}</li>
  *   <li>{@code agent.<name>} — e.g., {@code agent.universal.task}</li>
- *   <li>{@code skill.<name>} — e.g., {@code skill.code.review}</li>
  * </ul>
  */
 @Slf4j
@@ -34,7 +32,6 @@ public class McpToolProvider {
     private static final String PREFIX_TOOL = "tool.";
     private static final String PREFIX_PIPELINE = "pipeline.";
     private static final String PREFIX_AGENT = "agent.";
-    private static final String PREFIX_SKILL = "skill.";
 
     private final ArtifactRepository artifactRepository;
     private final ObjectMapper mapper;
@@ -82,15 +79,6 @@ public class McpToolProvider {
                 tools.add(convertAgent(manifest));
             } catch (Exception e) {
                 log.warn("Failed to convert agent '{}' to MCP: {}", name, e.getMessage());
-            }
-        }
-
-        for (String name : artifactRepository.listSkills()) {
-            try {
-                SkillMetadata metadata = artifactRepository.getSkillMetadata(name);
-                tools.add(convertSkill(metadata));
-            } catch (Exception e) {
-                log.warn("Failed to convert skill '{}' to MCP: {}", name, e.getMessage());
             }
         }
 
@@ -145,19 +133,6 @@ public class McpToolProvider {
                 .build();
     }
 
-    private McpToolInfo convertSkill(SkillMetadata metadata) {
-        String name = PREFIX_SKILL + metadata.getName();
-        String description = metadata.getDescription();
-        if (description == null || description.isBlank()) {
-            description = "Execute skill: " + metadata.getName();
-        }
-        return McpToolInfo.builder()
-                .name(name)
-                .description(description)
-                .inputSchema(createSkillInputSchema())
-                .build();
-    }
-
     private JsonNode extractInputSchema(ToolManifest manifest) {
         if (manifest.getInput() != null && manifest.getInput().getSchema() != null) {
             try {
@@ -199,21 +174,6 @@ public class McpToolProvider {
         schema.set("properties", properties);
         ArrayNode required = mapper.createArrayNode();
         required.add("request");
-        schema.set("required", required);
-        return schema;
-    }
-
-    private JsonNode createSkillInputSchema() {
-        ObjectNode schema = mapper.createObjectNode();
-        schema.put("type", "object");
-        ObjectNode properties = mapper.createObjectNode();
-        ObjectNode inputProp = mapper.createObjectNode();
-        inputProp.put("type", "string");
-        inputProp.put("description", "Input for the skill");
-        properties.set("input", inputProp);
-        schema.set("properties", properties);
-        ArrayNode required = mapper.createArrayNode();
-        required.add("input");
         schema.set("required", required);
         return schema;
     }

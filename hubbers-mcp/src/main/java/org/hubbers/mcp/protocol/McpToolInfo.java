@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * MCP tool information returned by {@code tools/list}.
- * Maps Hubbers artifacts (tools, pipelines, agents, skills) to MCP tool definitions.
+ * Maps Hubbers artifacts (tools, pipelines, agents) to MCP tool definitions.
+ * Skills are exposed as MCP prompts instead.
  *
  * @see <a href="https://spec.modelcontextprotocol.io/specification/server/tools/">MCP Tools Spec</a>
  */
@@ -22,7 +23,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class McpToolInfo {
 
-    /** Unique tool name. Uses convention: tool.*, pipeline.*, agent.*, skill.* */
+    /** Unique tool name. Uses convention: tool.*, pipeline.*, agent.* */
     private String name;
 
     /** Human-readable description of what the tool does. */

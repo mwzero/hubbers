@@ -1,20 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { Send, ChevronDown, ChevronUp, Check, Square, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { ModelInfo } from '@/types/chat';
 
 interface ChatInputProps {
   onSend: (request: string, context?: object) => void;
+  onStop?: () => void;
   disabled: boolean;
   conversationId: string | null;
   selectedAgent: string;
   availableAgents: string[];
   onAgentSelect: (agent: string) => void;
+  models?: ModelInfo[];
+  selectedModel?: string;
+  onModelSelect?: (model: string) => void;
 }
 
-export function ChatInput({ onSend, disabled, conversationId, selectedAgent, availableAgents, onAgentSelect }: ChatInputProps) {
+export function ChatInput({ onSend, onStop, disabled, conversationId, selectedAgent, availableAgents, onAgentSelect, models, selectedModel, onModelSelect }: ChatInputProps) {
   const [request, setRequest] = useState('');
   const [contextOpen, setContextOpen] = useState(false);
   const [contextJson, setContextJson] = useState('');
@@ -86,15 +92,38 @@ export function ChatInput({ onSend, disabled, conversationId, selectedAgent, ava
 
   return (
     <div className="border-t bg-card px-4 pb-4 space-y-3">
-      {/* Agent badge */}
-      <div className="pt-3 flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">Agent:</span>
-        <Badge variant="secondary" className="text-xs font-mono">
-          {selectedAgent}
-        </Badge>
-        <span className="text-[10px] text-muted-foreground italic">
-          Type <code className="px-1 py-0.5 rounded bg-muted font-mono">/</code> to change
-        </span>
+      {/* Agent + Model row */}
+      <div className="pt-3 flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">Agent:</span>
+          <Badge variant="secondary" className="text-xs font-mono">
+            {selectedAgent}
+          </Badge>
+          <span className="text-[10px] text-muted-foreground italic">
+            Type <code className="px-1 py-0.5 rounded bg-muted font-mono">/</code> to change
+          </span>
+        </div>
+        {models && models.length > 0 && onModelSelect && (
+          <div className="flex items-center gap-2">
+            <Cpu className="w-3 h-3 text-muted-foreground" />
+            <Select value={selectedModel || ''} onValueChange={onModelSelect}>
+              <SelectTrigger className="h-7 text-xs w-[200px]">
+                <SelectValue placeholder="Auto (agent default)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Auto (agent default)</SelectItem>
+                {models.map(m => (
+                  <SelectItem key={`${m.provider}:${m.name}`} value={`${m.provider}:${m.name}`}>
+                    <span className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-[9px] px-1 py-0">{m.provider}</Badge>
+                      {m.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {/* Context JSON collapsible */}
@@ -155,14 +184,25 @@ export function ChatInput({ onSend, disabled, conversationId, selectedAgent, ava
             {request.length}
           </span>
         </div>
-        <Button
-          onClick={handleSend}
-          disabled={disabled || !request.trim() || showAgentMenu}
-          size="icon"
-          className="h-[56px] w-[56px] shrink-0"
-        >
-          <Send className="w-5 h-5" />
-        </Button>
+        {disabled && onStop ? (
+          <Button
+            onClick={onStop}
+            variant="destructive"
+            size="icon"
+            className="h-[56px] w-[56px] shrink-0"
+          >
+            <Square className="w-5 h-5" />
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSend}
+            disabled={disabled || !request.trim() || showAgentMenu}
+            size="icon"
+            className="h-[56px] w-[56px] shrink-0"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
+        )}
       </div>
     </div>
   );

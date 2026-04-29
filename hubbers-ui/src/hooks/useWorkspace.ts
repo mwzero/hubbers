@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import type { Artifact, ArtifactType, RepoModel, Execution, Step, PipelineStep, StepInputMapping, FormDef } from '@/types/workspace';
+import type { Artifact, ArtifactType, RepoModel, Execution, Step, PipelineStep, StepInputMapping, FormDef, ValidationResult, ArtifactStatus } from '@/types/workspace';
 import * as api from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -11,6 +11,8 @@ export function useWorkspace() {
   const [loading, setLoading] = useState({ repo: false, manifest: false, save: false, validate: false, run: false });
   const [apiOnline, setApiOnline] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [artifactStatus, setArtifactStatus] = useState<ArtifactStatus | null>(null);
 
   // Runner
   const [runInput, setRunInput] = useState('{}');
@@ -70,10 +72,17 @@ export function useWorkspace() {
     setEditorTab('yaml');
     setSelectedExecution(null);
     setExecutionDetail(null);
+    setValidationResult(null);
+    setArtifactStatus(null);
     setLoading(l => ({ ...l, manifest: true }));
     try {
-      const yaml = await api.fetchManifest(art.type, art.name);
+      const [yaml, status] = await Promise.all([
+        api.fetchManifest(art.type, art.name),
+        api.fetchArtifactStatus(art.type, art.name).catch(() => null),
+      ]);
       setManifest(yaml);
+      setArtifactStatus(status);
+      if (status) setValidationResult({ valid: status.valid, errors: status.errors });
       if (art.type === 'pipeline') parsePipelineSteps(yaml);
     } catch (e: any) {
       toast.error(e.message);
@@ -180,6 +189,8 @@ export function useWorkspace() {
     setLoading(l => ({ ...l, validate: true }));
     try {
       const result = await api.validateManifest(selected.type, manifest);
+      setValidationResult(result);
+      setArtifactStatus({ status: result.valid ? 'valid' : 'invalid', certified: false, valid: result.valid, errors: result.errors || [] });
       if (result.valid) toast.success('Manifest is valid');
       else toast.error('Validation failed: ' + (result.errors?.join(', ') || 'Unknown'));
     } catch (e: any) {
@@ -289,7 +300,7 @@ export function useWorkspace() {
 
   return {
     repo, selected, manifest, setManifest, editorTab, setEditorTab,
-    loading, apiOnline, sidebarOpen, setSidebarOpen,
+    loading, apiOnline, sidebarOpen, setSidebarOpen, validationResult, artifactStatus,
     runInput, setRunInput, runOutput,
     formModal, setFormModal, submitFormModal,
     executions, selectedExecution, executionDetail, execDetailTab, setExecDetailTab,

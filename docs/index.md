@@ -15,6 +15,7 @@ Hubbers is a Git-native Java runtime for executing agents, tools, pipelines, and
 
 - [Agentic Architecture](AGENTIC_ARCHITECTURE.md)
 - [Codebase Analysis](CODEBASE_ANALYSIS.md)
+- [UI Roadmap](UI_ROADMAP.md)
 
 ## Artifact Authoring
 

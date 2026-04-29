@@ -80,3 +80,18 @@ export interface SystemInfo {
   availableTools: number;
   agentName: string;
 }
+
+export interface ModelInfo {
+  provider: string;
+  name: string;
+  size: number;
+}
+
+export interface ConversationSummary {
+  id: string;
+}
+
+export interface StreamEvent {
+  type: 'started' | 'result' | 'done' | 'error';
+  data: any;
+}

@@ -39,7 +39,8 @@ import java.util.concurrent.Callable;
         HubbersCommand.ToolCommand.class,
         HubbersCommand.PipelineCommand.class,
         HubbersCommand.SkillCommand.class,
-        HubbersCommand.WebCommand.class
+        HubbersCommand.WebCommand.class,
+        McpCommand.class
     }
 )
 public class HubbersCommand implements Callable<Integer> {
@@ -345,8 +346,14 @@ public class HubbersCommand implements Callable<Integer> {
             var objectMapper = JacksonFactory.jsonMapper();
             var mcpToolProvider = new McpToolProvider(root.runtimeFacade.getArtifactRepository(), objectMapper);
             var mcpPromptProvider = new McpPromptProvider(root.runtimeFacade.getArtifactRepository());
-            var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, root.runtimeFacade, objectMapper);
+            var mcpResourceProvider = new org.hubbers.mcp.McpResourceProvider(
+                    root.runtimeFacade.getArtifactRepository(), Path.of(appConfig.getRepoRoot()));
+            var mcpHandler = new McpRequestHandler(mcpToolProvider, mcpPromptProvider, mcpResourceProvider, root.runtimeFacade, objectMapper);
             webServer.setMcpRequestHandler(mcpHandler);
+
+            // Wire OpenAI-compatible proxy (/v1/chat/completions, /v1/models)
+            var openAiProxy = new org.hubbers.web.OpenAiCompatibleProxy(root.runtimeFacade, mcpToolProvider, objectMapper);
+            webServer.setOpenAiProxy(openAiProxy);
 
             webServer.start(port);
 

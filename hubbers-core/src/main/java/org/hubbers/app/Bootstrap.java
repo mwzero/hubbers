@@ -89,6 +89,12 @@ public class Bootstrap {
         // Register AgentExecutor in registry
         executorRegistry.register(ExecutorRegistry.ExecutorType.AGENT, agentExecutor);
 
+        // Create ModelRouter for local-first routing and token tracking
+        String ollamaUrl = config.getOllama() != null && config.getOllama().getBaseUrl() != null
+                ? config.getOllama().getBaseUrl() : "http://localhost:11434";
+        var modelRouter = new org.hubbers.model.ModelRouter(modelRegistry, ollamaUrl, httpClient);
+        agentExecutor.setModelRouter(modelRouter);
+
         // Create PipelineExecutor with ExecutorRegistry (instead of direct AgentExecutor reference)
         var pipelineExecutor = new PipelineExecutor(repository, executorRegistry, toolExecutor, new InputMapper(jsonMapper));
         
@@ -111,7 +117,9 @@ public class Bootstrap {
         var formSessionStore = new org.hubbers.forms.FormSessionStore();
         var juiFormService = new org.hubbers.forms.JuiFormService(formSessionStore);
 
-        return new RuntimeFacade(repository, agentExecutor, toolExecutor, pipelineExecutor, skillExecutor, new ManifestValidator(), executionStorage, juiFormService);
+        var facade = new RuntimeFacade(repository, agentExecutor, toolExecutor, pipelineExecutor, skillExecutor, new ManifestValidator(), executionStorage, juiFormService);
+        facade.setModelRouter(modelRouter);
+        return facade;
     }
 
     private static List<ToolDriver> loadToolDrivers(ToolDriverContext context) {

@@ -179,6 +179,22 @@ public class FileSystemConversationStore implements ConversationMemory {
         }
     }
 
+    @Override
+    public List<String> listConversations() {
+        if (!Files.exists(baseDir)) {
+            return List.of();
+        }
+        try (var dirs = Files.list(baseDir)) {
+            return dirs.filter(Files::isDirectory)
+                    .map(p -> p.getFileName().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Failed to list conversations", e);
+            return List.of();
+        }
+    }
+
     // --- Internal helpers ---
 
     private ReadWriteLock lockFor(String conversationId) {

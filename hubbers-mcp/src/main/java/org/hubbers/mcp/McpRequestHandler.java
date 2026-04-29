@@ -37,29 +37,49 @@ public class McpRequestHandler {
     private static final String PREFIX_TOOL = "tool.";
     private static final String PREFIX_PIPELINE = "pipeline.";
     private static final String PREFIX_AGENT = "agent.";
-    private static final String PREFIX_SKILL = "skill.";
 
     private final McpToolProvider toolProvider;
     private final McpPromptProvider promptProvider;
+    private final McpResourceProvider resourceProvider;
     private final RuntimeFacade runtimeFacade;
     private final ObjectMapper mapper;
+    private final McpSessionManager sessionManager;
 
     /**
      * Creates a new McpRequestHandler.
      *
-     * @param toolProvider   provides MCP tool definitions from Hubbers artifacts
-     * @param promptProvider provides MCP prompt definitions from Hubbers agents
-     * @param runtimeFacade  executes Hubbers artifacts
-     * @param mapper         Jackson mapper for JSON serialization
+     * @param toolProvider     provides MCP tool definitions from Hubbers artifacts
+     * @param promptProvider   provides MCP prompt definitions from Hubbers agents
+     * @param runtimeFacade    executes Hubbers artifacts
+     * @param mapper           Jackson mapper for JSON serialization
      */
     public McpRequestHandler(McpToolProvider toolProvider,
                              McpPromptProvider promptProvider,
                              RuntimeFacade runtimeFacade,
                              ObjectMapper mapper) {
+        this(toolProvider, promptProvider, null, runtimeFacade, mapper);
+    }
+
+    /**
+     * Creates a new McpRequestHandler with resource support.
+     *
+     * @param toolProvider     provides MCP tool definitions from Hubbers artifacts
+     * @param promptProvider   provides MCP prompt definitions from Hubbers agents
+     * @param resourceProvider provides MCP resource definitions (may be null)
+     * @param runtimeFacade    executes Hubbers artifacts
+     * @param mapper           Jackson mapper for JSON serialization
+     */
+    public McpRequestHandler(McpToolProvider toolProvider,
+                             McpPromptProvider promptProvider,
+                             McpResourceProvider resourceProvider,
+                             RuntimeFacade runtimeFacade,
+                             ObjectMapper mapper) {
         this.toolProvider = toolProvider;
         this.promptProvider = promptProvider;
+        this.resourceProvider = resourceProvider;
         this.runtimeFacade = runtimeFacade;
         this.mapper = mapper;
+        this.sessionManager = new McpSessionManager();
     }
 
     /**
@@ -82,6 +102,8 @@ public class McpRequestHandler {
             case "tools/call" -> Optional.of(handleToolsCall(request));
             case "prompts/list" -> Optional.of(handlePromptsList(request));
             case "prompts/get" -> Optional.of(handlePromptsGet(request));
+            case "resources/list" -> Optional.of(handleResourcesList(request));
+            case "resources/read" -> Optional.of(handleResourcesRead(request));
             case "ping" -> Optional.of(McpResponse.success(request.getId(), Map.of()));
             default -> {
                 log.warn("Unknown MCP method: {}", method);
@@ -95,7 +117,8 @@ public class McpRequestHandler {
 
         Map<String, Object> capabilities = Map.of(
                 "tools", Map.of("listChanged", false),
-                "prompts", Map.of("listChanged", false)
+                "prompts", Map.of("listChanged", false),
+                "resources", Map.of("listChanged", false)
         );
 
         Map<String, Object> serverInfo = Map.of(
@@ -125,11 +148,13 @@ public class McpRequestHandler {
 
         String fullName = params.get("name").asText();
         JsonNode arguments = params.has("arguments") ? params.get("arguments") : mapper.createObjectNode();
+        String sessionId = params.has("_meta") && params.get("_meta").has("sessionId")
+                ? params.get("_meta").get("sessionId").asText() : null;
 
-        log.info("MCP tools/call: {}", fullName);
+        log.info("MCP tools/call: {} (session={})", fullName, sessionId);
 
         try {
-            RunResult result = routeAndExecute(fullName, arguments);
+            RunResult result = routeAndExecute(fullName, arguments, sessionId);
             return McpResponse.success(request.getId(), toMcpToolCallResult(result));
         } catch (IllegalArgumentException e) {
             log.error("MCP tools/call failed for '{}': {}", fullName, e.getMessage());
@@ -165,6 +190,32 @@ public class McpRequestHandler {
         return McpResponse.success(request.getId(), result.get());
     }
 
+    private McpResponse handleResourcesList(McpRequest request) {
+        if (resourceProvider == null) {
+            return McpResponse.success(request.getId(), Map.of("resources", List.of()));
+        }
+        List<McpResourceInfo> resources = resourceProvider.listResources();
+        return McpResponse.success(request.getId(), Map.of("resources", resources));
+    }
+
+    private McpResponse handleResourcesRead(McpRequest request) {
+        JsonNode params = request.getParams();
+        if (params == null || !params.has("uri")) {
+            return McpResponse.invalidParams(request.getId(), "missing 'uri' field");
+        }
+        String uri = params.get("uri").asText();
+        if (resourceProvider == null) {
+            return McpResponse.invalidParams(request.getId(), "resources not configured");
+        }
+        var content = resourceProvider.readResource(uri);
+        if (content.isEmpty()) {
+            return McpResponse.invalidParams(request.getId(), "resource not found: " + uri);
+        }
+        return McpResponse.success(request.getId(), Map.of(
+                "contents", List.of(Map.of("uri", uri, "text", content.get()))
+        ));
+    }
+
     /**
      * Routes an MCP tool call to the appropriate Hubbers executor based on the name prefix.
      *
@@ -173,7 +224,20 @@ public class McpRequestHandler {
      * @return the execution result
      * @throws IllegalArgumentException if the name prefix is unknown
      */
+    /**
+     * Routes an MCP tool call to the appropriate Hubbers executor based on the name prefix.
+     * Agent calls use session-based conversation IDs for multi-turn dialogue.
+     *
+     * @param fullName  the prefixed tool name (e.g., "tool.web.search")
+     * @param arguments the JSON arguments for the tool
+     * @return the execution result
+     * @throws IllegalArgumentException if the name prefix is unknown
+     */
     private RunResult routeAndExecute(String fullName, JsonNode arguments) {
+        return routeAndExecute(fullName, arguments, null);
+    }
+
+    private RunResult routeAndExecute(String fullName, JsonNode arguments, String sessionId) {
         if (fullName.startsWith(PREFIX_TOOL)) {
             String artifactName = fullName.substring(PREFIX_TOOL.length());
             return runtimeFacade.runTool(artifactName, arguments);
@@ -184,11 +248,9 @@ public class McpRequestHandler {
         }
         if (fullName.startsWith(PREFIX_AGENT)) {
             String artifactName = fullName.substring(PREFIX_AGENT.length());
-            return runtimeFacade.runAgent(artifactName, arguments);
-        }
-        if (fullName.startsWith(PREFIX_SKILL)) {
-            String artifactName = fullName.substring(PREFIX_SKILL.length());
-            return runtimeFacade.runSkill(artifactName, arguments);
+            // Use session conversation ID for agent continuity
+            McpSessionManager.McpSession session = sessionManager.getOrCreate(sessionId);
+            return runtimeFacade.runAgent(artifactName, arguments, session.getConversationId());
         }
         throw new IllegalArgumentException("Unknown artifact type prefix in tool name: " + fullName);
     }

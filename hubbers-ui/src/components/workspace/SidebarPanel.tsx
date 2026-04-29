@@ -90,7 +90,10 @@ export function SidebarPanel({ repo, selected, loading, onSelect, onRefresh, onC
                       >
                         <ChevronRight className={`w-3 h-3 shrink-0 transition-transform ${isActive ? 'rotate-90' : 'group-hover:translate-x-0.5'}`} />
                         <span className="truncate">{art.label}</span>
-                        <Badge variant="outline" className="ml-auto text-[9px] px-1 py-0 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Badge variant="secondary" className="ml-auto text-[9px] px-1 py-0 h-3.5">
+                          draft
+                        </Badge>
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           {art.type === 'skill' ? '.md' : '.yaml'}
                         </Badge>
                       </button>

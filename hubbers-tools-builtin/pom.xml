@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>org.hubbers</groupId>
-            <artifactId>hubbers-core</artifactId>
+            <artifactId>hubbers-tools-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

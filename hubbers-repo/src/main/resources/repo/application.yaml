@@ -8,6 +8,18 @@ ollama:
   baseUrl: "http://localhost:11434"
   defaultModel: "qwen3:4b"
   timeoutSeconds: 180  # Request timeout in seconds (3 minutes)
+vectorDb:
+  enabled: true
+  provider: "lucene"
+  rootPath: "./datasets/lucene/vector"
+  defaultIndex: "default"
+  embeddingStrategy: "hashing"
+  dimensions: 256
+  defaultTopK: 3
+  certifiedOnly: false
+  retentionDays: 365
+  allowedPaths:
+    - "./datasets/lucene"
 tools:
   tools: {}
 executions:

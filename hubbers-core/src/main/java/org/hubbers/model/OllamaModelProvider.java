@@ -173,7 +173,15 @@ public class OllamaModelProvider implements ModelProvider {
             modelResponse.setContent(content);
             modelResponse.setModel(root.path("model").asText(model));
             modelResponse.setLatencyMs(System.currentTimeMillis() - start);
-            
+
+            // Extract token usage from Ollama response
+            long promptToks = root.path("prompt_eval_count").asLong(0);
+            long completionToks = root.path("eval_count").asLong(0);
+            modelResponse.setPromptTokens(promptToks);
+            modelResponse.setCompletionTokens(completionToks);
+            modelResponse.setTotalTokens(promptToks + completionToks);
+            log.debug("Ollama token usage: prompt={}, completion={}, total={}", promptToks, completionToks, promptToks + completionToks);
+
             // Parse tool calls if present
             JsonNode toolCallsNode = messageNode.path("tool_calls");
             if (toolCallsNode.isArray() && toolCallsNode.size() > 0) {

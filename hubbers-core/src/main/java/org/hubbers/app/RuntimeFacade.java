@@ -68,6 +68,27 @@ public class RuntimeFacade {
     
     private final ArtifactCatalogInjector artifactCatalogInjector = new ArtifactCatalogInjector();
 
+    // Optional: model router for token tracking and local-first routing
+    private org.hubbers.model.ModelRouter modelRouter;
+
+    /**
+     * Returns the model router for token usage queries, or null if not configured.
+     *
+     * @return the model router, or null
+     */
+    public org.hubbers.model.ModelRouter getModelRouter() {
+        return modelRouter;
+    }
+
+    /**
+     * Sets the model router.
+     *
+     * @param modelRouter the model router
+     */
+    public void setModelRouter(org.hubbers.model.ModelRouter modelRouter) {
+        this.modelRouter = modelRouter;
+    }
+
     public RuntimeFacade(ArtifactRepository artifactRepository,
                          AgentExecutor agentExecutor,
                          ToolExecutor toolExecutor,
@@ -405,6 +426,15 @@ public class RuntimeFacade {
     public ExecutionStorageService getExecutionStorage() { return executionStorage; }
     public org.hubbers.forms.JuiFormService getFormService() { return formService; }
     public PipelineExecutor getPipelineExecutor() { return pipelineExecutor; }
+
+    /**
+     * Returns the conversation memory store used by the agent executor, or null.
+     *
+     * @return conversation memory, or null
+     */
+    public org.hubbers.agent.memory.ConversationMemory getConversationMemory() {
+        return agentExecutor.getConversationMemory();
+    }
 
     /**
      * Execute an agent using a pre-configured manifest and conversation ID.

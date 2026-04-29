@@ -1,0 +1,124 @@
+---
+# Hubbers application configuration example.
+#
+# Copy this file to application.yaml, then delete the sections you do not need.
+# Secret values can be literal strings, null, or environment references such as
+# ${OPENAI_API_KEY}. ConfigLoader resolves ${ENV_VAR} values at runtime.
+
+# Root folder that contains repo/{agents,tools,pipelines,skills} and application.yaml.
+# The running process may override this with the resolved repository path.
+repoRoot: "hubbers-repo\\src\\main\\resources\\repo"
+
+# OpenAI-compatible cloud provider.
+openai:
+  apiKey: "${OPENAI_API_KEY}"
+  baseUrl: "https://api.openai.com/v1"
+  defaultModel: "gpt-4.1-mini"
+
+# Local Ollama provider.
+ollama:
+  baseUrl: "http://localhost:11434"
+  defaultModel: "qwen3:4b"
+  timeoutSeconds: 180
+
+# Azure OpenAI provider.
+azureOpenai:
+  endpoint: "https://your-resource.openai.azure.com"
+  apiKey: "${AZURE_OPENAI_API_KEY}"
+  deployment: "your-deployment-name"
+  apiVersion: "2024-02-01"
+  defaultModel: "gpt-4.1-mini"
+
+# Anthropic provider.
+anthropic:
+  apiKey: "${ANTHROPIC_API_KEY}"
+  baseUrl: "https://api.anthropic.com"
+  defaultModel: "claude-sonnet-4-20250514"
+  apiVersion: "2023-06-01"
+  maxTokens: 4096
+
+# Local llama.cpp server exposing OpenAI-compatible endpoints.
+llamaCpp:
+  baseUrl: "http://localhost:8080"
+  apiKey: null
+  defaultModel: "default"
+  timeoutSeconds: 300
+
+# Native local vector database management.
+# Current provider: lucene. Future providers can use the same settings surface.
+vectorDb:
+  enabled: true
+  provider: "lucene"
+  rootPath: "./datasets/lucene/vector"
+  defaultIndex: "default"
+  embeddingStrategy: "hashing"
+  dimensions: 256
+  defaultTopK: 3
+  certifiedOnly: false
+  retentionDays: 365
+  allowedPaths:
+    - "./datasets/lucene"
+    - "./repo/vector"
+
+# Per-tool global defaults. Tool manifests can still override these values.
+# Values in this map are strings; use manifest-level config for nested tool
+# structures such as browser profiles or command allowlists.
+tools:
+  tools:
+    firecrawl:
+      api_key: "${FIRECRAWL_API_KEY}"
+      default_action: "scrape"
+    csv.read:
+      default_file_path: "./datasets/input.csv"
+    csv.write:
+      default_file_path: "./datasets/output.csv"
+    rss:
+      default_limit: "20"
+    lucene.kv:
+      index_path: "./datasets/lucene/kv-store"
+    vector.lucene.upsert:
+      index_path: "./datasets/lucene/vector/default"
+    vector.lucene.search:
+      index_path: "./datasets/lucene/vector/default"
+      top_k: "3"
+    vector.lucene.enrich:
+      index_path: "./datasets/lucene/vector/default"
+      top_k: "3"
+    shell.exec:
+      default_timeout_seconds: "60"
+    process.manage:
+      max_process_list: "1000"
+    browser.pinchtab:
+      pinchtab_url: "http://localhost:9867"
+    sql.query:
+      connection_url: "jdbc:postgresql://localhost:5432/app"
+      username: "${DB_USERNAME}"
+      password: "${DB_PASSWORD}"
+      max_rows: "1000"
+
+# Execution history and log storage.
+executions:
+  path: "./_executions"
+  retentionDays: 30
+  maxConcurrent: 10
+
+# Web/runtime security policy.
+security:
+  apiKey: "${HUBBERS_API_KEY}"
+  allowedTools:
+    - "http"
+    - "rss"
+    - "csv.read"
+    - "csv.write"
+    - "lucene.kv"
+    - "vector.lucene.upsert"
+    - "vector.lucene.search"
+    - "vector.lucene.enrich"
+  deniedTools:
+    - "shell.exec"
+    - "process.manage"
+    - "file.ops"
+    - "docker"
+  allowedCommands:
+    - "^git status$"
+    - "^mvn test$"

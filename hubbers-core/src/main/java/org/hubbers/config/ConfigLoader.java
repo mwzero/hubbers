@@ -81,6 +81,15 @@ public class ConfigLoader {
             ExecutionsConfig executions = appConfig.getExecutions();
             executions.setPath(resolveValue(executions.getPath()));
         }
+        if (appConfig.getVectorDb() != null) {
+            VectorDbConfig vectorDb = appConfig.getVectorDb();
+            vectorDb.setRootPath(resolveValue(vectorDb.getRootPath()));
+            if (vectorDb.getAllowedPaths() != null) {
+                vectorDb.setAllowedPaths(vectorDb.getAllowedPaths().stream()
+                        .map(this::resolveValue)
+                        .toList());
+            }
+        }
     }
 
     private String resolveValue(String value) {

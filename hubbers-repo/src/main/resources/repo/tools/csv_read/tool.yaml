@@ -1,5 +1,5 @@
 tool:
-  name: csv.read
+  name: csv_read
   version: 1.0.0
   description: Read rows from a CSV file into items array
 

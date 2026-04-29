@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Activity, Save, RefreshCw, Plus, Trash2, Workflow, History, ArrowLeft, Play, ChevronDown, ChevronUp } from 'lucide-react';
+import { Activity, Save, RefreshCw, Plus, Trash2, Workflow, History, ArrowLeft, Play, ChevronDown, ChevronUp, Pen } from 'lucide-react';
 import { StepInputPanel } from '@/components/workspace/StepInputPanel';
+import { AgentBuilder } from '@/components/workspace/AgentBuilder';
+import { SkillBuilder } from '@/components/workspace/SkillBuilder';
+import { ToolWizard } from '@/components/workspace/ToolWizard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import type { Artifact, ArtifactType, Execution, Step, PipelineStep, RepoModel, StepInputMapping } from '@/types/workspace';
+import type { Artifact, ArtifactType, Execution, Step, PipelineStep, RepoModel, StepInputMapping, ValidationResult, ArtifactStatus } from '@/types/workspace';
 import { toast } from 'sonner';
 import * as api from '@/lib/api';
 
@@ -89,6 +92,8 @@ interface EditorPanelProps {
   onValidate: () => void;
   onRun: () => void;
   runDisabled: boolean;
+  validationResult: ValidationResult | null;
+  artifactStatus: ArtifactStatus | null;
   // Pipeline
   repo: RepoModel;
   pipelineSteps: PipelineStep[];
@@ -118,6 +123,7 @@ function formatTime(ts: number) {
 export function EditorPanel({
   selected, manifest, onManifestChange, editorTab, onEditorTabChange,
   loading, onSave, onValidate, onRun, runDisabled,
+  validationResult, artifactStatus,
   repo, pipelineSteps, onPipelineStepsChange, onSyncSteps,
   executions, onLoadExecutions, selectedExecution, executionDetail, execDetailTab, onExecDetailTabChange,
   onSelectExecution, onBackToList,
@@ -196,7 +202,13 @@ export function EditorPanel({
       <div className="px-4 py-3 border-b space-y-1">
         <p className="text-[10px] font-mono text-muted-foreground truncate">{selected.path}</p>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">{selected.type} / {selected.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium">{selected.type} / {selected.name}</p>
+            <Badge variant={artifactStatus?.valid === false ? 'destructive' : artifactStatus?.valid ? 'default' : 'secondary'} className="text-[10px]">
+              {artifactStatus?.status || 'draft'}
+            </Badge>
+            {artifactStatus?.certified && <Badge variant="outline" className="text-[10px]">certified</Badge>}
+          </div>
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5" onClick={onValidate} disabled={loading.validate}>
               {loading.validate ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Activity className="w-3 h-3" />}
@@ -212,12 +224,26 @@ export function EditorPanel({
             </Button>
           </div>
         </div>
+        {validationResult && !validationResult.valid && (
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            <p className="font-medium">Validation failed</p>
+            <ul className="mt-1 list-disc pl-4 space-y-0.5">
+              {(validationResult.errors || []).map(error => <li key={error}>{error}</li>)}
+            </ul>
+          </div>
+        )}
+        {validationResult?.valid && (
+          <div className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-xs text-green-700 dark:text-green-300">
+            Manifest validation passed.
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
       <Tabs value={editorTab} onValueChange={onEditorTabChange} className="flex-1 flex flex-col min-h-0">
         <TabsList className="mx-4 mt-2 w-fit">
           <TabsTrigger value="yaml" className="text-xs">{selected.type === 'skill' ? 'Markdown Editor' : 'YAML Editor'}</TabsTrigger>
+          <TabsTrigger value="builder" className="text-xs" disabled={selected.type === 'pipeline'}>Visual Builder</TabsTrigger>
           <TabsTrigger value="pipeline" className="text-xs" disabled={selected.type !== 'pipeline'}>Pipeline Designer</TabsTrigger>
           <TabsTrigger value="preview" className="text-xs" disabled={selected.type !== 'skill'}>Preview</TabsTrigger>
           <TabsTrigger value="executions" className="text-xs">Executions</TabsTrigger>
@@ -231,6 +257,19 @@ export function EditorPanel({
             placeholder="Select an artifact to edit..."
             className="h-full resize-none rounded-none border-0 font-mono text-xs bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           />
+        </TabsContent>
+
+        {/* Visual Builder */}
+        <TabsContent value="builder" className="flex-1 min-h-0 m-0">
+          {selected.type === 'agent' && (
+            <AgentBuilder manifest={manifest} onManifestChange={onManifestChange} repo={repo} />
+          )}
+          {selected.type === 'skill' && (
+            <SkillBuilder manifest={manifest} onManifestChange={onManifestChange} />
+          )}
+          {selected.type === 'tool' && (
+            <ToolWizard manifest={manifest} onManifestChange={onManifestChange} />
+          )}
         </TabsContent>
 
         {/* Skill Preview */}

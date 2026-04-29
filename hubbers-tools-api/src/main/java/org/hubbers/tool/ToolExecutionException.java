@@ -16,17 +16,6 @@ import lombok.Getter;
  *   <li>{@link ErrorCategory#INTERNAL_ERROR} - Unexpected internal errors</li>
  * </ul>
  * 
- * <p>Example usage:
- * <pre>{@code
- * if (config.get("api_key") == null) {
- *     throw new ToolExecutionException(
- *         "my.tool",
- *         "API key is required in tool configuration",
- *         ErrorCategory.CONFIGURATION_ERROR
- *     );
- * }
- * }</pre>
- * 
  * @since 0.1.0
  */
 @Getter

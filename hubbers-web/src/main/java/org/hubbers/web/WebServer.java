@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -41,6 +42,8 @@ public class WebServer {
     private final ObjectMapper jsonMapper;
     private final String repoPath;
     private McpRequestHandler mcpRequestHandler;
+    private OpenAiCompatibleProxy openAiProxy;
+    private McpSseTransport mcpSseTransport;
 
     public WebServer(RuntimeFacade runtimeFacade,
                      ManifestFileService manifestFileService,
@@ -69,6 +72,15 @@ public class WebServer {
         this.mcpRequestHandler = mcpRequestHandler;
     }
 
+    /**
+     * Sets the OpenAI-compatible proxy for /v1/* endpoints.
+     *
+     * @param openAiProxy the proxy to use for OpenAI-compatible function calling
+     */
+    public void setOpenAiProxy(OpenAiCompatibleProxy openAiProxy) {
+        this.openAiProxy = openAiProxy;
+    }
+
     public Javalin start(int port) {
         Javalin app = Javalin.create(config -> {
             
@@ -78,6 +90,13 @@ public class WebServer {
             });
 
             config.showJavalinBanner = false;
+
+            // Registrazione del plugin CORS
+            config.plugins.enableCors(cors -> {
+                cors.add(it -> {
+                    it.allowHost("http://127.0.0.1:8080");
+                });
+            });
         });
 
         app.exception(IllegalArgumentException.class, (e, ctx) -> writeError(ctx, 400, e.getMessage()));
@@ -150,10 +169,143 @@ public class WebServer {
             }
         });
         
+        // Model listing endpoint — queries Ollama /api/tags for locally available models
+        app.get("/api/models", ctx -> {
+            try {
+                ConfigLoader configLoader = new ConfigLoader(repoPath);
+                AppConfig config = configLoader.loadRaw();
+                var models = new java.util.ArrayList<Map<String, Object>>();
+
+                // Query Ollama for local models
+                String ollamaUrl = config.getOllama() != null && config.getOllama().getBaseUrl() != null
+                        ? config.getOllama().getBaseUrl() : "http://localhost:11434";
+                try {
+                    var client = java.net.http.HttpClient.newHttpClient();
+                    var request = java.net.http.HttpRequest.newBuilder()
+                            .uri(java.net.URI.create(ollamaUrl + "/api/tags"))
+                            .timeout(java.time.Duration.ofSeconds(5))
+                            .GET().build();
+                    var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() == 200) {
+                        JsonNode body = jsonMapper.readTree(response.body());
+                        if (body.has("models")) {
+                            for (JsonNode m : body.get("models")) {
+                                models.add(Map.of(
+                                    "provider", "ollama",
+                                    "name", m.get("name").asText(),
+                                    "size", m.has("size") ? m.get("size").asLong() : 0
+                                ));
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("Ollama not available: {}", e.getMessage());
+                }
+
+                // Add configured cloud providers as options
+                if (config.getOpenai() != null && config.getOpenai().getApiKey() != null) {
+                    String defaultModel = config.getOpenai().getDefaultModel() != null
+                            ? config.getOpenai().getDefaultModel() : "gpt-4.1-mini";
+                    models.add(Map.of("provider", "openai", "name", defaultModel, "size", 0));
+                }
+                if (config.getAnthropic() != null && config.getAnthropic().getApiKey() != null) {
+                    models.add(Map.of("provider", "anthropic", "name", "claude-sonnet-4-20250514", "size", 0));
+                }
+                if (config.getLlamaCpp() != null) {
+                    models.add(Map.of("provider", "llama-cpp", "name", "default", "size", 0));
+                }
+
+                ctx.json(Map.of("models", models));
+            } catch (Exception e) {
+                log.error("Failed to list models", e);
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+            }
+        });
+
         app.get("/api/agents", ctx -> ctx.json(Map.of("items", runtimeFacade.listAgents())));
         app.get("/api/tools", ctx -> ctx.json(Map.of("items", runtimeFacade.listTools())));
         app.get("/api/pipelines", ctx -> ctx.json(Map.of("items", runtimeFacade.listPipelines())));
         app.get("/api/skills", ctx -> ctx.json(Map.of("items", runtimeFacade.listSkills())));
+
+        app.get("/api/catalog/drivers", ctx -> ctx.json(Map.of("drivers", toolDriverCatalog())));
+
+        app.get("/api/catalog/model-providers", ctx -> {
+            ConfigLoader configLoader = new ConfigLoader(repoPath);
+            AppConfig config = configLoader.loadRaw();
+            ctx.json(Map.of("providers", modelProviderCatalog(config)));
+        });
+
+        app.get("/api/artifacts/{type}/{name}/status", ctx -> {
+            ManifestType type = ManifestType.fromPath(ctx.pathParam("type"));
+            String name = ctx.pathParam("name");
+            String yaml = manifestFileService.readManifest(type, name);
+            ValidationResult validation = validate(type, yaml);
+            String status = validation.isValid() ? "valid" : "invalid";
+            ctx.json(Map.of(
+                "status", status,
+                "certified", false,
+                "valid", validation.isValid(),
+                "errors", validation.getErrors()
+            ));
+        });
+
+        app.get("/api/gateway/status", ctx -> {
+            ConfigLoader configLoader = new ConfigLoader(repoPath);
+            AppConfig config = configLoader.loadRaw();
+            SecurityConfig security = config.getSecurity();
+            boolean apiKeyRequired = security != null && security.getApiKey() != null && !security.getApiKey().isBlank();
+
+            ctx.json(Map.of(
+                "mcp", Map.of(
+                    "configured", mcpRequestHandler != null,
+                    "streamableHttp", mcpRequestHandler != null,
+                    "sse", mcpSseTransport != null,
+                    "endpoint", "/mcp",
+                    "sseEndpoint", "/mcp/sse"
+                ),
+                "openAiCompatible", Map.of(
+                    "configured", openAiProxy != null,
+                    "modelsEndpoint", "/v1/models",
+                    "chatCompletionsEndpoint", "/v1/chat/completions",
+                    "toolsEndpoint", "/v1/tools"
+                ),
+                "policy", Map.of(
+                    "apiKeyRequired", apiKeyRequired,
+                    "certifiedOnly", false,
+                    "exposedArtifacts", Map.of(
+                        "agents", runtimeFacade.listAgents().size(),
+                        "tools", runtimeFacade.listTools().size(),
+                        "pipelines", runtimeFacade.listPipelines().size(),
+                        "skills", runtimeFacade.listSkills().size()
+                    )
+                )
+            ));
+        });
+
+        // Token usage tracking endpoint
+        app.get("/api/usage", ctx -> {
+            var router = runtimeFacade.getModelRouter();
+            if (router == null) {
+                ctx.json(Map.of("providers", Map.of(), "totalTokens", 0, "ollamaAvailable", false));
+                return;
+            }
+            var usageMap = router.getUsageByProvider();
+            var providerStats = new java.util.HashMap<String, Map<String, Object>>();
+            for (var entry : usageMap.entrySet()) {
+                long[] tokens = entry.getValue();
+                providerStats.put(entry.getKey(), Map.of(
+                    "promptTokens", tokens[0],
+                    "completionTokens", tokens[1],
+                    "totalTokens", tokens[0] + tokens[1]
+                ));
+            }
+            ctx.json(Map.of(
+                "providers", providerStats,
+                "totalTokens", router.getTotalTokens(),
+                "ollamaAvailable", router.isOllamaAvailable(),
+                "ollamaModels", router.getOllamaModels()
+            ));
+        });
 
         app.get("/api/manifest/{type}/{name}", ctx -> {
             ManifestType type = ManifestType.fromPath(ctx.pathParam("type"));
@@ -526,15 +678,125 @@ public class WebServer {
             }
         });
         
+        // ── Conversation history endpoints ──
+        app.get("/api/conversations", ctx -> {
+            var memory = runtimeFacade.getConversationMemory();
+            if (memory == null) {
+                ctx.json(Map.of("conversations", List.of()));
+                return;
+            }
+            var conversations = memory.listConversations().stream()
+                .map(id -> Map.of("id", id))
+                .toList();
+            ctx.json(Map.of("conversations", conversations));
+        });
+
+        app.get("/api/conversations/{id}/messages", ctx -> {
+            var memory = runtimeFacade.getConversationMemory();
+            if (memory == null) {
+                ctx.json(Map.of("messages", List.of()));
+                return;
+            }
+            String conversationId = ctx.pathParam("id");
+            var messages = memory.loadHistory(conversationId);
+            var serialized = messages.stream()
+                .map(msg -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("role", msg.getRole());
+                    m.put("content", msg.getContent());
+                    return m;
+                })
+                .toList();
+            ctx.json(Map.of("messages", serialized));
+        });
+
+        app.delete("/api/conversations/{id}", ctx -> {
+            var memory = runtimeFacade.getConversationMemory();
+            if (memory == null) {
+                writeError(ctx, 404, "Conversation memory not configured");
+                return;
+            }
+            String conversationId = ctx.pathParam("id");
+            memory.clearConversation(conversationId);
+            ctx.json(Map.of("deleted", true));
+        });
+
         // Get task service info
         app.get("/api/task/info", ctx -> {
             Map<String, Object> info = new HashMap<>();
             info.put("available_tools", runtimeFacade.listTools().size());
             info.put("available_agents", runtimeFacade.listAgents().size());
             info.put("available_pipelines", runtimeFacade.listPipelines().size());
+            info.put("available_skills", runtimeFacade.listSkills().size());
             info.put("agent", "universal.task");
             info.put("status", "ready");
             ctx.json(info);
+        });
+
+        // ── SSE streaming endpoint for chat UI ──
+        // Returns execution events as Server-Sent Events for real-time chat rendering.
+        app.post("/api/task/stream", ctx -> {
+            try {
+                JsonNode body = jsonMapper.readTree(ctx.body());
+                String request = body.get("request").asText();
+                JsonNode context = body.has("context") ? body.get("context") : null;
+                String agentName = body.has("agentName") ? body.get("agentName").asText() : "universal.task";
+                String conversationId = body.has("conversationId") ? body.get("conversationId").asText() : null;
+
+                // Model override support
+                String modelOverride = body.has("model") ? body.get("model").asText() : null;
+
+                log.info("POST /api/task/stream - request: {}, agent: {}, model: {}", request, agentName, modelOverride);
+
+                ctx.contentType("text/event-stream");
+                ctx.header("Cache-Control", "no-cache");
+                ctx.header("Connection", "keep-alive");
+
+                // Send "started" event
+                ctx.res().getWriter().write("event: started\ndata: {\"agent\":\"" + agentName + "\"}\n\n");
+                ctx.res().getWriter().flush();
+
+                // Build input
+                var inputJson = jsonMapper.createObjectNode();
+                inputJson.put("request", request);
+                if (context != null) {
+                    inputJson.set("context", context);
+                }
+                if (modelOverride != null) {
+                    inputJson.put("model", modelOverride);
+                }
+
+                // Execute (blocking for now — agent calls are synchronous)
+                RunResult result = runtimeFacade.runAgent(agentName, inputJson, conversationId);
+
+                // Send result event
+                Map<String, Object> resultEvent = new HashMap<>();
+                resultEvent.put("success", result.getStatus() == ExecutionStatus.SUCCESS);
+                if (result.getStatus() == ExecutionStatus.SUCCESS) {
+                    resultEvent.put("result", result.getOutput());
+                    resultEvent.put("executionId", result.getExecutionId());
+                } else {
+                    resultEvent.put("error", result.getError());
+                }
+                if (result.getExecutionTrace() != null) {
+                    resultEvent.put("executionTrace", result.getExecutionTrace());
+                }
+
+                String eventData = jsonMapper.writeValueAsString(resultEvent);
+                ctx.res().getWriter().write("event: result\ndata: " + eventData + "\n\n");
+                ctx.res().getWriter().write("event: done\ndata: {}\n\n");
+                ctx.res().getWriter().flush();
+
+            } catch (Exception e) {
+                log.error("Task stream failed", e);
+                try {
+                    String errorJson = jsonMapper.writeValueAsString(Map.of("error", e.getMessage()));
+                    ctx.res().getWriter().write("event: error\ndata: " + errorJson + "\n\n");
+                    ctx.res().getWriter().flush();
+                } catch (Exception ex) {
+                    log.error("Failed to write SSE error", ex);
+                }
+            }
         });
 
         // ── MCP (Model Context Protocol) endpoint ──
@@ -559,6 +821,57 @@ public class WebServer {
                 McpResponse errorResp = McpResponse.internalError(null, e.getMessage());
                 ctx.contentType("application/json").result(jsonMapper.writeValueAsString(errorResp));
             }
+        });
+
+        // ── MCP SSE transport (backward compatibility) ──
+        // Older MCP clients connect via SSE: GET /mcp/sse to get endpoint URL,
+        // then POST /mcp/messages?sessionId=... to send JSON-RPC.
+        app.get("/mcp/sse", ctx -> {
+            if (mcpSseTransport == null && mcpRequestHandler != null) {
+                mcpSseTransport = new McpSseTransport(mcpRequestHandler, jsonMapper);
+            }
+            if (mcpSseTransport == null) {
+                writeError(ctx, 501, "MCP server not configured");
+                return;
+            }
+            mcpSseTransport.handleSseConnect(ctx);
+        });
+
+        app.post("/mcp/messages", ctx -> {
+            if (mcpSseTransport == null) {
+                writeError(ctx, 501, "MCP SSE transport not initialized");
+                return;
+            }
+            mcpSseTransport.handleMessage(ctx);
+        });
+
+        // ── OpenAI-compatible proxy ──
+        // Allows any OpenAI-compatible client (Open WebUI, llama.cpp, LM Studio,
+        // text-generation-webui, Chatbox) to discover and invoke Hubbers artifacts
+        // via standard function calling.
+        app.get("/v1/models", ctx -> {
+            if (openAiProxy == null) {
+                writeError(ctx, 501, "OpenAI proxy not configured");
+                return;
+            }
+            openAiProxy.handleListModels(ctx);
+        });
+
+        app.post("/v1/chat/completions", ctx -> {
+            if (openAiProxy == null) {
+                writeError(ctx, 501, "OpenAI proxy not configured");
+                return;
+            }
+            openAiProxy.handleChatCompletions(ctx);
+        });
+
+        app.get("/v1/tools", ctx -> {
+            if (openAiProxy == null) {
+                writeError(ctx, 501, "OpenAI proxy not configured");
+                return;
+            }
+            ctx.contentType("application/json").result(
+                jsonMapper.writeValueAsString(openAiProxy.getToolDefinitions()));
         });
 
         app.start(port);
@@ -598,6 +911,57 @@ public class WebServer {
             case PIPELINE -> runtimeFacade.runPipeline(name, input);
             case SKILL -> runtimeFacade.runSkill(name, input);
         };
+    }
+
+    private List<Map<String, Object>> toolDriverCatalog() {
+        return List.of(
+                driver("http", "HTTP Request", "HTTP API calls using manifest config", "network"),
+                driver("http.webhook", "HTTP Webhook", "Start a local webhook listener", "network"),
+                driver("csv.read", "CSV Read", "Read rows from a CSV file", "filesystem"),
+                driver("csv.write", "CSV Write", "Write rows to a CSV file", "filesystem"),
+                driver("rss", "RSS Fetch", "Fetch and parse RSS or Atom feeds", "network"),
+                driver("firecrawl", "Firecrawl", "Scrape web pages through Firecrawl", "network"),
+                driver("file.ops", "File Operations", "Read, write, list, copy, move, or delete files", "high-risk"),
+                driver("shell.exec", "Shell Execute", "Execute shell commands", "high-risk"),
+                driver("process.manage", "Process Manage", "Inspect and control local processes", "high-risk"),
+                driver("docker", "Docker", "Run Docker-based workloads", "high-risk"),
+                driver("sql.query", "SQL Query", "Run SQL queries against configured databases", "data"),
+                driver("user-interaction", "User Interaction", "Request human input during execution", "interactive"),
+                driver("browser.pinchtab", "Pinchtab Browser", "Interact with browser automation", "network"),
+                driver("lucene.kv", "Lucene Key Value", "Read and write local Lucene key-value data", "storage"),
+                driver("vector.lucene.enrich", "Lucene Vector Context", "Enrich prompts from vector search", "storage"),
+                driver("vector.lucene.upsert", "Lucene Vector Upsert", "Store vector records locally", "storage"),
+                driver("vector.lucene.search", "Lucene Vector Search", "Search local vector records", "storage")
+        );
+    }
+
+    private Map<String, Object> driver(String type, String label, String description, String risk) {
+        return Map.of(
+                "type", type,
+                "label", label,
+                "description", description,
+                "risk", risk
+        );
+    }
+
+    private List<Map<String, Object>> modelProviderCatalog(AppConfig config) {
+        return List.of(
+                provider("ollama", "Ollama", true, config.getOllama() != null, config.getOllama() != null ? config.getOllama().getDefaultModel() : null),
+                provider("llama-cpp", "llama.cpp", true, config.getLlamaCpp() != null, config.getLlamaCpp() != null ? config.getLlamaCpp().getDefaultModel() : null),
+                provider("openai", "OpenAI", false, config.getOpenai() != null && config.getOpenai().getApiKey() != null && !config.getOpenai().getApiKey().isBlank(), config.getOpenai() != null ? config.getOpenai().getDefaultModel() : null),
+                provider("azure-openai", "Azure OpenAI", false, config.getAzureOpenai() != null && config.getAzureOpenai().getApiKey() != null && !config.getAzureOpenai().getApiKey().isBlank(), config.getAzureOpenai() != null ? config.getAzureOpenai().getDefaultModel() : null),
+                provider("anthropic", "Anthropic", false, config.getAnthropic() != null && config.getAnthropic().getApiKey() != null && !config.getAnthropic().getApiKey().isBlank(), config.getAnthropic() != null ? config.getAnthropic().getDefaultModel() : null)
+        );
+    }
+
+    private Map<String, Object> provider(String id, String label, boolean local, boolean configured, String defaultModel) {
+        Map<String, Object> provider = new LinkedHashMap<>();
+        provider.put("id", id);
+        provider.put("label", label);
+        provider.put("local", local);
+        provider.put("configured", configured);
+        provider.put("defaultModel", defaultModel == null ? "" : defaultModel);
+        return provider;
     }
     
     private org.hubbers.forms.FormTrigger getFormTrigger(ManifestType type, String name) {

@@ -39,4 +39,13 @@ public interface ConversationMemory {
      * Clear conversation history (for cleanup).
      */
     void clearConversation(String conversationId);
+
+    /**
+     * List all stored conversation IDs.
+     *
+     * @return list of conversation identifiers
+     */
+    default List<String> listConversations() {
+        return List.of();
+    }
 }

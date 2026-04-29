@@ -64,6 +64,27 @@ public class AgentExecutor {
     private final ExecutorRegistry executorRegistry;
     private final ArtifactToFunctionConverter artifactConverter;
 
+    // --- Optional: model router for local-first routing & token tracking ---
+    private ModelRouter modelRouter;
+
+    /**
+     * Returns the conversation memory store, or null if not configured.
+     *
+     * @return the conversation memory, or null
+     */
+    public ConversationMemory getConversationMemory() {
+        return conversationMemory;
+    }
+
+    /**
+     * Sets the model router for local-first LLM routing and token tracking.
+     *
+     * @param modelRouter the model router instance
+     */
+    public void setModelRouter(ModelRouter modelRouter) {
+        this.modelRouter = modelRouter;
+    }
+
     /**
      * Full constructor — supports both simple and agentic execution.
      *
@@ -233,6 +254,11 @@ public class AgentExecutor {
                 ModelResponse response = provider.generate(request);
                 long callDuration = System.currentTimeMillis() - callStart;
                 log.info("Model response received in {}ms, finish_reason: {}", callDuration, response.getFinishReason());
+
+                // Track token usage
+                if (modelRouter != null) {
+                    modelRouter.recordUsage(manifest.getModel().getProvider(), response);
+                }
 
                 // --- Persist assistant message immediately ---
                 Message assistantMessage = buildAssistantMessage(response);
@@ -429,6 +455,11 @@ public class AgentExecutor {
         ModelRequest synthesisRequest = buildModelRequest(manifest, history, List.of());
         ModelProvider provider = modelProviderRegistry.get(manifest.getModel().getProvider());
         ModelResponse synthesisResponse = provider.generate(synthesisRequest);
+
+        // Track synthesis token usage
+        if (modelRouter != null) {
+            modelRouter.recordUsage(manifest.getModel().getProvider(), synthesisResponse);
+        }
 
         Message synthesisMessage = Message.assistant(synthesisResponse.getContent());
         appendMessage(history, conversationId, synthesisMessage, true);

@@ -12,6 +12,7 @@ public class AppConfig {
     private AzureOpenAiConfig azureOpenai;
     private AnthropicConfig anthropic;
     private LlamaCppConfig llamaCpp;
+    private VectorDbConfig vectorDb;
     private ToolsConfig tools;
     private ExecutionsConfig executions;
     private SecurityConfig security;

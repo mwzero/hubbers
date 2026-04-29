@@ -76,6 +76,15 @@ public class OpenAiModelProvider implements ModelProvider {
             modelResponse.setContent(content);
             modelResponse.setModel(response.path("model").asText(payload.path("model").asText()));
             modelResponse.setLatencyMs(System.currentTimeMillis() - start);
+
+            // Extract token usage from OpenAI response
+            JsonNode usageNode = response.path("usage");
+            if (!usageNode.isMissingNode()) {
+                modelResponse.setPromptTokens(usageNode.path("prompt_tokens").asLong(0));
+                modelResponse.setCompletionTokens(usageNode.path("completion_tokens").asLong(0));
+                modelResponse.setTotalTokens(usageNode.path("total_tokens").asLong(0));
+            }
+
             JsonNode toolCallsNode = message.path("tool_calls");
             if (toolCallsNode.isArray() && toolCallsNode.size() > 0) {
                 modelResponse.setFunctionCalls(parseFunctionCalls(toolCallsNode));

@@ -1,4 +1,4 @@
-import type { ArtifactType, ValidationResult, Execution, Step, FormDef } from '@/types/workspace';
+import type { ArtifactType, ValidationResult, Execution, Step, FormDef, ToolDriverInfo, ModelProviderInfo, ArtifactStatus } from '@/types/workspace';
 import type { AppConfig } from '@/types/settings';
 
 const BASE = '';
@@ -29,6 +29,35 @@ export async function fetchArtifacts(type: 'agents' | 'tools' | 'pipelines' | 's
   const res = await handleResponse(await fetch(`${BASE}/api/${type}`));
   const data = await res.json();
   return data.items || [];
+}
+
+export async function fetchToolDrivers(): Promise<ToolDriverInfo[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/catalog/drivers`));
+  const data = await res.json();
+  return data.drivers || [];
+}
+
+export async function fetchModelProviders(): Promise<ModelProviderInfo[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/catalog/model-providers`));
+  const data = await res.json();
+  return data.providers || [];
+}
+
+export async function fetchArtifactStatus(type: ArtifactType, name: string): Promise<ArtifactStatus> {
+  const plural = type === 'skill' ? 'skills' : `${type}s`;
+  const res = await handleResponse(await fetch(`${BASE}/api/artifacts/${plural}/${name}/status`));
+  return res.json();
+}
+
+export interface GatewayStatus {
+  mcp: { configured: boolean; streamableHttp: boolean; sse: boolean; endpoint: string; sseEndpoint: string };
+  openAiCompatible: { configured: boolean; modelsEndpoint: string; chatCompletionsEndpoint: string; toolsEndpoint: string };
+  policy: { apiKeyRequired: boolean; certifiedOnly: boolean; exposedArtifacts: Record<string, number> };
+}
+
+export async function fetchGatewayStatus(): Promise<GatewayStatus> {
+  const res = await handleResponse(await fetch(`${BASE}/api/gateway/status`));
+  return res.json();
 }
 
 export async function fetchManifest(type: ArtifactType, name: string): Promise<string> {
