@@ -1,0 +1,29 @@
+info:
+  name: MCP - List Resources
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/mcp"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "jsonrpc": "2.0",
+        "id": 5,
+        "method": "resources/list",
+        "params": {}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: List all available MCP resources.

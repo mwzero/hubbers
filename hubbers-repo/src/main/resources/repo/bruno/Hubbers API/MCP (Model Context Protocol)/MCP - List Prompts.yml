@@ -1,0 +1,29 @@
+info:
+  name: MCP - List Prompts
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/mcp"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "prompts/list",
+        "params": {}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: List all available MCP prompts.

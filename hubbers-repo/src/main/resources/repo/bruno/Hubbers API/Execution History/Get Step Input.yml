@@ -1,0 +1,22 @@
+info:
+  name: Get Step Input
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/executions/{{executionId}}/steps/:stepName/input"
+  params:
+    - name: stepName
+      value: step-1
+      type: path
+      description: Name of the pipeline step
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Get input for a specific pipeline step.

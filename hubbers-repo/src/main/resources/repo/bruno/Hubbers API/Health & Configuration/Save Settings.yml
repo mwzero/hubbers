@@ -1,0 +1,46 @@
+info:
+  name: Save Settings
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/settings"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "ollama": {
+          "baseUrl": "http://localhost:11434",
+          "model": "llama3"
+        },
+        "security": {
+          "apiKey": ""
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 OK
+    request:
+      url: ""
+      method: POST
+    response:
+      statusText: "200"
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"success": true, "message": "Settings saved successfully"}'
+
+docs: Save/update the application configuration.

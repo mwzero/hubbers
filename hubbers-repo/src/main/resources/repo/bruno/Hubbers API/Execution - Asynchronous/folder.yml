@@ -1,0 +1,7 @@
+info:
+  name: Execution - Asynchronous
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit

@@ -1,2 +1,0 @@
-[2026-04-09 17:24:40.168] INFO - Starting tool execution: rss.fetch
-[2026-04-09 17:24:40.705] INFO - Execution completed successfully

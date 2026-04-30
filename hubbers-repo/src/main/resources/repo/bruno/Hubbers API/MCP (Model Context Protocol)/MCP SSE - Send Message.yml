@@ -1,0 +1,34 @@
+info:
+  name: MCP SSE - Send Message
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{baseUrl}}/mcp/messages?sessionId={{sessionId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: sessionId
+      value: "{{sessionId}}"
+      type: query
+      description: SSE session ID obtained from /mcp/sse connection
+  body:
+    type: json
+    data: |-
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/list",
+        "params": {}
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Send JSON-RPC message via SSE transport (requires active /mcp/sse connection).

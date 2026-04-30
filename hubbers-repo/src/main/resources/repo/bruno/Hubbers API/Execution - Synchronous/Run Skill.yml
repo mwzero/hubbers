@@ -1,0 +1,42 @@
+info:
+  name: Run Skill
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/run/skills/:name"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: name
+      value: example-skill
+      type: path
+      description: Name of the skill to execute
+  body:
+    type: json
+    data: |-
+      {
+        "input": "skill input"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "var jsonData = res.getBody();\r
+
+        if (jsonData.executionId) {\r
+
+        \    bru.setVar('executionId', jsonData.executionId);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Execute a skill synchronously.

@@ -1,0 +1,42 @@
+info:
+  name: Run Agent
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/run/agents/:name"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: name
+      value: hello-world
+      type: path
+      description: Name of the agent to execute
+  body:
+    type: json
+    data: |-
+      {
+        "input": "Hello, world!"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "var jsonData = res.getBody();\r
+
+        if (jsonData.executionId) {\r
+
+        \    bru.setVar('executionId', jsonData.executionId);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Execute an agent synchronously. Returns the full execution result.

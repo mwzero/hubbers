@@ -39,3 +39,4 @@ replay_pid*
 /hubbers-ui/node_modules
 /hubbers-repo/src/main/resources/repo/_executions
 /hubbers-framework/src/main/resources/web/assets
+/hubbers-repo/src/main/resources/repo/_executions

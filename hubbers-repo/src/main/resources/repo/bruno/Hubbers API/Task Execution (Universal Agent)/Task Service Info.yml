@@ -1,0 +1,31 @@
+info:
+  name: Task Service Info
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/task/info"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 OK
+    request:
+      url: ""
+      method: GET
+    response:
+      statusText: "200"
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"available_tools": 10, "available_agents": 5, "available_pipelines": 3, "available_skills": 4, "agent": "universal.task", "status": "ready"}'
+
+docs: Get task service info including available tool/agent/pipeline/skill counts.

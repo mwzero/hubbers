@@ -1,0 +1,26 @@
+info:
+  name: Get Manifest
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/manifest/:type/:name"
+  params:
+    - name: type
+      value: agents
+      type: path
+      description: "Artifact type: agents, tools, pipelines, or skills"
+    - name: name
+      value: hello-world
+      type: path
+      description: Name of the artifact
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Retrieve the raw YAML manifest for a specific artifact.

@@ -38,7 +38,7 @@ public class ArtifactRepository {
 
     public ArtifactRepository(Path repoRoot) {
         this.repoRoot = repoRoot;
-        listManifestNames(repoRoot, "tools", "tool.yaml");
+        loadBrunoTools();
     }
 
     public java.util.List<String> listAgents() {
@@ -221,4 +221,19 @@ public class ArtifactRepository {
     }
 
     
+
+    private void loadBrunoTools() {
+        BrunoToolLoader.loadTools(repoRoot).forEach(this::registerGeneratedTool);
+    }
+
+    private void registerGeneratedTool(ToolManifest manifest) {
+        String toolName = manifest.getTool().getName();
+        Path declaredToolPath = repoRoot.resolve("tools").resolve(toolName).resolve("tool.yaml");
+
+        if (Files.exists(declaredToolPath) || toolCache.containsKey(toolName)) {
+            throw new IllegalStateException("Duplicate tool name discovered while loading Bruno tools: " + toolName);
+        }
+
+        toolCache.put(toolName, manifest);
+    }
 }

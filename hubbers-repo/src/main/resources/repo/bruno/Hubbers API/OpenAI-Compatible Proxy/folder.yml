@@ -1,0 +1,7 @@
+info:
+  name: OpenAI-Compatible Proxy
+  type: folder
+  seq: 12
+
+request:
+  auth: inherit

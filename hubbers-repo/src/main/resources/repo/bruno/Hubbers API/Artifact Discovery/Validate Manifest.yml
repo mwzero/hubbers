@@ -1,0 +1,48 @@
+info:
+  name: Validate Manifest
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/validate/:type"
+  headers:
+    - name: Content-Type
+      value: text/plain
+  params:
+    - name: type
+      value: tools
+      type: path
+      description: "Artifact type to validate: agents, tools, pipelines, or skills"
+  body:
+    type: text
+    data: |-
+      name: my-tool
+      description: A sample tool
+      driver:
+        type: http
+        method: GET
+        url: https://example.com/api
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 OK - Valid
+    request:
+      url: ""
+      method: POST
+    response:
+      statusText: "200"
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"valid": true, "errors": []}'
+
+docs: Validate an artifact manifest YAML against its schema.

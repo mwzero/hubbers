@@ -1,0 +1,42 @@
+info:
+  name: Run Tool
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/run/tools/:name"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: name
+      value: example-tool
+      type: path
+      description: Name of the tool to execute
+  body:
+    type: json
+    data: |-
+      {
+        "query": "test"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "var jsonData = res.getBody();\r
+
+        if (jsonData.executionId) {\r
+
+        \    bru.setVar('executionId', jsonData.executionId);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Execute a tool synchronously.

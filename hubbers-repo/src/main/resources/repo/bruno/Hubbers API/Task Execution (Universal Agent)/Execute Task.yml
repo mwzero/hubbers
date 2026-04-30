@@ -1,0 +1,46 @@
+info:
+  name: Execute Task
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/task/execute"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "request": "Summarize the latest news",
+        "context": null,
+        "agentName": null,
+        "model": null
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "var jsonData = res.getBody();\r
+
+        if (jsonData.executionId) {\r
+
+        \    bru.setVar('executionId', jsonData.executionId);\r
+
+        }\r
+
+        if (jsonData.conversationId) {\r
+
+        \    bru.setVar('conversationId', jsonData.conversationId);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Execute a natural language request via the universal task agent.

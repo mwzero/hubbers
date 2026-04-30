@@ -1,0 +1,33 @@
+info:
+  name: Chat Completions
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/v1/chat/completions"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "model": "hubbers",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What tools are available?"
+          }
+        ],
+        "tool_choice": "auto"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: OpenAI-compatible chat completions endpoint with function calling support. Routes tool calls to Hubbers artifacts.

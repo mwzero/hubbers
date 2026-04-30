@@ -1,0 +1,36 @@
+info:
+  name: MCP - Initialize
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/mcp"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+          "protocolVersion": "2024-11-05",
+          "capabilities": {},
+          "clientInfo": {
+            "name": "postman-client",
+            "version": "1.0.0"
+          }
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Initialize MCP connection via JSON-RPC 2.0 (Streamable HTTP transport).

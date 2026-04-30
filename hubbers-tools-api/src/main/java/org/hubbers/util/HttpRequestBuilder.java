@@ -107,6 +107,22 @@ public class HttpRequestBuilder {
         this.httpMethod = "DELETE";
         return this;
     }
+
+    /**
+     * Start building a request with an arbitrary HTTP method.
+     *
+     * @param method the HTTP method to use
+     * @param url the target URL
+     * @return this builder for method chaining
+     */
+    public HttpRequestBuilder method(String method, String url) {
+        this.requestBuilder = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofSeconds(30));
+        this.httpMethod = method.toUpperCase();
+        return this;
+    }
     
     /**
      * Add a header to the request.
@@ -152,6 +168,22 @@ public class HttpRequestBuilder {
      */
     public HttpRequestBuilder jsonBody(String jsonBody) {
         requestBuilder.POST(HttpRequest.BodyPublishers.ofString(jsonBody));
+        return this;
+    }
+
+    /**
+     * Set the request body as a raw string with an optional content type.
+     *
+     * @param rawBody the raw request body
+     * @param contentType the content type header to apply
+     * @return this builder for method chaining
+     */
+    public HttpRequestBuilder rawBody(String rawBody, String contentType) {
+        this.bodyObject = null;
+        if (contentType != null && !contentType.isBlank()) {
+            requestBuilder.setHeader("Content-Type", contentType);
+        }
+        requestBuilder.method(httpMethod, HttpRequest.BodyPublishers.ofString(rawBody));
         return this;
     }
     

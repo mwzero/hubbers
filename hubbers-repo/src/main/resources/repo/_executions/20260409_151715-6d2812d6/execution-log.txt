@@ -1,2 +1,0 @@
-[2026-04-09 15:17:15.127] INFO - Starting skill execution: translation
-[2026-04-09 15:17:15.550] ERROR - Execution failed: LLM execution error: Ollama error 404: {"error":"model 'llama3.2:3b' not found"}

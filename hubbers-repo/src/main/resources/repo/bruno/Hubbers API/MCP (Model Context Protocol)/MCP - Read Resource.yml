@@ -1,0 +1,31 @@
+info:
+  name: MCP - Read Resource
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/mcp"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "jsonrpc": "2.0",
+        "id": 6,
+        "method": "resources/read",
+        "params": {
+          "uri": "resource://example"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Read a specific MCP resource by URI.

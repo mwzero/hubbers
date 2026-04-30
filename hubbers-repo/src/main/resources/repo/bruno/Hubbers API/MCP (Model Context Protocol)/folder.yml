@@ -1,0 +1,7 @@
+info:
+  name: MCP (Model Context Protocol)
+  type: folder
+  seq: 11
+
+request:
+  auth: inherit

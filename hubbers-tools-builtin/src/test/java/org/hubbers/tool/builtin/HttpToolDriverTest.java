@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +43,29 @@ class HttpToolDriverTest {
         // GET endpoint
         server.createContext("/api/data", exchange -> {
             String response = "{\"status\":\"ok\",\"data\":[1,2,3]}";
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length());
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        });
+
+        server.createContext("/api/manifest", exchange -> {
+            String[] segments = exchange.getRequestURI().getPath().split("/");
+            String type = segments.length > 3 ? segments[3] : "";
+            String name = segments.length > 4 ? segments[4] : "";
+            String query = exchange.getRequestURI().getQuery();
+            String authorization = exchange.getRequestHeaders().getFirst("Authorization");
+            String traceHeader = exchange.getRequestHeaders().getFirst("X-Trace-Id");
+
+            String response = String.format(
+                "{\"type\":\"%s\",\"name\":\"%s\",\"query\":\"%s\",\"authorization\":\"%s\",\"trace\":\"%s\"}",
+                type,
+                name,
+                query != null ? query : "",
+                authorization != null ? authorization : "",
+                traceHeader != null ? traceHeader : ""
+            );
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, response.length());
             try (OutputStream os = exchange.getResponseBody()) {
@@ -174,6 +198,60 @@ class HttpToolDriverTest {
 
         assertEquals("POST", result.path("method").asText(),
             "Default method should be POST");
+    }
+
+    @Test
+    void testExecute_WithTemplatedBrunoConfig_ResolvesUrlHeadersAndQuery() {
+        ToolManifest manifest = createManifest("test.bruno", "{{baseUrl}}/api/manifest/:type/:name", "GET");
+        Map<String, Object> config = new HashMap<>(manifest.getConfig());
+        config.put("variables", Map.of(
+            "baseUrl", baseUrl,
+            "apiKey", "demo-token"
+        ));
+        config.put("path_params", Map.of(
+            "type", "agents",
+            "name", "hello-world"
+        ));
+        config.put("query_params", Map.of(
+            "expand", "{{expand}}"
+        ));
+        config.put("headers", Map.of(
+            "Authorization", "Bearer {{apiKey}}",
+            "X-Trace-Id", "{{traceId}}"
+        ));
+        manifest.setConfig(config);
+
+        ObjectNode input = mapper.createObjectNode();
+        input.put("name", "weather.lookup");
+        input.put("expand", "true");
+        input.put("traceId", "trace-123");
+
+        JsonNode result = driver.execute(manifest, input);
+
+        assertEquals("agents", result.path("type").asText());
+        assertEquals("weather.lookup", result.path("name").asText());
+        assertEquals("expand=true", result.path("query").asText());
+        assertEquals("Bearer demo-token", result.path("authorization").asText());
+        assertEquals("trace-123", result.path("trace").asText());
+    }
+
+    @Test
+    void testExecute_WithBodyTemplate_ResolvesRawRequestBody() {
+        ToolManifest manifest = createManifest("test.body.template", baseUrl + "/api/echo", "POST");
+        Map<String, Object> config = new LinkedHashMap<>(manifest.getConfig());
+        config.put("body_type", "json");
+        config.put("body_template", "{\n  \"name\": \"{{toolName}}\",\n  \"kind\": \"generated\"\n}");
+        manifest.setConfig(config);
+
+        ObjectNode input = mapper.createObjectNode();
+        input.put("toolName", "bruno.hubbers-api.artifact-discovery.get-manifest");
+
+        JsonNode result = driver.execute(manifest, input);
+
+        assertEquals("POST", result.path("method").asText());
+        assertEquals("bruno.hubbers-api.artifact-discovery.get-manifest",
+            result.path("received").path("name").asText());
+        assertEquals("generated", result.path("received").path("kind").asText());
     }
 
     private ToolManifest createManifest(String name, String url, String method) {

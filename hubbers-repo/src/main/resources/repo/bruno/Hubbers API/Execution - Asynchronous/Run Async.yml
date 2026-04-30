@@ -1,0 +1,65 @@
+info:
+  name: Run Async
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/run/:type/:name/async?conversationId={{conversationId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: conversationId
+      value: "{{conversationId}}"
+      type: query
+      description: Optional conversation ID for context
+      disabled: true
+    - name: type
+      value: agents
+      type: path
+      description: "Artifact type: agents or pipelines"
+    - name: name
+      value: hello-world
+      type: path
+      description: Name of the artifact to execute
+  body:
+    type: json
+    data: |-
+      {
+        "input": "async input data"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "var jsonData = res.getBody();\r
+
+        if (jsonData.executionId) {\r
+
+        \    bru.setVar('executionId', jsonData.executionId);\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 OK
+    request:
+      url: ""
+      method: POST
+    response:
+      statusText: "200"
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"executionId": "abc-123", "status": "RUNNING"}'
+
+docs: Start asynchronous execution of an agent or pipeline. Returns immediately with an execution ID.

@@ -1,0 +1,17 @@
+info:
+  name: List Execution Steps
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/executions/{{executionId}}/steps"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: List all steps in a pipeline execution.

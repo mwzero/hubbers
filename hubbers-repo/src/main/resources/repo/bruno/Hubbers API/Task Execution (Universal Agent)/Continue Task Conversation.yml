@@ -1,0 +1,30 @@
+info:
+  name: Continue Task Conversation
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/task/continue"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "request": "Tell me more about item 3",
+        "conversationId": "{{conversationId}}",
+        "context": null,
+        "agentName": null,
+        "model": null
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Continue an existing task conversation with follow-up request.

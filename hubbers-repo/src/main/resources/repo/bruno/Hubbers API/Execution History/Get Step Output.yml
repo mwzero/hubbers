@@ -1,0 +1,22 @@
+info:
+  name: Get Step Output
+  type: http
+  seq: 9
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/executions/{{executionId}}/steps/:stepName/output"
+  params:
+    - name: stepName
+      value: step-1
+      type: path
+      description: Name of the pipeline step
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Get output for a specific pipeline step.

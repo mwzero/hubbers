@@ -1,2 +1,0 @@
-[2026-04-09 15:20:46.063] INFO - Starting skill execution: translation
-[2026-04-09 15:21:23.503] INFO - Execution completed successfully

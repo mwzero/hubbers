@@ -1,0 +1,52 @@
+info:
+  name: Save Manifest
+  type: http
+  seq: 7
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/manifest/:type/:name"
+  headers:
+    - name: Content-Type
+      value: text/plain
+  params:
+    - name: type
+      value: tools
+      type: path
+      description: "Artifact type: agents, tools, pipelines, or skills"
+    - name: name
+      value: my-tool
+      type: path
+      description: Name of the artifact to save
+  body:
+    type: text
+    data: |-
+      name: my-tool
+      description: A sample tool
+      driver:
+        type: http
+        method: GET
+        url: https://example.com/api
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: 200 OK
+    request:
+      url: ""
+      method: PUT
+    response:
+      statusText: "200"
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: '{"saved": true, "errors": []}'
+
+docs: Save or update an artifact manifest.

@@ -1,2 +1,0 @@
-[2026-04-09 16:28:51.550] INFO - Starting agent execution: universal.task
-[2026-04-09 16:29:05.741] ERROR - Execution failed: Invalid type for field result, expected: object

@@ -1,0 +1,27 @@
+info:
+  name: Submit Form
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/forms/{{sessionId}}/submit"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "field1": "value1",
+        "field2": "value2"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Submit form data and trigger artifact execution.

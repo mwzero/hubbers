@@ -1,0 +1,35 @@
+opencollection: 1.0.0
+
+info:
+  name: Hubbers API
+
+request:
+  auth:
+    type: bearer
+    token: "{{apiKey}}"
+  variables:
+    - name: baseUrl
+      value: http://localhost:7070
+    - name: apiKey
+      value: ""
+    - name: executionId
+      value: ""
+    - name: conversationId
+      value: ""
+    - name: sessionId
+      value: ""
+
+docs:
+  content: |-
+    Complete API collection for the Hubbers framework — a Git-native Java runtime for AI agents, tools, pipelines, and skills.
+
+    Base URL: http://localhost:7070
+
+    Authentication: Bearer token via Authorization header (skip for /api/health).
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
