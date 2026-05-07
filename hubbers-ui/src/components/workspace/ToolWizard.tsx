@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Wrench, Settings, FileInput, FileOutput, FlaskConical, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { SchemaEditor, schemaToYaml, yamlSchemaToModel } from '@/components/workspace/SchemaEditor';
 import type { SchemaModel, SchemaField } from '@/components/workspace/SchemaEditor';
-import { fetchToolDrivers } from '@/lib/api';
+import { fetchToolDrivers, fetchBrunoProjects, fetchBrunoRequests, fetchOpenApiSpecs, fetchOpenApiOperations } from '@/lib/api';
 import type { ToolDriverInfo } from '@/types/workspace';
+import type { BrunoRequest, OpenApiSpec, OpenApiOperation } from '@/lib/api';
 
 const FALLBACK_DRIVER_TYPES: ToolDriverInfo[] = [
   { type: 'http', label: 'HTTP Request', description: 'HTTP API calls using manifest config', risk: 'network' },
@@ -20,6 +21,8 @@ const FALLBACK_DRIVER_TYPES: ToolDriverInfo[] = [
   { type: 'csv.write', label: 'CSV Write', description: 'Write rows to a CSV file', risk: 'filesystem' },
   { type: 'file.ops', label: 'File Operations', description: 'Read, write, list, copy, move, or delete files', risk: 'high-risk' },
   { type: 'shell.exec', label: 'Shell Execute', description: 'Execute shell commands', risk: 'high-risk' },
+  { type: 'bruno', label: 'Bruno Collection', description: 'Execute a request from a Bruno API collection', risk: 'network' },
+  { type: 'openapi', label: 'OpenAPI Operation', description: 'Execute an operation from an OpenAPI specification', risk: 'network' },
 ];
 
 interface FormFieldModel {
@@ -98,10 +101,28 @@ function parseToolYaml(yaml: string): ToolModel | null {
     }
 
     // Parse input/output schemas
-    const inputMatch = yaml.match(/^input:\s*\n\s*schema:\s*\n([\s\S]*?)(?=^output:|^forms:|^examples:|^config:|^$)/m);
-    if (inputMatch) tool.inputSchema = parseBlock(inputMatch[1]);
-    const outputMatch = yaml.match(/^output:\s*\n\s*schema:\s*\n([\s\S]*?)(?=^input:|^forms:|^examples:|^config:|^$)/m);
-    if (outputMatch) tool.outputSchema = parseBlock(outputMatch[1]);
+    tool.inputSchema = extractToolSchemaSection(yaml, 'input');
+    tool.outputSchema = extractToolSchemaSection(yaml, 'output');
+
+    // Parse examples
+    const examplesMatch = yaml.match(/^examples:\s*\n([\s\S]*?)(?=^[a-z]|\s*$)/m);
+    if (examplesMatch) {
+      const exBlock = examplesMatch[1];
+      const rawItems = exBlock.split(/\n(?=\s*-)/);
+      for (const raw of rawItems) {
+        if (!raw.trim()) continue;
+        const ex: ExampleModel = { name: '', description: '', inputJson: '{}', outputJson: '{}' };
+        const nameM = raw.match(/name:\s*(.+)/);
+        const descM = raw.match(/description:\s*(.+)/);
+        const inM = raw.match(/input:\s*({[^\n]+})/);
+        const outM = raw.match(/output:\s*({[^\n]+})/);
+        if (nameM) ex.name = nameM[1].trim();
+        if (descM) ex.description = descM[1].trim();
+        if (inM) ex.inputJson = inM[1].trim();
+        if (outM) ex.outputJson = outM[1].trim();
+        if (ex.name || ex.inputJson !== '{}') tool.examples.push(ex);
+      }
+    }
 
     return tool;
   } catch {
@@ -109,31 +130,79 @@ function parseToolYaml(yaml: string): ToolModel | null {
   }
 }
 
-function parseBlock(block: string): SchemaModel {
-  const fields: SchemaField[] = [];
-  const lines = block.split('\n');
-  let current: SchemaField | null = null;
-  let inProperties = false;
-
+/** Extracts a top-level section's lines from YAML (stops at next top-level key). */
+function extractSectionLines(yaml: string, sectionName: string): string[] {
+  const lines = yaml.split('\n');
+  let inside = false;
+  const result: string[] = [];
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed === 'properties:') { inProperties = true; continue; }
-    if (!inProperties || !trimmed) continue;
-
-    const propMatch = trimmed.match(/^(\w[\w_]*)\s*:\s*$/);
-    if (propMatch && line.match(/^ {6,8}\w/)) {
-      if (current) fields.push(current);
-      current = { name: propMatch[1], type: 'string', description: '', required: false };
+    if (new RegExp(`^${sectionName}\\s*:`).test(line)) {
+      inside = true;
       continue;
     }
+    if (inside) {
+      if (line.length > 0 && !/^[\s#]/.test(line)) break;
+      result.push(line);
+    }
+  }
+  return result;
+}
 
-    if (current) {
-      const kv = trimmed.match(/^(\w+)\s*:\s*(.+)$/);
+/** Parse the schema nested under input/output → schema in a tool YAML. */
+function extractToolSchemaSection(yaml: string, sectionName: string): SchemaModel {
+  const sectionLines = extractSectionLines(yaml, sectionName);
+  if (!sectionLines.length) return { type: 'object', properties: [] };
+
+  // For tools the schema lives under an extra `schema:` key
+  let schemaLineIdx = -1;
+  for (let i = 0; i < sectionLines.length; i++) {
+    if (sectionLines[i].trim() === 'schema:') { schemaLineIdx = i; break; }
+  }
+  // Fall back to parsing the whole section block if no schema: wrapper
+  const searchLines = schemaLineIdx >= 0 ? sectionLines.slice(schemaLineIdx + 1) : sectionLines;
+
+  return parsePropertiesBlock(searchLines);
+}
+
+/** Given lines containing a `properties:` block, return a SchemaModel. */
+function parsePropertiesBlock(lines: string[]): SchemaModel {
+  let propLineIdx = -1;
+  let propIndent = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === 'properties:') {
+      propLineIdx = i;
+      propIndent = lines[i].search(/\S/);
+      break;
+    }
+  }
+  if (propLineIdx === -1) return { type: 'object', properties: [] };
+
+  const fieldIndent = propIndent + 2;
+  const attrIndent = propIndent + 4;
+  const fields: SchemaField[] = [];
+  let current: SchemaField | null = null;
+
+  for (let i = propLineIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue;
+    const leading = line.search(/\S/);
+    if (leading < 0) continue;
+
+    if (leading === fieldIndent) {
+      const nameMatch = line.trim().match(/^(\w[\w_-]*)\s*:\s*$/);
+      if (nameMatch) {
+        if (current) fields.push(current);
+        current = { name: nameMatch[1], type: 'string', description: '', required: false };
+      }
+    } else if (leading >= attrIndent && current) {
+      const kv = line.trim().match(/^(\w+)\s*:\s*(.+)$/);
       if (kv) {
         if (kv[1] === 'type') current.type = kv[2] as SchemaField['type'];
         if (kv[1] === 'required') current.required = kv[2] === 'true';
         if (kv[1] === 'description') current.description = kv[2];
       }
+    } else if (leading < fieldIndent) {
+      break;
     }
   }
   if (current) fields.push(current);
@@ -209,12 +278,74 @@ export function ToolWizard({ manifest, onManifestChange }: ToolWizardProps) {
   const [configKey, setConfigKey] = useState('');
   const [configVal, setConfigVal] = useState('');
 
+  // Bruno picker state
+  const [brunoProjects, setBrunoProjects] = useState<string[]>([]);
+  const [brunoRequests, setBrunoRequests] = useState<BrunoRequest[]>([]);
+  const [brunoProjectLoading, setBrunoProjectLoading] = useState(false);
+
+  // OpenAPI picker state
+  const [openApiSpecs, setOpenApiSpecs] = useState<OpenApiSpec[]>([]);
+  const [openApiOps, setOpenApiOps] = useState<OpenApiOperation[]>([]);
+  const [openApiOpsLoading, setOpenApiOpsLoading] = useState(false);
+
   useEffect(() => {
     fetchToolDrivers().then(setDrivers).catch(() => setDrivers([]));
   }, []);
 
+  // Load Bruno projects when driver type is Bruno
+  useEffect(() => {
+    if (tool.type !== 'bruno') return;
+    fetchBrunoProjects().then(setBrunoProjects).catch(() => setBrunoProjects([]));
+  }, [tool.type]);
+
+  // Load Bruno requests when selected project changes
+  useEffect(() => {
+    const project = tool.config['collection'];
+    if (tool.type !== 'bruno' || !project) { setBrunoRequests([]); return; }
+    setBrunoProjectLoading(true);
+    fetchBrunoRequests(project)
+      .then(setBrunoRequests)
+      .catch(() => setBrunoRequests([]))
+      .finally(() => setBrunoProjectLoading(false));
+  }, [tool.type, tool.config['collection']]);
+
+  // Load OpenAPI specs when driver type is OpenAPI
+  useEffect(() => {
+    if (tool.type !== 'openapi') return;
+    fetchOpenApiSpecs().then(setOpenApiSpecs).catch(() => setOpenApiSpecs([]));
+  }, [tool.type]);
+
+  // Load OpenAPI operations when selected spec changes
+  useEffect(() => {
+    const specFile = tool.config['spec'];
+    if (tool.type !== 'openapi' || !specFile) { setOpenApiOps([]); return; }
+    // Extract just the filename from the path (e.g. "openapi/petstore.yaml" → "petstore.yaml")
+    const specName = specFile.split('/').pop() || specFile;
+    setOpenApiOpsLoading(true);
+    fetchOpenApiOperations(specName)
+      .then(setOpenApiOps)
+      .catch(() => setOpenApiOps([]))
+      .finally(() => setOpenApiOpsLoading(false));
+  }, [tool.type, tool.config['spec']]);
+
   const yaml = useMemo(() => toolToYaml(tool), [tool]);
-  const syncToYaml = () => onManifestChange(yaml);
+
+  // Tracks the last YAML we sent to the parent so we can ignore echo-backs.
+  const lastSentYaml = useRef(yaml);
+
+  // Sync parent → tool: only when manifest changes externally (not as our own echo-back).
+  useEffect(() => {
+    if (manifest === lastSentYaml.current) return;
+    const parsed = parseToolYaml(manifest);
+    if (parsed) setTool(parsed);
+  }, [manifest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync tool → parent: whenever yaml changes due to user edits.
+  useEffect(() => {
+    if (yaml === lastSentYaml.current) return;
+    lastSentYaml.current = yaml;
+    onManifestChange(yaml);
+  }, [yaml, onManifestChange]);
 
   const update = (patch: Partial<ToolModel>) => setTool(prev => ({ ...prev, ...patch }));
 
@@ -267,14 +398,6 @@ export function ToolWizard({ manifest, onManifestChange }: ToolWizardProps) {
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
-        {/* Sync bar */}
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] text-muted-foreground">Tool configuration wizard — sync changes to YAML</p>
-          <Button size="sm" className="h-7 text-xs gap-1" onClick={syncToYaml}>
-            Sync to YAML
-          </Button>
-        </div>
-
         {/* Metadata */}
         <Card>
           <CardHeader className="py-2 px-3">
@@ -317,15 +440,141 @@ export function ToolWizard({ manifest, onManifestChange }: ToolWizardProps) {
               </SelectContent>
             </Select>
             {(drivers.length ? drivers : FALLBACK_DRIVER_TYPES).find(d => d.type === tool.type) && (
-              <p className="text-[10px] text-muted-foreground">
+              <div className="text-[10px] text-muted-foreground">
                 {(drivers.length ? drivers : FALLBACK_DRIVER_TYPES).find(d => d.type === tool.type)?.description}
                 <Badge variant={(drivers.length ? drivers : FALLBACK_DRIVER_TYPES).find(d => d.type === tool.type)?.risk === 'high-risk' ? 'destructive' : 'secondary'} className="ml-2 text-[9px]">
                   {(drivers.length ? drivers : FALLBACK_DRIVER_TYPES).find(d => d.type === tool.type)?.risk}
                 </Badge>
-              </p>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Bruno Collection Config Panel */}
+        {tool.type === 'bruno' && (
+          <Card className="border-l-[3px] border-l-orange-500">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
+                Bruno Collection
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-3 space-y-2">
+              <div>
+                <Label className="text-[10px]">Project (collection)</Label>
+                <Select
+                  value={tool.config['collection'] || ''}
+                  onValueChange={v => update({ config: { ...tool.config, collection: v, request: '' } })}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="Select Bruno project…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brunoProjects.map(p => (
+                      <SelectItem key={p} value={p}>{p}</SelectItem>
+                    ))}
+                    {brunoProjects.length === 0 && (
+                      <SelectItem value="__none__" disabled>No Bruno projects found in repo/bruno/</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px]">Request</Label>
+                <Select
+                  value={tool.config['request'] || ''}
+                  onValueChange={v => update({ config: { ...tool.config, request: v } })}
+                  disabled={!tool.config['collection'] || brunoProjectLoading}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder={brunoProjectLoading ? 'Loading…' : 'Select request…'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brunoRequests.map(r => (
+                      <SelectItem key={r.path} value={r.path}>{r.path}</SelectItem>
+                    ))}
+                    {brunoRequests.length === 0 && !brunoProjectLoading && (
+                      <SelectItem value="__none__" disabled>No requests found</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px]">Base URL override (optional)</Label>
+                <Input
+                  value={tool.config['base_url'] || ''}
+                  onChange={e => update({ config: { ...tool.config, base_url: e.target.value } })}
+                  placeholder="http://localhost:7070"
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* OpenAPI Spec Config Panel */}
+        {tool.type === 'openapi' && (
+          <Card className="border-l-[3px] border-l-blue-500">
+            <CardHeader className="py-2 px-3">
+              <CardTitle className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
+                OpenAPI Specification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-3 pb-3 space-y-2">
+              <div>
+                <Label className="text-[10px]">Spec file (repo/openapi/)</Label>
+                <Select
+                  value={tool.config['spec'] || ''}
+                  onValueChange={v => update({ config: { ...tool.config, spec: v, operation_id: '' } })}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder="Select OpenAPI spec…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {openApiSpecs.map(s => (
+                      <SelectItem key={s.file} value={s.file}>{s.name}</SelectItem>
+                    ))}
+                    {openApiSpecs.length === 0 && (
+                      <SelectItem value="__none__" disabled>No specs found in repo/openapi/</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px]">Operation ID</Label>
+                <Select
+                  value={tool.config['operation_id'] || ''}
+                  onValueChange={v => update({ config: { ...tool.config, operation_id: v } })}
+                  disabled={!tool.config['spec'] || openApiOpsLoading}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue placeholder={openApiOpsLoading ? 'Loading…' : 'Select operation…'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {openApiOps.map(op => (
+                      <SelectItem key={op.operationId} value={op.operationId}>
+                        <span className="font-mono text-[10px]">{op.method}</span>
+                        <span className="ml-1">{op.operationId}</span>
+                        {op.summary && <span className="text-muted-foreground ml-1">— {op.summary}</span>}
+                      </SelectItem>
+                    ))}
+                    {openApiOps.length === 0 && !openApiOpsLoading && (
+                      <SelectItem value="__none__" disabled>No operations found</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[10px]">Base URL override (optional)</Label>
+                <Input
+                  value={tool.config['base_url'] || ''}
+                  onChange={e => update({ config: { ...tool.config, base_url: e.target.value } })}
+                  placeholder="Uses servers[0].url from spec"
+                  className="h-7 text-xs font-mono"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Config */}
         <Card>

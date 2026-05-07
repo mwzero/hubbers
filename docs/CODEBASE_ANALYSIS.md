@@ -37,10 +37,13 @@ The refreshed documentation corrects the biggest mismatches:
 
 Hubbers has a solid runtime shape:
 
-- clean module boundaries
+- clean module boundaries with a dedicated `hubbers-tools-api` SPI jar
 - a single execution facade
 - executor mediation through `ExecutorRegistry`
 - first-class support for skills, forms, and execution history
+- MCP server (stdio and SSE) for external chat UI integration
+- OpenAI-compatible proxy for function-calling clients
+- five model providers: OpenAI, Azure OpenAI, Ollama, Anthropic, llama.cpp
 
 The current release risk is mostly around packaging consistency, not around the basic runtime architecture.
 

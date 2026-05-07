@@ -4,7 +4,10 @@ agent:
   description: Demo agent for testing form-based human-in-the-loop input collection
 
 mode: simple
-tools: []
+tools:
+  - demo.calculator
+  - csv.write
+  - csv_read
 config:
   max_iterations: 1
   timeout_seconds: 120
@@ -47,9 +50,7 @@ instructions:
   system_prompt: |
     Given the user's search parameters — `{query}`, depth `{depth}`, max results `{maxResults}` —
     analyse the query, extract key search terms, and recommend a search strategy.
-
     Return a JSON object with `analysis`, `searchTerms`, and `strategy`.
-
     Analyze the query and provide search strategy recommendations:
     - Query analysis: break down the intent
     - Identified search terms: extract keywords

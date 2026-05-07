@@ -68,11 +68,16 @@ Reference:
 
 ## Bundled Agent Types
 
-The bundled repo currently demonstrates two different styles:
+The bundled repo currently includes eight agents:
 
-- `research.assistant`: an agent with an explicit tool list
-- `universal.task`: a task-style entry point that plans and selects artifacts dynamically
 - `demo.search`: a form-driven agent example
+- `research.assistant`: an agent with an explicit tool list
+- `rss.ner`: RSS-focused NER extraction agent
+- `rss.sentiment`: RSS sentiment analysis agent
+- `rss.translate`: RSS content translation agent
+- `simple.agent`: minimal example agent
+- `text.summarizer`: text summarization agent
+- `universal.task`: a task-style entry point that plans and selects artifacts dynamically
 
 ## Practical Mental Model
 
@@ -91,3 +96,4 @@ Use this model when reading or extending the code:
 - [Agents Guide](AGENTS.md)
 - [Tools Guide](Tools.md)
 - [Pipelines Guide](Pipelines.md)
+- [MCP Server](MCP.md)

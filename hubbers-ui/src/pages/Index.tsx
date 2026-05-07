@@ -28,6 +28,8 @@ export default function Index() {
                 onSelect={ws.selectArtifact}
                 onRefresh={ws.loadRepo}
                 onCreate={ws.createArtifact}
+                onSelectBrunoRequest={ws.selectBrunoRequest}
+                selectedBrunoFile={ws.brunoFile ? { project: ws.brunoFile.project, path: ws.brunoFile.path } : null}
               />
             </ResizablePanel>
             <ResizableHandle withHandle />
@@ -60,6 +62,9 @@ export default function Index() {
             onExecDetailTabChange={ws.setExecDetailTab}
             onSelectExecution={ws.loadExecutionDetail}
             onBackToList={() => ws.setSelectedExecution(null)}
+            onRerunWithInput={ws.rerunWithInput}
+            onLoadInput={input => ws.setRunInput(JSON.stringify(input, null, 2))}
+            brunoFile={ws.brunoFile}
           />
         </ResizablePanel>
 
@@ -71,6 +76,9 @@ export default function Index() {
             onRunInputChange={ws.setRunInput}
             runOutput={ws.runOutput}
             running={ws.loading.run}
+            manifest={ws.manifest}
+            onRun={ws.runArtifact}
+            selected={ws.selected}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

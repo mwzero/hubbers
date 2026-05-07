@@ -31,6 +31,9 @@ export function useWorkspace() {
   const [pipelineSteps, setPipelineSteps] = useState<PipelineStep[]>([]);
   const [pipelineInputParams, setPipelineInputParams] = useState<string[]>([]);
 
+  // Bruno file viewer
+  const [brunoFile, setBrunoFile] = useState<api.BrunoFileData | null>(null);
+
   const healthRef = useRef<ReturnType<typeof setInterval>>();
 
   // Health check
@@ -67,7 +70,23 @@ export function useWorkspace() {
 
   useEffect(() => { loadRepo(); }, [loadRepo]);
 
+  const selectBrunoRequest = useCallback(async (project: string, request: api.BrunoRequest) => {
+    setSelected(null);
+    setManifest('');
+    setLoading(l => ({ ...l, manifest: true }));
+    try {
+      const data = await api.fetchBrunoRequestFile(project, request.path);
+      setBrunoFile(data);
+    } catch (e: any) {
+      toast.error(e.message);
+      setBrunoFile(null);
+    } finally {
+      setLoading(l => ({ ...l, manifest: false }));
+    }
+  }, []);
+
   const selectArtifact = useCallback(async (art: Artifact) => {
+    setBrunoFile(null);
     setSelected(art);
     setEditorTab('yaml');
     setSelectedExecution(null);
@@ -241,6 +260,40 @@ export function useWorkspace() {
     }
   }, [selected, runInput]);
 
+  /** Re-run a previous execution: loads its input into the runner then executes. */
+  const rerunWithInput = useCallback(async (input: any) => {
+    if (!selected) return;
+    const inputStr = JSON.stringify(input, null, 2);
+    setRunInput(inputStr);
+    setLoading(l => ({ ...l, run: true }));
+    setRunOutput('');
+    try {
+      const result = await api.runArtifact(selected.type, selected.name, input);
+      if (result.requiresForm && result.form && result.formSessionId) {
+        const initialData: Record<string, any> = {};
+        result.form.fields.forEach(f => { if (f.defaultValue !== undefined) initialData[f.name] = f.defaultValue; });
+        setFormModal({ open: true, form: result.form, sessionId: result.formSessionId, data: initialData });
+      } else {
+        let parsedResult = result.result;
+        if (typeof parsedResult === 'string') {
+          try { parsedResult = JSON.parse(parsedResult); } catch { /* keep */ }
+        }
+        const output: Record<string, any> = {};
+        if (result.data !== undefined) output.result = result.data;
+        else if (parsedResult !== undefined) output.result = parsedResult;
+        else output.result = result;
+        if (result.tools_used) output.tools_used = result.tools_used;
+        if (result.reasoning) output.reasoning = result.reasoning;
+        setRunOutput(JSON.stringify(output, null, 2));
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+      setRunOutput(`Error: ${e.message}`);
+    } finally {
+      setLoading(l => ({ ...l, run: false }));
+    }
+  }, [selected]);
+
   const submitFormModal = useCallback(async () => {
     if (!formModal.sessionId) return;
     try {
@@ -305,8 +358,9 @@ export function useWorkspace() {
     formModal, setFormModal, submitFormModal,
     executions, selectedExecution, executionDetail, execDetailTab, setExecDetailTab,
     pipelineSteps, setPipelineSteps, pipelineInputParams, setPipelineInputParams, syncStepsToYaml,
-    loadRepo, selectArtifact, saveManifest, validateManifest, runArtifact,
+    loadRepo, selectArtifact, saveManifest, validateManifest, runArtifact, rerunWithInput,
     loadExecutions, loadExecutionDetail, setSelectedExecution,
     createArtifact,
+    brunoFile, selectBrunoRequest,
   };
 }

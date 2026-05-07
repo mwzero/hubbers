@@ -1,0 +1,43 @@
+tool:
+  name: openapi.petstore.get-pet
+  version: 1.0.0
+  description: >
+    Retrieve a single pet from the Petstore API by its numeric ID.
+    Uses the OpenAPI driver and the petstore.yaml spec stored in repo/openapi/.
+
+type: openapi
+
+config:
+  spec: openapi/petstore.yaml
+  operation_id: getPetById
+
+input:
+  schema:
+    type: object
+    required:
+      - petId
+    properties:
+      petId:
+        type: integer
+        description: Numeric ID of the pet to retrieve
+
+output:
+  schema:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+
+examples:
+  - name: get-pet-1
+    description: Get the pet with ID 1
+    input:
+      petId: 1
+    output:
+      id: 1
+      name: doggie
+      status: available

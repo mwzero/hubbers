@@ -17,7 +17,7 @@ java -jar hubbers-distribution/target/hubbers.jar --help
 
 ## Prerequisites
 
-- Java 21
+- Java 25 (project compiler source/target)
 - GraalVM with `native-image`
 - platform-native build toolchain
 - Visual Studio Build Tools on Windows

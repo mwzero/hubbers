@@ -17,9 +17,11 @@ The codebase is organized as a multi-module Maven project with a bundled artifac
 
 | Module | Purpose |
 | --- | --- |
+| `hubbers-tools-api` | Tool driver SPI, manifest types, shared utilities |
 | `hubbers-core` | Runtime core, executors, validators, model providers |
 | `hubbers-tools-builtin` | Built-in Java tool drivers and Lucene support classes |
 | `hubbers-framework` | Compatibility jar preserving the historical runtime coordinate |
+| `hubbers-mcp` | Model Context Protocol server (stdio and SSE transports) |
 | `hubbers-web` | Web server and packaged frontend resources |
 | `hubbers-cli` | CLI commands and `org.hubbers.Main` entrypoint |
 | `hubbers-repo` | Bundled sample repo with manifests and config |
@@ -30,8 +32,8 @@ The codebase is organized as a multi-module Maven project with a bundled artifac
 
 Current contents of `hubbers-repo/src/main/resources/repo`:
 
-- 3 agents
-- 15 tools
+- 8 agents
+- 17 tools
 - 11 pipelines
 - 6 skills
 
@@ -43,6 +45,9 @@ Current contents of `hubbers-repo/src/main/resources/repo`:
 - reusable skill execution through `SkillExecutor`
 - form-driven interaction in the web layer
 - execution logging and persisted run history
+- MCP server (stdio and SSE) through `hubbers-mcp`
+- OpenAI-compatible proxy endpoints (`/v1/chat/completions`)
+- model providers: OpenAI, Azure OpenAI, Ollama, Anthropic, llama.cpp
 
 ## Build Entry Point
 
@@ -55,4 +60,5 @@ java -jar hubbers-distribution/target/hubbers.jar --help
 
 - [Software Architecture](SWA.md)
 - [Agentic Architecture](AGENTIC_ARCHITECTURE.md)
+- [MCP Server](MCP.md)
 - [GitHub Pages Publishing](GITHUB_PAGES.md)

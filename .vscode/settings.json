@@ -2,10 +2,19 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive",
     "java.format.settings.url": ".vscode/java-formatter.xml",
-    "java.autobuild.enabled": true,
+    "java.autobuild.enabled": false,
     "chat.tools.terminal.autoApprove": {
         "mvn clean": true,
         ".\\node\\npm.cmd": true,
-        "mvn.cmd": true
+        "mvn.cmd": true,
+        "mvn -pl hubbers-core": true,
+        "Get-NetTCPConnection": true,
+        "Get-CimInstance": true,
+        "mvn compile": true,
+        "mvn install": true,
+        "Add-Type": true,
+        "mvn dependency:resolve": true,
+        "New-Object": true,
+        "Out-Null": true
     }
 }

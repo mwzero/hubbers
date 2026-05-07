@@ -180,3 +180,85 @@ export async function saveSettings(config: AppConfig): Promise<void> {
     body: JSON.stringify(config),
   }));
 }
+
+// ── Bruno collection browser ───────────────────────────────────────────────
+
+export async function fetchBrunoProjects(): Promise<string[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/bruno`));
+  const data = await res.json();
+  return data.projects || [];
+}
+
+export interface BrunoRequest {
+  path: string;
+  name: string;
+}
+
+export async function fetchBrunoRequests(project: string): Promise<BrunoRequest[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/bruno/${encodeURIComponent(project)}`));
+  const data = await res.json();
+  return data.requests || [];
+}
+
+export interface BrunoParam {
+  name: string;
+  value: string;
+  type: string;        // "path" | "query"
+  description: string;
+}
+
+export interface BrunoHeader {
+  name: string;
+  value: string;
+}
+
+export interface BrunoBody {
+  type: string;
+  data: string;
+}
+
+export interface BrunoFileData {
+  project: string;
+  path: string;
+  name: string;
+  method: string;
+  url: string;
+  auth: string;
+  params: BrunoParam[];
+  headers: BrunoHeader[];
+  body: BrunoBody | null;
+  raw: string;
+}
+
+export async function fetchBrunoRequestFile(project: string, requestPath: string): Promise<BrunoFileData> {
+  const res = await handleResponse(
+    await fetch(`${BASE}/api/bruno-request?project=${encodeURIComponent(project)}&path=${encodeURIComponent(requestPath)}`)
+  );
+  return res.json();
+}
+
+// ── OpenAPI spec browser ───────────────────────────────────────────────────
+
+export interface OpenApiSpec {
+  file: string;
+  name: string;
+}
+
+export interface OpenApiOperation {
+  operationId: string;
+  method: string;
+  path: string;
+  summary: string;
+}
+
+export async function fetchOpenApiSpecs(): Promise<OpenApiSpec[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/openapi`));
+  const data = await res.json();
+  return data.specs || [];
+}
+
+export async function fetchOpenApiOperations(specName: string): Promise<OpenApiOperation[]> {
+  const res = await handleResponse(await fetch(`${BASE}/api/openapi/${encodeURIComponent(specName)}`));
+  const data = await res.json();
+  return data.operations || [];
+}

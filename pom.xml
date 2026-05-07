@@ -41,6 +41,7 @@
         <firecrawl.version>1.1.1</firecrawl.version>
         
         <!-- Plugin versions -->
+        <maven.clean.plugin.version>3.2.0</maven.clean.plugin.version>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.2.5</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.5.3</maven.shade.plugin.version>
@@ -181,6 +182,11 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven.clean.plugin.version}</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>

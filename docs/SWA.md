@@ -10,9 +10,11 @@ Hubbers is a multi-module Java 21 project that turns a repository of AI artifact
 
 | Module | Purpose |
 | --- | --- |
+| `hubbers-tools-api` | Tool driver SPI, manifest types, shared utilities (no runtime deps) |
 | `hubbers-core` | Runtime core, executors, manifest parsing, validation, model providers |
 | `hubbers-tools-builtin` | Built-in tool drivers discovered through `ServiceLoader` |
 | `hubbers-framework` | Compatibility jar preserving the historical runtime coordinate |
+| `hubbers-mcp` | Model Context Protocol server (stdio and SSE transports) |
 | `hubbers-web` | Web API and static asset serving |
 | `hubbers-cli` | Command-line interface and `org.hubbers.Main` |
 | `hubbers-repo` | Bundled repository with sample artifacts and runtime config |
@@ -68,9 +70,11 @@ Hubbers currently supports four repository artifact categories:
 - Natural-language routing through `runAgent(..., {"request": ...})`
 - Conversation-aware execution for agentic workflows
 - Human-in-the-loop forms via `forms.before`
-- Execution history APIs
-- OpenAI and Ollama model provider support
-- Built-in file, shell, RSS, process, CSV, Lucene, browser, and user-input tools
+- Execution history APIs (`/api/executions`)
+- Model providers: OpenAI, Azure OpenAI, Ollama, Anthropic, llama.cpp
+- Built-in file, shell, RSS, process, CSV, SQL, Lucene, browser, webhook, and user-input tools
+- MCP server (stdio and SSE) for integration with Claude Desktop, VS Code, and other clients
+- OpenAI-compatible proxy (`/v1/chat/completions`, `/v1/models`) for function-calling clients
 
 ## Known Architectural Constraints
 
@@ -84,4 +88,5 @@ Hubbers currently supports four repository artifact categories:
 - [Tools Guide](Tools.md)
 - [Pipelines Guide](Pipelines.md)
 - [Skills Guide](Skills.md)
+- [MCP Server](MCP.md)
 - [Native Build Guide](NATIVE_BUILD.md)

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Sparkles, Cpu, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,7 +112,23 @@ export function SkillBuilder({ manifest, onManifestChange }: SkillBuilderProps) 
   }, []);
 
   const md = useMemo(() => skillToMd(skill), [skill]);
-  const syncToMarkdown = () => onManifestChange(md);
+
+  // Tracks the last Markdown we sent to the parent so we can ignore echo-backs.
+  const lastSentMd = useRef(md);
+
+  // Sync parent → skill: only when manifest changes externally (not as our own echo-back).
+  useEffect(() => {
+    if (manifest === lastSentMd.current) return;
+    const parsed = parseSkillMd(manifest);
+    if (parsed) setSkill(parsed);
+  }, [manifest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync skill → parent: whenever md changes due to user edits.
+  useEffect(() => {
+    if (md === lastSentMd.current) return;
+    lastSentMd.current = md;
+    onManifestChange(md);
+  }, [md, onManifestChange]);
 
   const updateMeta = (patch: Partial<SkillModel['metadata']>) => setSkill(prev => ({ ...prev, metadata: { ...prev.metadata, ...patch } }));
   const updateModel = (patch: Partial<SkillModel['model']>) => setSkill(prev => ({ ...prev, model: { ...prev.model, ...patch } }));
@@ -132,14 +148,6 @@ export function SkillBuilder({ manifest, onManifestChange }: SkillBuilderProps) 
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
-        {/* Sync bar */}
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] text-muted-foreground">Visual editor — changes sync to Markdown on click</p>
-          <Button size="sm" className="h-7 text-xs gap-1" onClick={syncToMarkdown}>
-            Sync to Markdown
-          </Button>
-        </div>
-
         {/* Metadata */}
         <Card>
           <CardHeader className="py-2 px-3">

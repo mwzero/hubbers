@@ -1,0 +1,36 @@
+tool:
+  name: bruno.hubbers-api.list-conversations
+  version: 1.0.0
+  description: >
+    Lists all stored conversations via the Hubbers API, using the Bruno
+    collection defined under repo/bruno/Hubbers API.
+    Demonstrates calling a Bruno collection request as a Hubbers tool.
+
+type: bruno
+
+config:
+  collection: "Hubbers API"
+  request: "Conversations/List Conversations"
+  base_url: "http://localhost:7070"
+
+input:
+  schema:
+    type: object
+    properties: {}
+
+output:
+  schema:
+    type: object
+    properties:
+      conversations:
+        type: array
+        description: List of conversation objects returned by the API
+
+examples:
+  - name: list-all-conversations
+    description: Retrieve all conversations from the local Hubbers instance
+    input: {}
+    output:
+      conversations:
+        - id: "conv-001"
+          createdAt: "2026-05-07T10:00:00Z"

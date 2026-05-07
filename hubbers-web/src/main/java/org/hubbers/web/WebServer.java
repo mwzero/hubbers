@@ -229,6 +229,224 @@ public class WebServer {
 
         app.get("/api/catalog/drivers", ctx -> ctx.json(Map.of("drivers", toolDriverCatalog())));
 
+        // ── Bruno collection browser ──
+        // List Bruno projects and requests so the UI can build tool configs.
+        app.get("/api/bruno", ctx -> {
+            try {
+                java.nio.file.Path brunoRoot = java.nio.file.Path.of(repoPath, "bruno");
+                if (!java.nio.file.Files.isDirectory(brunoRoot)) {
+                    ctx.json(Map.of("projects", List.of()));
+                    return;
+                }
+                var projects = java.nio.file.Files.list(brunoRoot)
+                        .filter(java.nio.file.Files::isDirectory)
+                        .map(p -> p.getFileName().toString())
+                        .sorted()
+                        .toList();
+                ctx.json(Map.of("projects", projects));
+            } catch (java.io.IOException e) {
+                writeError(ctx, 500, "Failed to list Bruno projects: " + e.getMessage());
+            }
+        });
+
+        app.get("/api/bruno/{project}", ctx -> {
+            String project = ctx.pathParam("project");
+            // Validate: only allow safe names (no path traversal)
+            if (!project.matches("[A-Za-z0-9 ._-]+")) {
+                writeError(ctx, 400, "Invalid project name");
+                return;
+            }
+            try {
+                java.nio.file.Path projectDir = java.nio.file.Path.of(repoPath, "bruno", project);
+                if (!java.nio.file.Files.isDirectory(projectDir)) {
+                    writeError(ctx, 404, "Bruno project not found: " + project);
+                    return;
+                }
+                // Walk the project dir and collect all *.yml files (excluding opencollection.yml and environments/)
+                java.nio.file.Path rootNorm = projectDir.toAbsolutePath().normalize();
+                var requests = java.nio.file.Files.walk(projectDir)
+                        .filter(java.nio.file.Files::isRegularFile)
+                        .filter(p -> p.getFileName().toString().endsWith(".yml"))
+                        .filter(p -> !p.getFileName().toString().equals("opencollection.yml"))
+                        .filter(p -> !p.toAbsolutePath().normalize().toString().contains("environments"))
+                        .map(p -> {
+                            String rel = rootNorm.relativize(p.toAbsolutePath().normalize()).toString();
+                            // Remove .yml extension and normalise separators
+                            String reqPath = rel.endsWith(".yml") ? rel.substring(0, rel.length() - 4) : rel;
+                            reqPath = reqPath.replace("\\", "/");
+                            return Map.of("path", reqPath, "name", p.getFileName().toString().replace(".yml", ""));
+                        })
+                        .sorted((a, b) -> ((String) a.get("path")).compareTo((String) b.get("path")))
+                        .toList();
+                ctx.json(Map.of("project", project, "requests", requests));
+            } catch (java.io.IOException e) {
+                writeError(ctx, 500, "Failed to list Bruno requests: " + e.getMessage());
+            }
+        });
+
+        // Fetch the structured content of a single Bruno request file.
+        // Uses a dedicated route to avoid conflict with /api/bruno/{project} wildcard.
+        // Query params: project=, path=
+        app.get("/api/bruno-request", ctx -> {
+            String project = ctx.queryParam("project");
+            if (project == null || project.isBlank()) {
+                writeError(ctx, 400, "Missing 'project' query parameter");
+                return;
+            }
+            if (!project.matches("[A-Za-z0-9 ._-]+")) {
+                writeError(ctx, 400, "Invalid project name");
+                return;
+            }
+            String requestPath = ctx.queryParam("path");
+            if (requestPath == null || requestPath.isBlank()) {
+                writeError(ctx, 400, "Missing 'path' query parameter");
+                return;
+            }
+            // Prevent path traversal
+            if (requestPath.contains("..")) {
+                writeError(ctx, 400, "Invalid request path");
+                return;
+            }
+            try {
+                java.nio.file.Path projectDir = java.nio.file.Path.of(repoPath, "bruno", project).toAbsolutePath().normalize();
+                java.nio.file.Path requestFile = projectDir.resolve(requestPath.replace("/", java.io.File.separator) + ".yml").normalize();
+                if (!requestFile.startsWith(projectDir)) {
+                    writeError(ctx, 400, "Invalid request path");
+                    return;
+                }
+                if (!java.nio.file.Files.exists(requestFile)) {
+                    writeError(ctx, 404, "Request file not found: " + requestPath);
+                    return;
+                }
+                String raw = java.nio.file.Files.readString(requestFile);
+                JsonNode node = JacksonFactory.yamlMapper().readTree(raw);
+
+                var result = new java.util.LinkedHashMap<String, Object>();
+                result.put("project", project);
+                result.put("path", requestPath);
+                result.put("name", node.path("info").path("name").asText(requestFile.getFileName().toString().replace(".yml", "")));
+                result.put("method", node.path("http").path("method").asText("GET").toUpperCase());
+                result.put("url", node.path("http").path("url").asText(""));
+                result.put("auth", node.path("http").path("auth").asText(""));
+                // params
+                var params = new java.util.ArrayList<Map<String, String>>();
+                JsonNode paramsNode = node.path("http").path("params");
+                if (paramsNode.isArray()) {
+                    for (JsonNode p : paramsNode) {
+                        params.add(Map.of(
+                            "name", p.path("name").asText(""),
+                            "value", p.path("value").asText(""),
+                            "type", p.path("type").asText("query"),
+                            "description", p.path("description").asText("")
+                        ));
+                    }
+                }
+                result.put("params", params);
+                // headers
+                var headers = new java.util.ArrayList<Map<String, String>>();
+                JsonNode headersNode = node.path("http").path("headers");
+                if (headersNode.isArray()) {
+                    for (JsonNode h : headersNode) {
+                        headers.add(Map.of(
+                            "name", h.path("name").asText(""),
+                            "value", h.path("value").asText("")
+                        ));
+                    }
+                }
+                result.put("headers", headers);
+                // body
+                JsonNode bodyNode = node.path("body");
+                if (!bodyNode.isMissingNode()) {
+                    result.put("body", Map.of(
+                        "type", bodyNode.path("type").asText("json"),
+                        "data", bodyNode.path("data").toString()
+                    ));
+                } else {
+                    result.put("body", null);
+                }
+                result.put("raw", raw);
+                ctx.json(result);
+            } catch (java.io.IOException e) {
+                writeError(ctx, 500, "Failed to read Bruno request: " + e.getMessage());
+            }
+        });
+
+        // ── OpenAPI spec browser ──
+        // List spec files under repo/openapi/ for use in tool configs.
+        app.get("/api/openapi", ctx -> {
+            try {
+                java.nio.file.Path openApiRoot = java.nio.file.Path.of(repoPath, "openapi");
+                if (!java.nio.file.Files.isDirectory(openApiRoot)) {
+                    ctx.json(Map.of("specs", List.of()));
+                    return;
+                }
+                var specs = java.nio.file.Files.walk(openApiRoot)
+                        .filter(java.nio.file.Files::isRegularFile)
+                        .filter(p -> {
+                            String n = p.getFileName().toString().toLowerCase();
+                            return n.endsWith(".yaml") || n.endsWith(".yml") || n.endsWith(".json");
+                        })
+                        .map(p -> {
+                            java.nio.file.Path rootNorm = openApiRoot.toAbsolutePath().normalize();
+                            String rel = rootNorm.relativize(p.toAbsolutePath().normalize()).toString()
+                                    .replace("\\", "/");
+                            return Map.of("file", "openapi/" + rel, "name", p.getFileName().toString());
+                        })
+                        .sorted((a, b) -> ((String) a.get("name")).compareTo((String) b.get("name")))
+                        .toList();
+                ctx.json(Map.of("specs", specs));
+            } catch (java.io.IOException e) {
+                writeError(ctx, 500, "Failed to list OpenAPI specs: " + e.getMessage());
+            }
+        });
+
+        // Read a specific OpenAPI spec file (for UI preview of operationIds)
+        app.get("/api/openapi/{spec}", ctx -> {
+            String specName = ctx.pathParam("spec");
+            if (!specName.matches("[A-Za-z0-9._-]+")) {
+                writeError(ctx, 400, "Invalid spec name");
+                return;
+            }
+            try {
+                java.nio.file.Path specFile = java.nio.file.Path.of(repoPath, "openapi", specName).normalize();
+                java.nio.file.Path openApiRoot = java.nio.file.Path.of(repoPath, "openapi").toAbsolutePath().normalize();
+                if (!specFile.toAbsolutePath().normalize().startsWith(openApiRoot)) {
+                    writeError(ctx, 400, "Invalid spec path");
+                    return;
+                }
+                if (!java.nio.file.Files.exists(specFile)) {
+                    writeError(ctx, 404, "Spec not found: " + specName);
+                    return;
+                }
+                String content = java.nio.file.Files.readString(specFile);
+                // Parse to JSON (works for both YAML and JSON specs) and return operation list
+                JsonNode spec = specName.endsWith(".json") ? jsonMapper.readTree(content)
+                        : JacksonFactory.yamlMapper().readTree(content);
+                // Extract operations
+                var operations = new java.util.ArrayList<Map<String, Object>>();
+                JsonNode paths = spec.path("paths");
+                if (paths.isObject()) {
+                    paths.fields().forEachRemaining(pathEntry -> {
+                        pathEntry.getValue().fields().forEachRemaining(methodEntry -> {
+                            String opId = methodEntry.getValue().path("operationId").asText("");
+                            String summary = methodEntry.getValue().path("summary").asText("");
+                            if (!opId.isBlank()) {
+                                operations.add(Map.of(
+                                    "operationId", opId,
+                                    "method", methodEntry.getKey().toUpperCase(),
+                                    "path", pathEntry.getKey(),
+                                    "summary", summary
+                                ));
+                            }
+                        });
+                    });
+                }
+                ctx.json(Map.of("spec", specName, "operations", operations));
+            } catch (java.io.IOException e) {
+                writeError(ctx, 500, "Failed to read OpenAPI spec: " + e.getMessage());
+            }
+        });
+
         app.get("/api/catalog/model-providers", ctx -> {
             ConfigLoader configLoader = new ConfigLoader(repoPath);
             AppConfig config = configLoader.loadRaw();
@@ -328,12 +546,6 @@ public class WebServer {
             ManifestType type = ManifestType.fromPath(ctx.pathParam("type"));
             String name = ctx.pathParam("name");
             String yaml = ctx.body();
-
-            ValidationResult validation = validate(type, yaml);
-            if (!validation.isValid()) {
-                ctx.status(400).json(Map.of("saved", false, "errors", validation.getErrors()));
-                return;
-            }
 
             manifestFileService.writeManifest(type, name, yaml);
             ctx.json(Map.of("saved", true));
@@ -931,7 +1143,9 @@ public class WebServer {
                 driver("lucene.kv", "Lucene Key Value", "Read and write local Lucene key-value data", "storage"),
                 driver("vector.lucene.enrich", "Lucene Vector Context", "Enrich prompts from vector search", "storage"),
                 driver("vector.lucene.upsert", "Lucene Vector Upsert", "Store vector records locally", "storage"),
-                driver("vector.lucene.search", "Lucene Vector Search", "Search local vector records", "storage")
+                driver("vector.lucene.search", "Lucene Vector Search", "Search local vector records", "storage"),
+                driver("bruno", "Bruno Collection", "Execute a request from a Bruno API collection", "network"),
+                driver("openapi", "OpenAPI Operation", "Execute an operation from an OpenAPI specification", "network")
         );
     }
 

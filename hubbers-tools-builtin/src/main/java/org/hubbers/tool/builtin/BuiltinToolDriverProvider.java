@@ -4,6 +4,7 @@ import org.hubbers.tool.ToolDriver;
 import org.hubbers.tool.ToolDriverContext;
 import org.hubbers.tool.ToolDriverProvider;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -12,6 +13,7 @@ import java.util.List;
 public class BuiltinToolDriverProvider implements ToolDriverProvider {
     @Override
     public List<ToolDriver> createDrivers(ToolDriverContext context) {
+        Path repoRoot = Path.of(context.appConfig().getRepoRoot());
         return List.of(
                 new HttpToolDriver(context.httpClient(), context.jsonMapper()),
                 new DockerToolDriver(context.jsonMapper()),
@@ -29,7 +31,9 @@ public class BuiltinToolDriverProvider implements ToolDriverProvider {
                 new ProcessManageToolDriver(context.jsonMapper()),
                 new UserInputToolDriver(context.jsonMapper()),
                 new SqlQueryToolDriver(context.jsonMapper()),
-                new WebhookToolDriver(context.jsonMapper())
+                new WebhookToolDriver(context.jsonMapper()),
+                new BrunoToolDriver(repoRoot, context.httpClient(), context.jsonMapper()),
+                new OpenApiToolDriver(repoRoot, context.httpClient(), context.jsonMapper())
         );
     }
 }

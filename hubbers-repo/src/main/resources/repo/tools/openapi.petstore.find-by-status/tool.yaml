@@ -1,0 +1,45 @@
+tool:
+  name: openapi.petstore.find-by-status
+  version: 1.0.0
+  description: >
+    Find pets in the Petstore by their adoption status.
+    Demonstrates using an OpenAPI specification as a Hubbers tool via the
+    openapi driver. The spec is stored under repo/openapi/petstore.yaml.
+
+type: openapi
+
+config:
+  spec: openapi/petstore.yaml
+  operation_id: findPetsByStatus
+  # base_url: https://petstore3.swagger.io/api/v3   # defaults to servers[0].url in the spec
+
+input:
+  schema:
+    type: object
+    properties:
+      status:
+        type: string
+        description: "Filter by pet status: available, pending, or sold"
+        enum:
+          - available
+          - pending
+          - sold
+
+output:
+  schema:
+    type: object
+    properties:
+      items:
+        type: array
+        description: List of pets matching the given status
+
+examples:
+  - name: find-available-pets
+    description: List all available pets from the Petstore demo API
+    input:
+      status: available
+    output:
+      items:
+        - id: 1
+          name: doggie
+          status: available

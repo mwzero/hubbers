@@ -1,6 +1,9 @@
 package org.hubbers.app;
 
+import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.tool.ToolManifest;
+import org.hubbers.validation.ManifestValidator;
+import org.hubbers.validation.ValidationResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +56,21 @@ class ArtifactRepositoryBrunoTest {
         assertNotNull(manifest.getInput().getSchema().getProperties().get("name"),
                 "Path params should be exposed as input properties");
     }
+
+        @Test
+        @DisplayName("Should load and validate flat agent input and output schemas")
+        void testLoadAgent_WithFlatSchemas_ReturnsValidManifest() throws URISyntaxException {
+                ArtifactRepository repository = new ArtifactRepository(testRepoPath());
+
+                AgentManifest manifest = repository.loadAgent("simple.agent");
+                ValidationResult validationResult = new ManifestValidator().validateAgent(manifest);
+
+                assertNotNull(manifest.getInput(), "Agent manifest should define input");
+                assertNotNull(manifest.getInput().getSchema(), "Flat input schema should be bound to schema");
+                assertNotNull(manifest.getOutput(), "Agent manifest should define output");
+                assertNotNull(manifest.getOutput().getSchema(), "Flat output schema should be bound to schema");
+                assertTrue(validationResult.isValid(), "Flat agent schemas should pass validation");
+        }
 
     private Path testRepoPath() throws URISyntaxException {
         return Path.of(getClass().getClassLoader().getResource("repo").toURI());

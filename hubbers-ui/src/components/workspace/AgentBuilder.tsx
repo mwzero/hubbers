@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Bot, Settings, Cpu, FileText, Wrench } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -116,15 +115,8 @@ function parseAgentYaml(yaml: string): AgentModel | null {
       agent.systemPrompt = promptLines.join('\n').trim();
     }
 
-    // Parse input/output schemas from a simple approach - re-parse the YAML for properties
-    const inputMatch = yaml.match(/^input:\s*\n([\s\S]*?)(?=^output:|^instructions:|^$)/m);
-    if (inputMatch) {
-      agent.inputSchema = parseSchemaBlock(inputMatch[1]);
-    }
-    const outputMatch = yaml.match(/^output:\s*\n([\s\S]*?)(?=^instructions:|^input:|^$)/m);
-    if (outputMatch) {
-      agent.outputSchema = parseSchemaBlock(outputMatch[1]);
-    }
+    agent.inputSchema = extractSchemaSection(yaml, 'input');
+    agent.outputSchema = extractSchemaSection(yaml, 'output');
 
     return agent;
   } catch {
@@ -132,30 +124,71 @@ function parseAgentYaml(yaml: string): AgentModel | null {
   }
 }
 
-function parseSchemaBlock(block: string): SchemaModel {
-  const fields: SchemaModel['properties'] = [];
-  const lines = block.split('\n');
-  let currentField: any = null;
-
+/** Extracts a top-level section's lines from YAML without fragile lookahead regexes. */
+function extractSectionLines(yaml: string, sectionName: string): string[] {
+  const lines = yaml.split('\n');
+  let inside = false;
+  const result: string[] = [];
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    // Property name (indented under "properties:")
-    const propMatch = trimmed.match(/^(\w[\w_]*)\s*:\s*$/);
-    if (propMatch && line.match(/^ {4,6}\w/)) {
-      if (currentField) fields.push(currentField);
-      currentField = { name: propMatch[1], type: 'string', description: '', required: false };
+    if (new RegExp(`^${sectionName}\\s*:`).test(line)) {
+      inside = true;
       continue;
     }
+    if (inside) {
+      // Any non-empty line at column 0 that isn't a comment ends the section
+      if (line.length > 0 && !/^[\s#]/.test(line)) break;
+      result.push(line);
+    }
+  }
+  return result;
+}
 
-    if (currentField) {
-      const kv = trimmed.match(/^(\w+)\s*:\s*(.+)$/);
+/** Parse a schema from YAML lines belonging to an input/output section. */
+function extractSchemaSection(yaml: string, sectionName: string): SchemaModel {
+  const sectionLines = extractSectionLines(yaml, sectionName);
+  if (!sectionLines.length) return { type: 'object', properties: [] };
+
+  // Find the 'properties:' line and its indentation
+  let propLineIdx = -1;
+  let propIndent = -1;
+  for (let i = 0; i < sectionLines.length; i++) {
+    if (sectionLines[i].trim() === 'properties:') {
+      propLineIdx = i;
+      propIndent = sectionLines[i].search(/\S/);
+      break;
+    }
+  }
+  if (propLineIdx === -1) return { type: 'object', properties: [] };
+
+  // Field names live at propIndent + 2, field attributes at propIndent + 4
+  const fieldIndent = propIndent + 2;
+  const attrIndent = propIndent + 4;
+
+  const fields: SchemaModel['properties'] = [];
+  let currentField: SchemaModel['properties'][number] | null = null;
+
+  for (let i = propLineIdx + 1; i < sectionLines.length; i++) {
+    const line = sectionLines[i];
+    if (!line.trim()) continue;
+
+    const leading = line.search(/\S/);
+    if (leading < 0) continue;
+
+    if (leading === fieldIndent) {
+      const nameMatch = line.trim().match(/^(\w[\w_-]*)\s*:\s*$/);
+      if (nameMatch) {
+        if (currentField) fields.push(currentField);
+        currentField = { name: nameMatch[1], type: 'string', description: '', required: false };
+      }
+    } else if (leading >= attrIndent && currentField) {
+      const kv = line.trim().match(/^(\w+)\s*:\s*(.+)$/);
       if (kv) {
-        if (kv[1] === 'type') currentField.type = kv[2];
+        if (kv[1] === 'type') currentField.type = kv[2] as SchemaModel['properties'][number]['type'];
         if (kv[1] === 'required') currentField.required = kv[2] === 'true';
         if (kv[1] === 'description') currentField.description = kv[2];
       }
+    } else if (leading < fieldIndent) {
+      break; // back to parent level
     }
   }
   if (currentField) fields.push(currentField);
@@ -212,10 +245,24 @@ export function AgentBuilder({ manifest, onManifestChange, repo }: AgentBuilderP
     fetchModelProviders().then(setProviders).catch(() => setProviders([]));
   }, []);
 
-  // Sync back to YAML whenever agent model changes
   const yaml = useMemo(() => agentToYaml(agent), [agent]);
 
-  const syncToYaml = () => onManifestChange(yaml);
+  // Tracks the last YAML we sent to the parent so we can ignore echo-backs.
+  const lastSentYaml = useRef(yaml);
+
+  // Sync parent → agent: only when manifest changes externally (not as our own echo-back).
+  useEffect(() => {
+    if (manifest === lastSentYaml.current) return;
+    const parsed = parseAgentYaml(manifest);
+    if (parsed) setAgent(parsed);
+  }, [manifest]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync agent → parent: whenever yaml changes due to user edits.
+  useEffect(() => {
+    if (yaml === lastSentYaml.current) return;
+    lastSentYaml.current = yaml;
+    onManifestChange(yaml);
+  }, [yaml, onManifestChange]);
 
   const update = (patch: Partial<AgentModel>) => setAgent(prev => ({ ...prev, ...patch }));
   const updateConfig = (patch: Partial<AgentModel['config']>) => setAgent(prev => ({ ...prev, config: { ...prev.config, ...patch } }));
@@ -233,14 +280,6 @@ export function AgentBuilder({ manifest, onManifestChange, repo }: AgentBuilderP
   return (
     <ScrollArea className="h-full">
       <div className="p-4 space-y-4">
-        {/* Sync bar */}
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] text-muted-foreground">Visual editor — changes sync to YAML on click</p>
-          <Button size="sm" className="h-7 text-xs gap-1" onClick={syncToYaml}>
-            Sync to YAML
-          </Button>
-        </div>
-
         {/* Metadata */}
         <Card>
           <CardHeader className="py-2 px-3">
