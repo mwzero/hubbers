@@ -1,0 +1,8 @@
+node_modules
+src
+.vscode-test
+*.ts
+tsconfig.json
+webpack.config.js
+pom.xml
+.gitignore

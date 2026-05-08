@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hubbers.io/schemas/tool.schema.json",
+  "title": "Hubbers Tool Manifest",
+  "description": "Schema for tool.yaml — defines a tool's type, driver configuration, and I/O contract.",
+  "type": "object",
+  "required": ["tool", "type"],
+  "additionalProperties": false,
+  "properties": {
+    "tool": {
+      "type": "object",
+      "description": "Tool identity and metadata.",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique dot-separated tool identifier (e.g., 'rss.fetch', 'web.search', 'csv.write').",
+          "pattern": "^[a-z][a-z0-9.\\-_]*$"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version (e.g., '1.0.0').",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this tool does. Shown to the model during tool selection."
+        }
+      }
+    },
+    "type": {
+      "type": "string",
+      "description": "Tool driver type. Determines which ToolDriver implementation handles execution.",
+      "enum": [
+        "rss",
+        "http",
+        "file",
+        "csv",
+        "script",
+        "shell",
+        "sql",
+        "pdf",
+        "vector",
+        "lucene",
+        "openapi",
+        "bruno",
+        "browser",
+        "process",
+        "user-input",
+        "webhook",
+        "custom"
+      ]
+    },
+    "config": {
+      "type": "object",
+      "description": "Driver-specific configuration (structure varies by tool type).",
+      "additionalProperties": true
+    },
+    "input": {
+      "type": "object",
+      "description": "Defines the tool's accepted input.",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema fragment for input validation.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["object", "string", "array", "number", "boolean", "integer"],
+              "default": "object"
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "description": { "type": "string" },
+                  "required": { "type": "boolean" },
+                  "items": { "type": "object" },
+                  "enum": { "type": "array" },
+                  "default": {}
+                }
+              }
+            },
+            "required": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Defines the tool's produced output.",
+      "properties": {
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema fragment for output validation.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["object", "string", "array", "number", "boolean", "integer"],
+              "default": "object"
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "description": { "type": "string" },
+                  "required": { "type": "boolean" },
+                  "items": { "type": "object" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Security permissions required by this tool.",
+      "items": {
+        "type": "string",
+        "enum": ["network", "filesystem", "process", "database", "shell"]
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Usage examples shown in documentation and used for testing.",
+      "items": {
+        "type": "object",
+        "required": ["name", "input"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "input": { "type": "object" },
+          "output": { "type": "object" }
+        }
+      }
+    }
+  }
+}

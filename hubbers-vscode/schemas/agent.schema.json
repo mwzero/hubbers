@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hubbers.io/schemas/agent.schema.json",
+  "title": "Hubbers Agent Manifest",
+  "description": "Schema for agent.yaml — defines an AI agent's identity, model, I/O contract, and instructions.",
+  "type": "object",
+  "required": ["agent", "model"],
+  "additionalProperties": false,
+  "properties": {
+    "agent": {
+      "type": "object",
+      "description": "Agent identity and metadata.",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique dot-separated agent identifier (e.g., 'universal.task', 'rss.sentiment').",
+          "pattern": "^[a-z][a-z0-9.\\-]*$"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version (e.g., '1.0.0').",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this agent does."
+        }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "description": "Execution mode. 'simple' = single LLM call; 'agentic' = ReAct loop with tool calling.",
+      "enum": ["simple", "agentic"],
+      "default": "simple"
+    },
+    "tools": {
+      "type": "array",
+      "description": "List of tool names this agent is allowed to call (leave empty to allow all).",
+      "items": {
+        "type": "string",
+        "description": "Tool name (e.g., 'rss.fetch', 'web.search')."
+      },
+      "default": []
+    },
+    "config": {
+      "type": "object",
+      "description": "Runtime configuration for the agent execution loop.",
+      "additionalProperties": false,
+      "properties": {
+        "max_iterations": {
+          "type": "integer",
+          "description": "Maximum number of ReAct loop iterations before aborting.",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 5
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "description": "Maximum wall-clock time in seconds before the execution is cancelled.",
+          "minimum": 1,
+          "default": 300
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "description": "LLM model provider and configuration.",
+      "required": ["provider", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {
+          "type": "string",
+          "description": "Model provider identifier.",
+          "enum": ["openai", "azure-openai", "ollama", "anthropic", "llama-cpp"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Model name as understood by the provider (e.g., 'gpt-4o', 'qwen3:4b', 'claude-3-5-sonnet')."
+        },
+        "temperature": {
+          "type": "number",
+          "description": "Sampling temperature (0.0 = deterministic, 2.0 = very random).",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 0.7
+        },
+        "maxTokens": {
+          "type": "integer",
+          "description": "Maximum tokens to generate in a single response.",
+          "minimum": 1
+        },
+        "max_tokens": {
+          "type": "integer",
+          "description": "Alias for maxTokens (snake_case variant).",
+          "minimum": 1
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "description": "JSON Schema fragment describing the agent's expected input.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["object", "string", "array", "number", "boolean", "integer"]
+        },
+        "properties": {
+          "type": "object",
+          "description": "Input field definitions.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "required": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "JSON Schema fragment describing the agent's expected output.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["object", "string", "array", "number", "boolean", "integer"]
+        },
+        "properties": {
+          "type": "object",
+          "description": "Output field definitions.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "instructions": {
+      "type": "object",
+      "description": "System prompt and optional few-shot examples for the agent.",
+      "properties": {
+        "system_prompt": {
+          "type": "string",
+          "description": "System prompt injected before every conversation. Supports {{ARTIFACTS_CATALOG}} placeholder."
+        },
+        "examples": {
+          "type": "array",
+          "description": "Optional few-shot examples shown to the model.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "user": { "type": "string" },
+              "assistant": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

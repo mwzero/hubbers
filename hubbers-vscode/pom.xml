@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.hubbers</groupId>
+        <artifactId>hubbers-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>hubbers-vscode</artifactId>
+    <packaging>jar</packaging>
+    <name>Hubbers VS Code Extension</name>
+    <description>VS Code extension providing artifact editing, MCP integration, and in-editor execution for Hubbers</description>
+
+    <properties>
+        <!-- Set to true to skip the frontend build entirely -->
+        <hubbers.vscode.skip.frontend>false</hubbers.vscode.skip.frontend>
+        <!-- Set to false to run vsce package (requires @vscode/vsce and a valid publisher) -->
+        <hubbers.vscode.skip.package>true</hubbers.vscode.skip.package>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <retryOnError>true</retryOnError>
+                    <failOnError>false</failOnError>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.basedir}/dist</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <!-- Install Node and npm -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <skip>${hubbers.vscode.skip.frontend}</skip>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
+                        </configuration>
+                    </execution>
+
+                    <!-- npm install -->
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <skip>${hubbers.vscode.skip.frontend}</skip>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- webpack compile -->
+                    <execution>
+                        <id>npm compile</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <skip>${hubbers.vscode.skip.frontend}</skip>
+                            <arguments>run compile</arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- vsce package (.vsix) — skipped by default, requires @vscode/vsce publisher -->
+                    <execution>
+                        <id>npm vsce-package</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <skip>${hubbers.vscode.skip.package}</skip>
+                            <arguments>run vsce-package</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Skip default Java JAR (no Java sources) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <skipIfEmpty>true</skipIfEmpty>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

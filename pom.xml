@@ -21,6 +21,7 @@
         <module>hubbers-cli</module>
         <module>hubbers-repo</module>
         <module>hubbers-mcp</module>
+        <module>hubbers-vscode</module>
         <module>hubbers-distribution</module>
     </modules>
 

@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hubbers.io/schemas/pipeline.schema.json",
+  "title": "Hubbers Pipeline Manifest",
+  "description": "Schema for pipeline.yaml — defines a multi-step workflow composing tools, agents, and other pipelines.",
+  "type": "object",
+  "required": ["pipeline", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "pipeline": {
+      "type": "object",
+      "description": "Pipeline identity and metadata.",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique dot-separated pipeline identifier (e.g., 'rss.sentiment.csv').",
+          "pattern": "^[a-z][a-z0-9.\\-_]*$"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version (e.g., '1.0.0').",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this pipeline does."
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "description": "Top-level pipeline input schema (passed as pipeline.input.* in step mappings).",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["object", "string", "array", "number", "boolean", "integer"],
+          "default": "object"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "required": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Ordered list of execution steps.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique step identifier within this pipeline. Referenced in input_mapping as ${steps.<id>.output.*}.",
+            "pattern": "^[a-z][a-z0-9_\\-]*$"
+          },
+          "tool": {
+            "type": "string",
+            "description": "Name of the tool to execute. Mutually exclusive with 'agent' and 'pipeline'."
+          },
+          "agent": {
+            "type": "string",
+            "description": "Name of the agent to execute. Mutually exclusive with 'tool' and 'pipeline'."
+          },
+          "pipeline": {
+            "type": "string",
+            "description": "Name of a nested pipeline to execute. Mutually exclusive with 'tool' and 'agent'."
+          },
+          "input_mapping": {
+            "type": "object",
+            "description": "Maps step input fields to pipeline input or previous step outputs. Use ${pipeline.input.<field>} or ${steps.<id>.output.<field>} expressions.",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "condition": {
+            "type": "string",
+            "description": "SpEL-like expression evaluated before executing this step. Step is skipped if false."
+          },
+          "retry": {
+            "type": "object",
+            "description": "Retry policy on step failure.",
+            "additionalProperties": false,
+            "properties": {
+              "maxAttempts": {
+                "type": "integer",
+                "description": "Maximum number of execution attempts.",
+                "minimum": 1,
+                "default": 3
+              },
+              "backoffMs": {
+                "type": "integer",
+                "description": "Milliseconds to wait between retry attempts.",
+                "minimum": 0,
+                "default": 1000
+              }
+            }
+          },
+          "fallback": {
+            "type": "object",
+            "description": "Behaviour when this step fails after all retries.",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "'skip' continues the pipeline, 'error' aborts, 'default' injects a default value.",
+                "enum": ["skip", "error", "default"]
+              },
+              "default": {
+                "description": "Default output value injected when type is 'default'."
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "description": "Usage examples for documentation and testing.",
+      "items": {
+        "type": "object",
+        "required": ["name", "input"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "input": { "type": "object" },
+          "output": { "type": "object" }
+        }
+      }
+    }
+  }
+}

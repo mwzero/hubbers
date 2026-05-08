@@ -40,3 +40,7 @@ replay_pid*
 /hubbers-repo/src/main/resources/repo/_executions
 /hubbers-framework/src/main/resources/web/assets
 /hubbers-repo/src/main/resources/repo/_executions
+/hubbers-vscode/node/node_modules
+/hubbers-vscode/node_modules
+/hubbers-vscode/node
+hubbers-vscode/package-lock.json
