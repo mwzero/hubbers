@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>hubbers-framework</artifactId>
-    <name>Hubbers Framework Compatibility</name>
+    <name>Hubbers Framework Core  and Tools built-in</name>
     <description>Compatibility artifact that preserves the historical hubbers-framework coordinate</description>
 
     <dependencies>

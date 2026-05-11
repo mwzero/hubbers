@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { buildCommand, getRepoPath } from './config';
 
 /** Thrown when the Hubbers executable cannot be found (ENOENT). */
@@ -21,6 +24,76 @@ export function getOutputChannel(): vscode.OutputChannel {
         outputChannel = vscode.window.createOutputChannel('Hubbers');
     }
     return outputChannel;
+}
+
+/**
+ * Runs a Hubbers CLI command in a dedicated integrated terminal.
+ *
+ * Using a terminal (real TTY) allows the CLI to display interactive prompts
+ * that the user can respond to directly. The same named terminal is reused
+ * across runs; a new one is created when the previous one has exited.
+ *
+ * JSON quoting strategy:
+ * - When a file path is provided, it is passed directly as `--input <path>` — the
+ *   CLI natively accepts a file path and reads it itself (no shell quoting needed).
+ * - When only inline JSON is provided, it is written to a temp file first, then
+ *   passed as a file path, to avoid PowerShell double-quote stripping.
+ */
+export function runHubbersInTerminal(
+    args: string[],
+    inputJson?: string,
+    inputFilePath?: string,
+): void {
+    const { cmd, cmdArgs } = buildCommand(args);
+    const repoPath = getRepoPath();
+    const cwd = repoPath ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+    // Reuse or create the named Hubbers terminal
+    let terminal = vscode.window.terminals.find(
+        (t) => t.name === 'Hubbers' && t.exitStatus === undefined,
+    );
+    if (!terminal) {
+        terminal = vscode.window.createTerminal({ name: 'Hubbers', cwd });
+    }
+    terminal.show(true);
+
+    // Always cd to the correct working directory before each run so the CLI
+    // finds application.yaml regardless of where the terminal was last used.
+    if (cwd) {
+        terminal.sendText(`Set-Location '${cwd.replace(/'/g, "''")}'`);
+    }
+
+    if (inputFilePath) {
+        // The CLI natively accepts a file path for --input — pass it directly.
+        const quotedPath = `'${inputFilePath.replace(/'/g, "''")}'`;
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')} --input ${quotedPath}`);
+    } else if (inputJson && inputJson.trim()) {
+        // Inline JSON: write to a temp file so the CLI reads it as a file path,
+        // avoiding PowerShell's double-quote stripping on external processes.
+        let compact: string;
+        try {
+            compact = JSON.stringify(JSON.parse(inputJson));
+        } catch {
+            compact = inputJson.trim();
+        }
+        const tmpFile = path.join(os.tmpdir(), `hubbers-input-${Date.now()}.json`);
+        fs.writeFileSync(tmpFile, compact, 'utf8');
+        const quotedTmp = `'${tmpFile.replace(/'/g, "''")}'`;
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')} --input ${quotedTmp}`);
+    } else {
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')}`);
+    }
+}
+
+/**
+ * Wraps an argument in double quotes if it contains spaces or special chars.
+ * Uses cmd.exe-compatible escaping (internal quotes doubled).
+ */
+function quoteArg(arg: string): string {
+    if (/[ \t"'{}\[\]|&<>^]/.test(arg)) {
+        return `"${arg.replace(/"/g, '""')}"`;
+    }
+    return arg;
 }
 
 /**

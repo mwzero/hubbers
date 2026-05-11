@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
-import { ArtifactTreeProvider, ArtifactNode } from './providers/ArtifactTreeProvider';
+import { ArtifactTreeProvider, ArtifactNode, InputFileNode } from './providers/ArtifactTreeProvider';
 import { ArtifactCodeLensProvider } from './providers/ArtifactCodeLensProvider';
 import { McpServerProvider } from './providers/McpServerProvider';
 import { configureMcp } from './commands/configureMcp';
 import { runArtifact } from './commands/runArtifact';
 import { importArtifacts } from './commands/importArtifacts';
+import { newInputFile, deleteInputFile } from './commands/manageInputs';
+import { newArtifact, newArtifactOfType } from './commands/newArtifact';
 import { registerSchemas } from './util/schemaRegistrar';
 import { getOutputChannel } from './util/processRunner';
 
@@ -27,7 +29,7 @@ export function activate(context: vscode.ExtensionContext): void {
             treeProvider.refresh(),
         ),
 
-        vscode.commands.registerCommand('hubbers.runArtifact', (node: ArtifactNode) =>
+        vscode.commands.registerCommand('hubbers.runArtifact', (node: ArtifactNode | InputFileNode) =>
             runArtifact(node),
         ),
 
@@ -46,6 +48,34 @@ export function activate(context: vscode.ExtensionContext): void {
 
         vscode.commands.registerCommand('hubbers.importArtifacts', (uri?: vscode.Uri) =>
             importArtifacts(() => treeProvider.refresh(), uri),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newInputFile', (node: ArtifactNode) =>
+            newInputFile(node, () => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.deleteInputFile', (node: InputFileNode) =>
+            deleteInputFile(node, () => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newArtifact', () =>
+            newArtifact(() => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newAgent', () =>
+            newArtifactOfType('agent', () => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newTool', () =>
+            newArtifactOfType('tool', () => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newPipeline', () =>
+            newArtifactOfType('pipeline', () => treeProvider.refresh()),
+        ),
+
+        vscode.commands.registerCommand('hubbers.newSkill', () =>
+            newArtifactOfType('skill', () => treeProvider.refresh()),
         ),
     );
 

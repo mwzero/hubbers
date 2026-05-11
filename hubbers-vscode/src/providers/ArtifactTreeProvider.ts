@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ArtifactItem, ArtifactType, TYPE_LABELS } from '../types';
-import { scanWorkspaceArtifacts } from '../util/artifactScanner';
+import { ArtifactItem, ArtifactType, InputFile, TYPE_LABELS } from '../types';
+import { scanWorkspaceArtifacts, scanInputFiles } from '../util/artifactScanner';
 
 /** Ordered type display sequence in the sidebar. */
 const TYPE_ORDER: ArtifactType[] = ['agent', 'tool', 'pipeline', 'skill'];
@@ -30,7 +30,7 @@ export class CategoryNode extends ArtifactNodeBase {
                 : vscode.TreeItemCollapsibleState.Collapsed,
         );
         this.description = `${children.length}`;
-        this.contextValue = 'category';
+        this.contextValue = `category-${artifactType}`;
         this.iconPath = new vscode.ThemeIcon('folder');
     }
 }
@@ -40,7 +40,13 @@ export class ArtifactNode extends ArtifactNodeBase {
     readonly nodeType = 'artifact' as const;
 
     constructor(public readonly item: ArtifactItem) {
-        super(item.name, vscode.TreeItemCollapsibleState.None);
+        const hasInputs = scanInputFiles(item.filePath).length > 0;
+        super(
+            item.name,
+            hasInputs
+                ? vscode.TreeItemCollapsibleState.Collapsed
+                : vscode.TreeItemCollapsibleState.None,
+        );
         this.description = item.type;
         this.tooltip = item.filePath;
         this.contextValue = 'artifact';
@@ -62,6 +68,30 @@ export class ArtifactNode extends ArtifactNodeBase {
     }
 }
 
+/** Leaf node representing a pre-stored JSON input file for an artifact. */
+export class InputFileNode extends vscode.TreeItem {
+    readonly nodeType = 'inputFile' as const;
+
+    constructor(
+        public readonly inputFile: InputFile,
+        public readonly parentItem: ArtifactItem,
+    ) {
+        super(inputFile.label, vscode.TreeItemCollapsibleState.None);
+        this.description = 'input';
+        this.tooltip = inputFile.filePath;
+        this.contextValue = 'inputFile';
+        this.resourceUri = vscode.Uri.file(inputFile.filePath);
+        this.iconPath = new vscode.ThemeIcon('json');
+
+        // Click opens the JSON file in the editor
+        this.command = {
+            command: 'vscode.open',
+            title: 'Open',
+            arguments: [vscode.Uri.file(inputFile.filePath)],
+        };
+    }
+}
+
 function iconForType(type: ArtifactType): string {
     switch (type) {
         case 'agent':    return 'hubot';
@@ -75,7 +105,7 @@ function iconForType(type: ArtifactType): string {
 // Tree data provider
 // ---------------------------------------------------------------------------
 
-type TreeNode = CategoryNode | ArtifactNode;
+type TreeNode = CategoryNode | ArtifactNode | InputFileNode;
 
 export class ArtifactTreeProvider implements vscode.TreeDataProvider<TreeNode> {
     private readonly _onDidChangeTreeData = new vscode.EventEmitter<TreeNode | undefined | void>();
@@ -83,6 +113,7 @@ export class ArtifactTreeProvider implements vscode.TreeDataProvider<TreeNode> {
 
     private categories: CategoryNode[] = [];
     private readonly fileWatcher: vscode.FileSystemWatcher;
+    private readonly inputWatcher: vscode.FileSystemWatcher;
 
     constructor() {
         // Watch for artifact manifest changes to trigger a refresh
@@ -91,6 +122,11 @@ export class ArtifactTreeProvider implements vscode.TreeDataProvider<TreeNode> {
         this.fileWatcher.onDidCreate(() => this.refresh());
         this.fileWatcher.onDidDelete(() => this.refresh());
         this.fileWatcher.onDidChange(() => this.refresh());
+
+        // Watch for input file changes
+        this.inputWatcher = vscode.workspace.createFileSystemWatcher('**/inputs/*.json');
+        this.inputWatcher.onDidCreate(() => this.refresh());
+        this.inputWatcher.onDidDelete(() => this.refresh());
     }
 
     /** Triggers a full re-scan of the workspace. */
@@ -100,6 +136,7 @@ export class ArtifactTreeProvider implements vscode.TreeDataProvider<TreeNode> {
 
     dispose(): void {
         this.fileWatcher.dispose();
+        this.inputWatcher.dispose();
         this._onDidChangeTreeData.dispose();
     }
 
@@ -120,10 +157,19 @@ export class ArtifactTreeProvider implements vscode.TreeDataProvider<TreeNode> {
         if (element instanceof CategoryNode) {
             return element.children;
         }
+        if (element instanceof ArtifactNode) {
+            return scanInputFiles(element.item.filePath).map(
+                (f) => new InputFileNode(f, element.item),
+            );
+        }
         return [];
     }
 
     getParent(element: TreeNode): TreeNode | undefined {
+        if (element instanceof InputFileNode) {
+            const cat = this.categories.find((c) => c.artifactType === element.parentItem.type);
+            return cat?.children.find((a) => a.item.filePath === element.parentItem.filePath);
+        }
         if (element instanceof ArtifactNode) {
             return this.categories.find((c) => c.artifactType === element.item.type);
         }

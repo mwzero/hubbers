@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { ArtifactNode } from '../providers/ArtifactTreeProvider';
+import { ArtifactNode, InputFileNode } from '../providers/ArtifactTreeProvider';
 import { detectArtifactName, detectArtifactType, scanInputFiles } from '../util/artifactScanner';
-import { runHubbersCommand, getOutputChannel, HubbersNotFoundError } from '../util/processRunner';
+import { runHubbersInTerminal } from '../util/processRunner';
 import { ArtifactType, TYPE_COMMANDS } from '../types';
 
 /**
@@ -13,13 +13,18 @@ import { ArtifactType, TYPE_COMMANDS } from '../types';
  * 2. CodeLens "▶ Run"       → receives no argument (uses active editor)
  * 3. Command palette         → no argument (uses active editor)
  */
-export async function runArtifact(node?: ArtifactNode): Promise<void> {
+export async function runArtifact(node?: ArtifactNode | InputFileNode): Promise<void> {
     let artifactType: ArtifactType | undefined;
     let artifactName: string | undefined;
     let manifestFilePath: string | undefined;
+    let specificInputFilePath: string | undefined;
 
-    if (node instanceof ArtifactNode) {
-        // Called from tree view — node carries full artifact info
+    if (node instanceof InputFileNode) {
+        // Called from an input file node — run immediately with that file
+        artifactType = node.parentItem.type;
+        artifactName = node.parentItem.name;
+        specificInputFilePath = node.inputFile.filePath;
+    } else if (node instanceof ArtifactNode) {
         artifactType = node.item.type;
         artifactName = node.item.name;
         manifestFilePath = node.item.filePath;
@@ -43,66 +48,41 @@ export async function runArtifact(node?: ArtifactNode): Promise<void> {
     }
 
     // Resolve the JSON input to pass to the CLI
-    const inputJson = await resolveInput(artifactType, artifactName, manifestFilePath);
-    if (inputJson === undefined) {
-        return; // User cancelled
-    }
-
     const subCommand = TYPE_COMMANDS[artifactType];
     const args = [subCommand, 'run', artifactName];
 
-    try {
-        await runHubbersCommand(args, inputJson.trim() || undefined);
-    } catch (err) {
-        if (err instanceof HubbersNotFoundError) {
-            const choice = await vscode.window.showErrorMessage(
-                err.message,
-                'Configure hubbers.jarPath',
-                'Show Output',
-            );
-            if (choice === 'Configure hubbers.jarPath') {
-                vscode.commands.executeCommand(
-                    'workbench.action.openSettings',
-                    'hubbers.jarPath',
-                );
-            } else if (choice === 'Show Output') {
-                getOutputChannel().show();
-            }
-        } else {
-            const message = err instanceof Error ? err.message : String(err);
-            vscode.window
-                .showErrorMessage(`Hubbers run failed: ${message}`, 'Show Output')
-                .then((choice) => {
-                    if (choice === 'Show Output') {
-                        getOutputChannel().show();
-                    }
-                });
-        }
+    if (specificInputFilePath) {
+        // InputFileNode: validate JSON then pass the path directly to the CLI
+        if (!validateJsonFile(specificInputFilePath)) { return; }
+        runHubbersInTerminal(args, undefined, specificInputFilePath);
+    } else {
+        const resolved = await resolveInput(artifactType, artifactName, manifestFilePath);
+        if (resolved === undefined) { return; }
+        runHubbersInTerminal(args, resolved.json, resolved.filePath);
     }
 }
 
 /**
- * Resolves the JSON input string for a run.
- *
- * - When pre-stored input files exist in <artifact-dir>/inputs/, shows a
- *   quick pick with those files plus inline / browse / no-input options.
- * - When no input files exist, falls back directly to the inline input box
- *   (backward-compatible behaviour).
+ * Resolves the JSON input for a run.
  *
  * Returns:
- *   - a JSON string (possibly empty) to pass via --input
- *   - undefined if the user cancelled
+ *   - `{ filePath }` when a JSON file was selected (path passed directly to CLI)
+ *   - `{ json }` when the user typed JSON inline (written to temp file by processRunner)
+ *   - `{}` for "no input"
+ *   - `undefined` if the user cancelled
  */
 async function resolveInput(
     artifactType: ArtifactType,
     artifactName: string,
     manifestFilePath: string | undefined,
-): Promise<string | undefined> {
+): Promise<{ json?: string; filePath?: string } | undefined> {
     const inputFiles = manifestFilePath ? scanInputFiles(manifestFilePath) : [];
 
     // No pre-stored inputs → fall back to inline box (original behaviour)
     if (inputFiles.length === 0) {
-        return promptInline(artifactType, artifactName);
+        const json = await promptInline(artifactType, artifactName);
+        if (json === undefined) { return undefined; }
+        return { json: json.trim() || undefined };
     }
 
     // Build quick-pick items
@@ -117,7 +97,7 @@ async function resolveInput(
     const actionItems: InputPickItem[] = [
         { label: '', kind: vscode.QuickPickItemKind.Separator },
         { label: '$(pencil) Type JSON inline', action: 'inline' },
-        { label: '$(folder-opened) Browse for JSON file\u2026', action: 'browse' },
+        { label: '$(folder-opened) Browse for JSON file…', action: 'browse' },
         { label: '$(circle-slash) No input', action: 'none' },
     ];
 
@@ -134,11 +114,13 @@ async function resolveInput(
     }
 
     if (picked.action === 'none') {
-        return ''; // Runs without --input
+        return {}; // No --input
     }
 
     if (picked.action === 'inline') {
-        return promptInline(artifactType, artifactName);
+        const json = await promptInline(artifactType, artifactName);
+        if (json === undefined) { return undefined; }
+        return { json: json.trim() || undefined };
     }
 
     if (picked.action === 'browse') {
@@ -152,12 +134,15 @@ async function resolveInput(
         if (!uris || uris.length === 0) {
             return undefined; // Cancelled
         }
-        return readAndValidateJsonFile(uris[0].fsPath);
+        const fp = uris[0].fsPath;
+        if (!validateJsonFile(fp)) { return undefined; }
+        return { filePath: fp };
     }
 
     // A pre-stored input file was selected
     if (picked.filePath) {
-        return readAndValidateJsonFile(picked.filePath);
+        if (!validateJsonFile(picked.filePath)) { return undefined; }
+        return { filePath: picked.filePath };
     }
 
     return undefined;
@@ -183,24 +168,22 @@ async function promptInline(artifactType: ArtifactType, artifactName: string): P
 }
 
 /**
- * Reads a JSON file from disk and validates its content.
- * Shows an error message and returns undefined if reading or parsing fails.
+ * Validates that a file exists and contains valid JSON.
+ * Shows an error message and returns false if not.
  */
-function readAndValidateJsonFile(filePath: string): string | undefined {
+function validateJsonFile(filePath: string): boolean {
     let raw: string;
     try {
         raw = fs.readFileSync(filePath, 'utf8');
-    } catch (err) {
+    } catch {
         vscode.window.showErrorMessage(`Failed to read input file: ${filePath}`);
-        return undefined;
+        return false;
     }
     try {
         JSON.parse(raw);
+        return true;
     } catch {
-        vscode.window.showErrorMessage(
-            `Input file contains invalid JSON: ${filePath}`,
-        );
-        return undefined;
+        vscode.window.showErrorMessage(`Input file contains invalid JSON: ${filePath}`);
+        return false;
     }
-    return raw;
 }

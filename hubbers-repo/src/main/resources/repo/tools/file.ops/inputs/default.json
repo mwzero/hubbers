@@ -1,0 +1,7 @@
+{
+    "operation": "write",
+    "path": "c:/temp/test2.csv",
+    "content": "This is the content to write to the file."
+}
+
+

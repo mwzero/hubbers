@@ -270,7 +270,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class ToolRun implements Callable<Integer> {
         @CommandLine.ParentCommand ToolCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) String input;
+        @CommandLine.Option(names = "--input", description = "Input JSON string or file path (skips interactive form when provided)") String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.TOOL); }
     }
 
@@ -290,7 +290,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class SkillRun implements Callable<Integer> {
         @CommandLine.ParentCommand SkillCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) String input;
+        @CommandLine.Option(names = "--input", description = "Input JSON string or file path (skips interactive form when provided)") String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.SKILL); }
     }
 
@@ -326,7 +326,7 @@ public class HubbersCommand implements Callable<Integer> {
     static class PipelineRun implements Callable<Integer> {
         @CommandLine.ParentCommand PipelineCommand parent;
         @CommandLine.Parameters(index = "0") String name;
-        @CommandLine.Option(names = "--input", required = true) String input;
+        @CommandLine.Option(names = "--input", description = "Input JSON string or file path (skips interactive form when provided)") String input;
         @Override public Integer call() { return run(parent.root.runtimeFacade, name, input, Mode.PIPELINE); }
     }
 
@@ -376,13 +376,20 @@ public class HubbersCommand implements Callable<Integer> {
         try {
             // Check if input is a file or direct JSON
             JsonNode input;
-            File inputFile = new File(inputSource);
-            if (inputFile.exists() && inputFile.isFile()) {
-                // Input is a file path
-                input = mapper.readTree(Files.readString(inputFile.toPath()));
+            boolean inputProvided;
+            if (inputSource == null || inputSource.isBlank()) {
+                input = mapper.createObjectNode();
+                inputProvided = false;
             } else {
-                // Input is direct JSON string
-                input = mapper.readTree(inputSource);
+                File inputFile = new File(inputSource);
+                if (inputFile.exists() && inputFile.isFile()) {
+                    // Input is a file path
+                    input = mapper.readTree(Files.readString(inputFile.toPath()));
+                } else {
+                    // Input is direct JSON string
+                    input = mapper.readTree(inputSource);
+                }
+                inputProvided = input != null && input.isObject() && input.size() > 0;
             }
             
             // Special handling for demo tools/pipelines - add default required fields if missing
@@ -401,9 +408,9 @@ public class HubbersCommand implements Callable<Integer> {
                 }
             }
             
-            // Check for forms.before in manifest
+            // Check for forms.before in manifest - only show form when no input was provided
             FormTrigger forms = getFormTrigger(facade, name, mode);
-            if (forms != null && forms.getBefore() != null) {
+            if (!inputProvided && forms != null && forms.getBefore() != null) {
                 try {
                     CliFormService formService = new CliFormService();
                     Map<String, Object> formData = formService.collectFormData(forms.getBefore());

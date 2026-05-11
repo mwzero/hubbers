@@ -47,8 +47,10 @@ const ArtifactCodeLensProvider_1 = __webpack_require__(8);
 const McpServerProvider_1 = __webpack_require__(9);
 const configureMcp_1 = __webpack_require__(10);
 const runArtifact_1 = __webpack_require__(11);
-const importArtifacts_1 = __webpack_require__(14);
-const schemaRegistrar_1 = __webpack_require__(15);
+const importArtifacts_1 = __webpack_require__(15);
+const manageInputs_1 = __webpack_require__(16);
+const newArtifact_1 = __webpack_require__(17);
+const schemaRegistrar_1 = __webpack_require__(18);
 const processRunner_1 = __webpack_require__(12);
 function activate(context) {
     // -------------------------------------------------------------------------
@@ -69,7 +71,7 @@ function activate(context) {
         if (node?.uri) {
             vscode.window.showTextDocument(node.uri);
         }
-    }), vscode.commands.registerCommand('hubbers.configureMcp', () => (0, configureMcp_1.configureMcp)()), vscode.commands.registerCommand('hubbers.importArtifacts', (uri) => (0, importArtifacts_1.importArtifacts)(() => treeProvider.refresh(), uri)));
+    }), vscode.commands.registerCommand('hubbers.configureMcp', () => (0, configureMcp_1.configureMcp)()), vscode.commands.registerCommand('hubbers.importArtifacts', (uri) => (0, importArtifacts_1.importArtifacts)(() => treeProvider.refresh(), uri)), vscode.commands.registerCommand('hubbers.newInputFile', (node) => (0, manageInputs_1.newInputFile)(node, () => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.deleteInputFile', (node) => (0, manageInputs_1.deleteInputFile)(node, () => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.newArtifact', () => (0, newArtifact_1.newArtifact)(() => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.newAgent', () => (0, newArtifact_1.newArtifactOfType)('agent', () => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.newTool', () => (0, newArtifact_1.newArtifactOfType)('tool', () => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.newPipeline', () => (0, newArtifact_1.newArtifactOfType)('pipeline', () => treeProvider.refresh())), vscode.commands.registerCommand('hubbers.newSkill', () => (0, newArtifact_1.newArtifactOfType)('skill', () => treeProvider.refresh())));
     // -------------------------------------------------------------------------
     // CodeLens — "▶ Run" above artifact manifests
     // -------------------------------------------------------------------------
@@ -144,7 +146,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ArtifactTreeProvider = exports.ArtifactNode = exports.CategoryNode = void 0;
+exports.ArtifactTreeProvider = exports.InputFileNode = exports.ArtifactNode = exports.CategoryNode = void 0;
 const vscode = __importStar(__webpack_require__(1));
 const types_1 = __webpack_require__(3);
 const artifactScanner_1 = __webpack_require__(4);
@@ -168,7 +170,7 @@ class CategoryNode extends ArtifactNodeBase {
         this.artifactType = artifactType;
         this.children = children;
         this.description = `${children.length}`;
-        this.contextValue = 'category';
+        this.contextValue = `category-${artifactType}`;
         this.iconPath = new vscode.ThemeIcon('folder');
     }
 }
@@ -178,7 +180,10 @@ class ArtifactNode extends ArtifactNodeBase {
     item;
     nodeType = 'artifact';
     constructor(item) {
-        super(item.name, vscode.TreeItemCollapsibleState.None);
+        const hasInputs = (0, artifactScanner_1.scanInputFiles)(item.filePath).length > 0;
+        super(item.name, hasInputs
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.None);
         this.item = item;
         this.description = item.type;
         this.tooltip = item.filePath;
@@ -198,6 +203,29 @@ class ArtifactNode extends ArtifactNodeBase {
     }
 }
 exports.ArtifactNode = ArtifactNode;
+/** Leaf node representing a pre-stored JSON input file for an artifact. */
+class InputFileNode extends vscode.TreeItem {
+    inputFile;
+    parentItem;
+    nodeType = 'inputFile';
+    constructor(inputFile, parentItem) {
+        super(inputFile.label, vscode.TreeItemCollapsibleState.None);
+        this.inputFile = inputFile;
+        this.parentItem = parentItem;
+        this.description = 'input';
+        this.tooltip = inputFile.filePath;
+        this.contextValue = 'inputFile';
+        this.resourceUri = vscode.Uri.file(inputFile.filePath);
+        this.iconPath = new vscode.ThemeIcon('json');
+        // Click opens the JSON file in the editor
+        this.command = {
+            command: 'vscode.open',
+            title: 'Open',
+            arguments: [vscode.Uri.file(inputFile.filePath)],
+        };
+    }
+}
+exports.InputFileNode = InputFileNode;
 function iconForType(type) {
     switch (type) {
         case 'agent': return 'hubot';
@@ -211,6 +239,7 @@ class ArtifactTreeProvider {
     onDidChangeTreeData = this._onDidChangeTreeData.event;
     categories = [];
     fileWatcher;
+    inputWatcher;
     constructor() {
         // Watch for artifact manifest changes to trigger a refresh
         const watchPattern = '**/{agent.yaml,tool.yaml,pipeline.yaml,SKILL.md}';
@@ -218,6 +247,10 @@ class ArtifactTreeProvider {
         this.fileWatcher.onDidCreate(() => this.refresh());
         this.fileWatcher.onDidDelete(() => this.refresh());
         this.fileWatcher.onDidChange(() => this.refresh());
+        // Watch for input file changes
+        this.inputWatcher = vscode.workspace.createFileSystemWatcher('**/inputs/*.json');
+        this.inputWatcher.onDidCreate(() => this.refresh());
+        this.inputWatcher.onDidDelete(() => this.refresh());
     }
     /** Triggers a full re-scan of the workspace. */
     refresh() {
@@ -225,6 +258,7 @@ class ArtifactTreeProvider {
     }
     dispose() {
         this.fileWatcher.dispose();
+        this.inputWatcher.dispose();
         this._onDidChangeTreeData.dispose();
     }
     // -------------------------------------------------------------------------
@@ -242,9 +276,16 @@ class ArtifactTreeProvider {
         if (element instanceof CategoryNode) {
             return element.children;
         }
+        if (element instanceof ArtifactNode) {
+            return (0, artifactScanner_1.scanInputFiles)(element.item.filePath).map((f) => new InputFileNode(f, element.item));
+        }
         return [];
     }
     getParent(element) {
+        if (element instanceof InputFileNode) {
+            const cat = this.categories.find((c) => c.artifactType === element.parentItem.type);
+            return cat?.children.find((a) => a.item.filePath === element.parentItem.filePath);
+        }
         if (element instanceof ArtifactNode) {
             return this.categories.find((c) => c.artifactType === element.item.type);
         }
@@ -926,8 +967,14 @@ async function runArtifact(node) {
     let artifactType;
     let artifactName;
     let manifestFilePath;
-    if (node instanceof ArtifactTreeProvider_1.ArtifactNode) {
-        // Called from tree view — node carries full artifact info
+    let specificInputFilePath;
+    if (node instanceof ArtifactTreeProvider_1.InputFileNode) {
+        // Called from an input file node — run immediately with that file
+        artifactType = node.parentItem.type;
+        artifactName = node.parentItem.name;
+        specificInputFilePath = node.inputFile.filePath;
+    }
+    else if (node instanceof ArtifactTreeProvider_1.ArtifactNode) {
         artifactType = node.item.type;
         artifactName = node.item.name;
         manifestFilePath = node.item.filePath;
@@ -948,54 +995,41 @@ async function runArtifact(node) {
         return;
     }
     // Resolve the JSON input to pass to the CLI
-    const inputJson = await resolveInput(artifactType, artifactName, manifestFilePath);
-    if (inputJson === undefined) {
-        return; // User cancelled
-    }
     const subCommand = types_1.TYPE_COMMANDS[artifactType];
     const args = [subCommand, 'run', artifactName];
-    try {
-        await (0, processRunner_1.runHubbersCommand)(args, inputJson.trim() || undefined);
+    if (specificInputFilePath) {
+        // InputFileNode: validate JSON then pass the path directly to the CLI
+        if (!validateJsonFile(specificInputFilePath)) {
+            return;
+        }
+        (0, processRunner_1.runHubbersInTerminal)(args, undefined, specificInputFilePath);
     }
-    catch (err) {
-        if (err instanceof processRunner_1.HubbersNotFoundError) {
-            const choice = await vscode.window.showErrorMessage(err.message, 'Configure hubbers.jarPath', 'Show Output');
-            if (choice === 'Configure hubbers.jarPath') {
-                vscode.commands.executeCommand('workbench.action.openSettings', 'hubbers.jarPath');
-            }
-            else if (choice === 'Show Output') {
-                (0, processRunner_1.getOutputChannel)().show();
-            }
+    else {
+        const resolved = await resolveInput(artifactType, artifactName, manifestFilePath);
+        if (resolved === undefined) {
+            return;
         }
-        else {
-            const message = err instanceof Error ? err.message : String(err);
-            vscode.window
-                .showErrorMessage(`Hubbers run failed: ${message}`, 'Show Output')
-                .then((choice) => {
-                if (choice === 'Show Output') {
-                    (0, processRunner_1.getOutputChannel)().show();
-                }
-            });
-        }
+        (0, processRunner_1.runHubbersInTerminal)(args, resolved.json, resolved.filePath);
     }
 }
 /**
- * Resolves the JSON input string for a run.
- *
- * - When pre-stored input files exist in <artifact-dir>/inputs/, shows a
- *   quick pick with those files plus inline / browse / no-input options.
- * - When no input files exist, falls back directly to the inline input box
- *   (backward-compatible behaviour).
+ * Resolves the JSON input for a run.
  *
  * Returns:
- *   - a JSON string (possibly empty) to pass via --input
- *   - undefined if the user cancelled
+ *   - `{ filePath }` when a JSON file was selected (path passed directly to CLI)
+ *   - `{ json }` when the user typed JSON inline (written to temp file by processRunner)
+ *   - `{}` for "no input"
+ *   - `undefined` if the user cancelled
  */
 async function resolveInput(artifactType, artifactName, manifestFilePath) {
     const inputFiles = manifestFilePath ? (0, artifactScanner_1.scanInputFiles)(manifestFilePath) : [];
     // No pre-stored inputs → fall back to inline box (original behaviour)
     if (inputFiles.length === 0) {
-        return promptInline(artifactType, artifactName);
+        const json = await promptInline(artifactType, artifactName);
+        if (json === undefined) {
+            return undefined;
+        }
+        return { json: json.trim() || undefined };
     }
     const fileItems = inputFiles.map((f) => ({
         label: `$(file-code) ${f.label}`,
@@ -1005,7 +1039,7 @@ async function resolveInput(artifactType, artifactName, manifestFilePath) {
     const actionItems = [
         { label: '', kind: vscode.QuickPickItemKind.Separator },
         { label: '$(pencil) Type JSON inline', action: 'inline' },
-        { label: '$(folder-opened) Browse for JSON file\u2026', action: 'browse' },
+        { label: '$(folder-opened) Browse for JSON file…', action: 'browse' },
         { label: '$(circle-slash) No input', action: 'none' },
     ];
     const picked = await vscode.window.showQuickPick([...fileItems, ...actionItems], {
@@ -1016,10 +1050,14 @@ async function resolveInput(artifactType, artifactName, manifestFilePath) {
         return undefined; // Cancelled
     }
     if (picked.action === 'none') {
-        return ''; // Runs without --input
+        return {}; // No --input
     }
     if (picked.action === 'inline') {
-        return promptInline(artifactType, artifactName);
+        const json = await promptInline(artifactType, artifactName);
+        if (json === undefined) {
+            return undefined;
+        }
+        return { json: json.trim() || undefined };
     }
     if (picked.action === 'browse') {
         const uris = await vscode.window.showOpenDialog({
@@ -1032,11 +1070,18 @@ async function resolveInput(artifactType, artifactName, manifestFilePath) {
         if (!uris || uris.length === 0) {
             return undefined; // Cancelled
         }
-        return readAndValidateJsonFile(uris[0].fsPath);
+        const fp = uris[0].fsPath;
+        if (!validateJsonFile(fp)) {
+            return undefined;
+        }
+        return { filePath: fp };
     }
     // A pre-stored input file was selected
     if (picked.filePath) {
-        return readAndValidateJsonFile(picked.filePath);
+        if (!validateJsonFile(picked.filePath)) {
+            return undefined;
+        }
+        return { filePath: picked.filePath };
     }
     return undefined;
 }
@@ -1060,26 +1105,26 @@ async function promptInline(artifactType, artifactName) {
     });
 }
 /**
- * Reads a JSON file from disk and validates its content.
- * Shows an error message and returns undefined if reading or parsing fails.
+ * Validates that a file exists and contains valid JSON.
+ * Shows an error message and returns false if not.
  */
-function readAndValidateJsonFile(filePath) {
+function validateJsonFile(filePath) {
     let raw;
     try {
         raw = fs.readFileSync(filePath, 'utf8');
     }
-    catch (err) {
+    catch {
         vscode.window.showErrorMessage(`Failed to read input file: ${filePath}`);
-        return undefined;
+        return false;
     }
     try {
         JSON.parse(raw);
+        return true;
     }
     catch {
         vscode.window.showErrorMessage(`Input file contains invalid JSON: ${filePath}`);
-        return undefined;
+        return false;
     }
-    return raw;
 }
 
 
@@ -1124,9 +1169,13 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HubbersNotFoundError = void 0;
 exports.getOutputChannel = getOutputChannel;
+exports.runHubbersInTerminal = runHubbersInTerminal;
 exports.runHubbersCommand = runHubbersCommand;
 const vscode = __importStar(__webpack_require__(1));
 const cp = __importStar(__webpack_require__(13));
+const fs = __importStar(__webpack_require__(6));
+const os = __importStar(__webpack_require__(14));
+const path = __importStar(__webpack_require__(5));
 const config_1 = __webpack_require__(7);
 /** Thrown when the Hubbers executable cannot be found (ENOENT). */
 class HubbersNotFoundError extends Error {
@@ -1144,6 +1193,68 @@ function getOutputChannel() {
         outputChannel = vscode.window.createOutputChannel('Hubbers');
     }
     return outputChannel;
+}
+/**
+ * Runs a Hubbers CLI command in a dedicated integrated terminal.
+ *
+ * Using a terminal (real TTY) allows the CLI to display interactive prompts
+ * that the user can respond to directly. The same named terminal is reused
+ * across runs; a new one is created when the previous one has exited.
+ *
+ * JSON quoting strategy:
+ * - When a file path is provided, it is passed directly as `--input <path>` — the
+ *   CLI natively accepts a file path and reads it itself (no shell quoting needed).
+ * - When only inline JSON is provided, it is written to a temp file first, then
+ *   passed as a file path, to avoid PowerShell double-quote stripping.
+ */
+function runHubbersInTerminal(args, inputJson, inputFilePath) {
+    const { cmd, cmdArgs } = (0, config_1.buildCommand)(args);
+    const repoPath = (0, config_1.getRepoPath)();
+    const cwd = repoPath ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    // Reuse or create the named Hubbers terminal
+    let terminal = vscode.window.terminals.find((t) => t.name === 'Hubbers' && t.exitStatus === undefined);
+    if (!terminal) {
+        terminal = vscode.window.createTerminal({ name: 'Hubbers', cwd });
+    }
+    terminal.show(true);
+    // Always cd to the correct working directory before each run so the CLI
+    // finds application.yaml regardless of where the terminal was last used.
+    if (cwd) {
+        terminal.sendText(`Set-Location '${cwd.replace(/'/g, "''")}'`);
+    }
+    if (inputFilePath) {
+        // The CLI natively accepts a file path for --input — pass it directly.
+        const quotedPath = `'${inputFilePath.replace(/'/g, "''")}'`;
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')} --input ${quotedPath}`);
+    }
+    else if (inputJson && inputJson.trim()) {
+        // Inline JSON: write to a temp file so the CLI reads it as a file path,
+        // avoiding PowerShell's double-quote stripping on external processes.
+        let compact;
+        try {
+            compact = JSON.stringify(JSON.parse(inputJson));
+        }
+        catch {
+            compact = inputJson.trim();
+        }
+        const tmpFile = path.join(os.tmpdir(), `hubbers-input-${Date.now()}.json`);
+        fs.writeFileSync(tmpFile, compact, 'utf8');
+        const quotedTmp = `'${tmpFile.replace(/'/g, "''")}'`;
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')} --input ${quotedTmp}`);
+    }
+    else {
+        terminal.sendText(`${cmd} ${cmdArgs.map(quoteArg).join(' ')}`);
+    }
+}
+/**
+ * Wraps an argument in double quotes if it contains spaces or special chars.
+ * Uses cmd.exe-compatible escaping (internal quotes doubled).
+ */
+function quoteArg(arg) {
+    if (/[ \t"'{}\[\]|&<>^]/.test(arg)) {
+        return `"${arg.replace(/"/g, '""')}"`;
+    }
+    return arg;
 }
 /**
  * Runs a Hubbers CLI command and streams its output to the Hubbers output channel.
@@ -1212,6 +1323,12 @@ module.exports = require("child_process");
 
 /***/ }),
 /* 14 */
+/***/ ((module) => {
+
+module.exports = require("os");
+
+/***/ }),
+/* 15 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1461,7 +1578,311 @@ function copyDirRecursive(srcDir, destDir) {
 
 
 /***/ }),
-/* 15 */
+/* 16 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.newInputFile = newInputFile;
+exports.deleteInputFile = deleteInputFile;
+const vscode = __importStar(__webpack_require__(1));
+const fs = __importStar(__webpack_require__(6));
+const path = __importStar(__webpack_require__(5));
+/**
+ * Command: Hubbers: New Input File
+ *
+ * Creates a new JSON input file inside <artifact-dir>/inputs/ and opens it.
+ */
+async function newInputFile(node, refresh) {
+    const name = await vscode.window.showInputBox({
+        prompt: 'Input file name (without .json)',
+        placeHolder: 'default',
+        value: 'default',
+        validateInput: (v) => {
+            if (!v.trim()) {
+                return 'Name cannot be empty';
+            }
+            if (/[/\\]/.test(v)) {
+                return 'Name cannot contain path separators';
+            }
+            return undefined;
+        },
+    });
+    if (name === undefined) {
+        return;
+    }
+    const inputsDir = path.join(path.dirname(node.item.filePath), 'inputs');
+    const filePath = path.join(inputsDir, `${name.trim()}.json`);
+    if (fs.existsSync(filePath)) {
+        const answer = await vscode.window.showWarningMessage(`"${name.trim()}.json" already exists. Open it?`, 'Open', 'Cancel');
+        if (answer === 'Open') {
+            vscode.window.showTextDocument(vscode.Uri.file(filePath));
+        }
+        return;
+    }
+    try {
+        if (!fs.existsSync(inputsDir)) {
+            fs.mkdirSync(inputsDir, { recursive: true });
+        }
+        fs.writeFileSync(filePath, '{}\n', 'utf8');
+    }
+    catch (err) {
+        vscode.window.showErrorMessage(`Failed to create input file: ${err instanceof Error ? err.message : String(err)}`);
+        return;
+    }
+    refresh();
+    vscode.window.showTextDocument(vscode.Uri.file(filePath));
+}
+/**
+ * Command: Hubbers: Delete Input File
+ *
+ * Deletes the selected input JSON file after user confirmation.
+ */
+async function deleteInputFile(node, refresh) {
+    const answer = await vscode.window.showWarningMessage(`Delete input file "${node.inputFile.label}.json"?`, { modal: true }, 'Delete');
+    if (answer !== 'Delete') {
+        return;
+    }
+    try {
+        fs.unlinkSync(node.inputFile.filePath);
+    }
+    catch (err) {
+        vscode.window.showErrorMessage(`Failed to delete: ${err instanceof Error ? err.message : String(err)}`);
+        return;
+    }
+    refresh();
+}
+
+
+/***/ }),
+/* 17 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.newArtifact = newArtifact;
+exports.newArtifactOfType = newArtifactOfType;
+const vscode = __importStar(__webpack_require__(1));
+const fs = __importStar(__webpack_require__(6));
+const path = __importStar(__webpack_require__(5));
+const config_1 = __webpack_require__(7);
+/** Sub-folder name for each artifact type (plural). */
+const TYPE_FOLDERS = {
+    agent: 'agents',
+    tool: 'tools',
+    pipeline: 'pipelines',
+    skill: 'skills',
+};
+/** Manifest file name for each artifact type. */
+const TYPE_FILES = {
+    agent: 'agent.yaml',
+    tool: 'tool.yaml',
+    pipeline: 'pipeline.yaml',
+    skill: 'SKILL.md',
+};
+/** Minimal valid manifest content for each artifact type. */
+function manifestTemplate(type, name) {
+    switch (type) {
+        case 'agent':
+            return [
+                `agent:`,
+                `  name: ${name}`,
+                `  version: 1.0.0`,
+                `  description: ""`,
+                ``,
+                `model:`,
+                `  provider: openai`,
+                `  name: gpt-4o`,
+                ``,
+                `instructions: |`,
+                `  You are a helpful assistant.`,
+                ``,
+            ].join('\n');
+        case 'tool':
+            return [
+                `tool:`,
+                `  name: ${name}`,
+                `  version: 1.0.0`,
+                `  description: ""`,
+                ``,
+                `type: http`,
+                ``,
+            ].join('\n');
+        case 'pipeline':
+            return [
+                `pipeline:`,
+                `  name: ${name}`,
+                `  version: 1.0.0`,
+                `  description: ""`,
+                ``,
+                `steps: []`,
+                ``,
+            ].join('\n');
+        case 'skill':
+            return [
+                `# ${name}`,
+                ``,
+                `Describe the skill here.`,
+                ``,
+            ].join('\n');
+    }
+}
+/**
+ * Command: Hubbers: New Artifact
+ *
+ * Guides the user through creating a new Hubbers artifact scaffold:
+ *  1. Choose type (agent / tool / pipeline / skill)
+ *  2. Enter a dot-separated name
+ *  3. Writes the manifest into <repoRoot>/<type>s/<name>/<manifest>
+ *  4. Opens the newly created file
+ */
+async function newArtifact(refresh) {
+    // Step 1 — artifact type
+    const typeItems = [
+        { label: '$(hubot) Agent', description: 'agent.yaml', detail: 'AI agent with model, instructions, and tool access' },
+        { label: '$(tools) Tool', description: 'tool.yaml', detail: 'Reusable capability (http, file, script, …)' },
+        { label: '$(git-merge) Pipeline', description: 'pipeline.yaml', detail: 'Multi-step workflow composing tools and agents' },
+        { label: '$(book) Skill', description: 'SKILL.md', detail: 'Prompt-engineering skill document' },
+    ];
+    const typePick = await vscode.window.showQuickPick(typeItems, {
+        title: 'New Hubbers Artifact — Step 1 of 2',
+        placeHolder: 'Select artifact type',
+    });
+    if (!typePick) {
+        return;
+    }
+    const typeMap = {
+        '$(hubot) Agent': 'agent',
+        '$(tools) Tool': 'tool',
+        '$(git-merge) Pipeline': 'pipeline',
+        '$(book) Skill': 'skill',
+    };
+    const artifactType = typeMap[typePick.label];
+    await newArtifactOfType(artifactType, refresh);
+}
+/**
+ * Creates a new artifact of a specific type, skipping the type-picker step.
+ * Used by the per-type commands (hubbers.newAgent, hubbers.newTool, …).
+ */
+async function newArtifactOfType(artifactType, refresh) {
+    const namePattern = /^[a-z][a-z0-9.\-]*$/;
+    const artifactName = await vscode.window.showInputBox({
+        title: 'New Hubbers Artifact — Step 2 of 2',
+        prompt: `Enter a dot-separated name for the ${artifactType}`,
+        placeHolder: artifactType === 'agent' ? 'universal.task' :
+            artifactType === 'tool' ? 'rss.fetch' :
+                artifactType === 'pipeline' ? 'rss.sentiment.csv' : 'my.skill',
+        validateInput: (v) => {
+            if (!v.trim()) {
+                return 'Name cannot be empty';
+            }
+            if (!namePattern.test(v.trim())) {
+                return 'Use lowercase letters, digits, dots and hyphens (e.g. rss.fetch)';
+            }
+            return undefined;
+        },
+    });
+    if (!artifactName) {
+        return;
+    }
+    // Determine base directory
+    const repoPath = (0, config_1.getRepoPath)();
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const baseDir = repoPath ?? workspaceRoot;
+    if (!baseDir) {
+        vscode.window.showErrorMessage('No workspace folder is open and hubbers.repoPath is not configured.');
+        return;
+    }
+    const artifactDir = path.join(baseDir, TYPE_FOLDERS[artifactType], artifactName.trim());
+    const manifestPath = path.join(artifactDir, TYPE_FILES[artifactType]);
+    if (fs.existsSync(manifestPath)) {
+        const choice = await vscode.window.showWarningMessage(`Artifact "${artifactName.trim()}" already exists. Open its manifest?`, 'Open', 'Cancel');
+        if (choice === 'Open') {
+            vscode.window.showTextDocument(vscode.Uri.file(manifestPath));
+        }
+        return;
+    }
+    try {
+        fs.mkdirSync(artifactDir, { recursive: true });
+        fs.writeFileSync(manifestPath, manifestTemplate(artifactType, artifactName.trim()), 'utf8');
+    }
+    catch (err) {
+        vscode.window.showErrorMessage(`Failed to create artifact: ${err instanceof Error ? err.message : String(err)}`);
+        return;
+    }
+    refresh();
+    vscode.window.showTextDocument(vscode.Uri.file(manifestPath));
+}
+
+
+/***/ }),
+/* 18 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 

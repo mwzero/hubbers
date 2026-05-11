@@ -83,6 +83,48 @@
         "title": "Import Artifacts from Folder...",
         "icon": "$(cloud-download)",
         "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newArtifact",
+        "title": "New Artifact...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newAgent",
+        "title": "New Agent...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newTool",
+        "title": "New Tool...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newPipeline",
+        "title": "New Pipeline...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newSkill",
+        "title": "New Skill...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.newInputFile",
+        "title": "New Input File...",
+        "icon": "$(add)",
+        "category": "Hubbers"
+      },
+      {
+        "command": "hubbers.deleteInputFile",
+        "title": "Delete Input File",
+        "icon": "$(trash)",
+        "category": "Hubbers"
       }
     ],
     "menus": {
@@ -93,9 +135,14 @@
           "group": "navigation@1"
         },
         {
-          "command": "hubbers.importArtifacts",
+          "command": "hubbers.newArtifact",
           "when": "view == hubbersArtifacts",
           "group": "navigation@2"
+        },
+        {
+          "command": "hubbers.importArtifacts",
+          "when": "view == hubbersArtifacts",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -110,9 +157,79 @@
           "group": "inline@2"
         },
         {
+          "command": "hubbers.newInputFile",
+          "when": "view == hubbersArtifacts && viewItem == artifact",
+          "group": "inline@3"
+        },
+        {
           "command": "hubbers.runArtifact",
           "when": "view == hubbersArtifacts && viewItem == artifact",
           "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.newInputFile",
+          "when": "view == hubbersArtifacts && viewItem == artifact",
+          "group": "hubbers@2"
+        },
+        {
+          "command": "hubbers.newAgent",
+          "when": "view == hubbersArtifacts && viewItem == category-agent",
+          "group": "inline@1"
+        },
+        {
+          "command": "hubbers.newTool",
+          "when": "view == hubbersArtifacts && viewItem == category-tool",
+          "group": "inline@1"
+        },
+        {
+          "command": "hubbers.newPipeline",
+          "when": "view == hubbersArtifacts && viewItem == category-pipeline",
+          "group": "inline@1"
+        },
+        {
+          "command": "hubbers.newSkill",
+          "when": "view == hubbersArtifacts && viewItem == category-skill",
+          "group": "inline@1"
+        },
+        {
+          "command": "hubbers.newAgent",
+          "when": "view == hubbersArtifacts && viewItem == category-agent",
+          "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.newTool",
+          "when": "view == hubbersArtifacts && viewItem == category-tool",
+          "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.newPipeline",
+          "when": "view == hubbersArtifacts && viewItem == category-pipeline",
+          "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.newSkill",
+          "when": "view == hubbersArtifacts && viewItem == category-skill",
+          "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.runArtifact",
+          "when": "view == hubbersArtifacts && viewItem == inputFile",
+          "group": "inline@1"
+        },
+        {
+          "command": "hubbers.deleteInputFile",
+          "when": "view == hubbersArtifacts && viewItem == inputFile",
+          "group": "inline@2"
+        },
+        {
+          "command": "hubbers.runArtifact",
+          "when": "view == hubbersArtifacts && viewItem == inputFile",
+          "group": "hubbers@1"
+        },
+        {
+          "command": "hubbers.deleteInputFile",
+          "when": "view == hubbersArtifacts && viewItem == inputFile",
+          "group": "hubbers@2"
         }
       ],
       "commandPalette": [
@@ -122,6 +239,30 @@
         },
         {
           "command": "hubbers.openArtifact",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.newInputFile",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.deleteInputFile",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.newAgent",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.newTool",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.newPipeline",
+          "when": "false"
+        },
+        {
+          "command": "hubbers.newSkill",
           "when": "false"
         }
       ],

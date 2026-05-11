@@ -11,7 +11,7 @@ echo Skipping frontend rebuild (requires existing hubbers-ui\dist)
 echo Preserving existing build output to avoid locked UI asset cleanup failures
 echo.
 
-call mvn package -am -DskipTests -Dhubbers.ui.skip.frontend=true
+call mvn package -am -DskipTests -Dhubbers.ui.skip.frontend=true -Dhubbers.vscode.skip.frontend=true
 
 if %errorlevel% neq 0 (
     echo.

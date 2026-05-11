@@ -25,10 +25,13 @@ import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.ManifestValidator;
 import org.hubbers.validation.SchemaValidator;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +46,7 @@ public class Bootstrap {
     public static RuntimeFacade createRuntimeFacade(String repoPath) {
         String resolvedRepoPath = RepoPathResolver.resolve(repoPath);
 
+        logBuildInfo();
         log.info("Initializing Hubbers Runtime with repo path: {}", resolvedRepoPath);
         // Load configuration application.yaml
         AppConfig config = new ConfigLoader(resolvedRepoPath).load();
@@ -120,6 +124,21 @@ public class Bootstrap {
         var facade = new RuntimeFacade(repository, agentExecutor, toolExecutor, pipelineExecutor, skillExecutor, new ManifestValidator(), executionStorage, juiFormService);
         facade.setModelRouter(modelRouter);
         return facade;
+    }
+
+    private static void logBuildInfo() {
+        try (InputStream is = Bootstrap.class.getClassLoader()
+                .getResourceAsStream("hubbers-build.properties")) {
+            if (is != null) {
+                Properties props = new Properties();
+                props.load(is);
+                String version = props.getProperty("hubbers.version", "unknown");
+                String buildTime = props.getProperty("hubbers.build.timestamp", "unknown");
+                log.info("Hubbers version: {}  built: {}", version, buildTime);
+            }
+        } catch (IOException e) {
+            log.debug("Could not load build info: {}", e.getMessage());
+        }
     }
 
     private static List<ToolDriver> loadToolDrivers(ToolDriverContext context) {
