@@ -168,6 +168,12 @@ public class HubberAgentLoop {
                 System.out.println("👁️ Osservazione (Risultato): " + observation);
 
                 conversationHistory.add("\nOBSERVATION FROM TOOL:\n" + observation);
+
+                if (observation.contains("\"status\": \"success\"")) {
+                    conversationHistory.add("\nSYSTEM: Il tool è stato eseguito con successo. " +
+                            "Fornisci ora la risposta finale all'utente in linguaggio naturale. " +
+                            "NON chiamare altri tool.");
+                }
             } else {
                 String cleanResponse = rawResponse.replaceAll("<thought>.*?</thought>", "").trim();
                 System.out.println("\n🤖 Risposta Finale Agente: " + cleanResponse);
@@ -209,11 +215,28 @@ public class HubberAgentLoop {
                 // Estrae il blocco di testo contenuto dentro i tag <call:memory_append>...</call>
                 String memoryData = toolCall.substring(toolCall.indexOf(">") + 1).trim();
                 
-                URL resourceUrl = HubberAgentLoop.class.getResource(MEMORY_RESOURCE);
-                if (resourceUrl == null) {
+                // Resolve to the matching src/ resources folder so writes survive Maven rebuilds.
+                // Walk up until "target" is found, then check whether the next segment is
+                // "test-classes" → src/test/resources, or "classes" → src/main/resources.
+                URL classUrl = HubberAgentLoop.class.getResource(MEMORY_RESOURCE);
+                if (classUrl == null) {
                     return "{\"status\": \"error\", \"message\": \"File di memoria non trovato nel classpath.\"}";
                 }
-                Path path = Paths.get(resourceUrl.toURI());
+                Path classPath = Paths.get(classUrl.toURI());
+                Path targetDir = classPath;
+                while (targetDir != null && !"target".equals(targetDir.getFileName().toString())) {
+                    targetDir = targetDir.getParent();
+                }
+                Path path;
+                if (targetDir != null) {
+                    Path classesDir = targetDir.resolve("test-classes");
+                    String srcResources = Files.isDirectory(classesDir) ? "test/resources" : "main/resources";
+                    path = targetDir.getParent()
+                                    .resolve("src").resolve(srcResources)
+                                    .resolve("org").resolve("hubbers").resolve("agent").resolve("memory.md");
+                } else {
+                    path = classPath;
+                }
                 
                 // Effettua l'append di una riga con un ritorno a capo finale
                 String lineToAppend = "\n- " + memoryData;
