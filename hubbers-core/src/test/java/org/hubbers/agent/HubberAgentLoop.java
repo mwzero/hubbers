@@ -188,7 +188,7 @@ public class HubberAgentLoop {
         try {
             if (toolCall.startsWith("file_write")) {
                 String filename = extractAttribute(toolCall, "filename");
-                String content = toolCall.substring(toolCall.indexOf(">") + 1, toolCall.lastIndexOf("</call>"));
+                String content = toolCall.substring(toolCall.indexOf(">") + 1);
                 
                 Path path = Paths.get(filename);
                 Files.writeString(path, content);
@@ -207,7 +207,7 @@ public class HubberAgentLoop {
                 
             } else if (toolCall.startsWith("memory_append")) {
                 // Estrae il blocco di testo contenuto dentro i tag <call:memory_append>...</call>
-                String memoryData = toolCall.substring(toolCall.indexOf(">") + 1, toolCall.lastIndexOf("</call>")).trim();
+                String memoryData = toolCall.substring(toolCall.indexOf(">") + 1).trim();
                 
                 URL resourceUrl = HubberAgentLoop.class.getResource(MEMORY_RESOURCE);
                 if (resourceUrl == null) {
