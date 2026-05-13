@@ -16,5 +16,6 @@
         "mvn dependency:resolve": true,
         "New-Object": true,
         "Out-Null": true
-    }
+    },
+    "java.debug.settings.onBuildFailureProceed": true
 }

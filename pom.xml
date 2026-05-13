@@ -101,7 +101,7 @@
             <!-- Web Server -->
             <dependency>
                 <groupId>io.javalin</groupId>
-                <artifactId>javalin-bundle</artifactId>
+                <artifactId>javalin</artifactId>
                 <version>${javalin.version}</version>
             </dependency>
             
@@ -217,6 +217,14 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
                     <version>${maven.dependency.plugin.version}</version>
+                    <dependencies>
+                        <!-- ASM 9.8 adds Java 25 (class file v69) support -->
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm</artifactId>
+                            <version>9.8</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
