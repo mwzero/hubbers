@@ -1,51 +1,14 @@
 package org.hubbers.agent.memory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.model.Message;
-
-import java.util.List;
-
 /**
- * Interface for storing and retrieving conversation history and facts.
+ * Platform-level conversation memory interface.
+ * Extends the platform-agnostic react interface so that all platform implementations
+ * ({@link FileSystemConversationStore}, {@link InMemoryConversationStore}) automatically
+ * satisfy {@link org.hubbers.react.memory.ConversationMemory} as well.
+ *
+ * @deprecated Use {@link org.hubbers.react.memory.ConversationMemory} directly.
  */
-public interface ConversationMemory {
-    
-    /**
-     * Save a message to the conversation history.
-     */
-    void saveMessage(String conversationId, Message message);
-    
-    /**
-     * Load the full conversation history.
-     */
-    List<Message> loadHistory(String conversationId);
-    
-    /**
-     * Save a fact extracted from the conversation.
-     */
-    void saveFact(String conversationId, String key, JsonNode value);
-    
-    /**
-     * Retrieve a specific fact by key.
-     */
-    JsonNode getFact(String conversationId, String key);
-    
-    /**
-     * Search facts by query (semantic search if supported).
-     */
-    List<Fact> searchFacts(String conversationId, String query);
-    
-    /**
-     * Clear conversation history (for cleanup).
-     */
-    void clearConversation(String conversationId);
-
-    /**
-     * List all stored conversation IDs.
-     *
-     * @return list of conversation identifiers
-     */
-    default List<String> listConversations() {
-        return List.of();
-    }
+@Deprecated(since = "0.3.0", forRemoval = true)
+public interface ConversationMemory extends org.hubbers.react.memory.ConversationMemory {
+    // All methods inherited from org.hubbers.react.memory.ConversationMemory
 }

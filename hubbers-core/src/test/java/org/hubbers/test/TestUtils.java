@@ -11,7 +11,7 @@ import org.hubbers.manifest.agent.OutputDefinition;
 import org.hubbers.manifest.common.Metadata;
 import org.hubbers.manifest.common.SchemaDefinition;
 import org.hubbers.manifest.tool.ToolManifest;
-import org.hubbers.model.*;
+import org.hubbers.react.model.*;
 import org.hubbers.util.JacksonFactory;
 
 import java.util.ArrayList;
@@ -61,7 +61,6 @@ public class TestUtils {
      */
     public static ModelProvider createMockProvider(String response, List<FunctionCall> functionCalls) {
         return new ModelProvider() {
-            @Override
             public String providerName() {
                 return "test";
             }

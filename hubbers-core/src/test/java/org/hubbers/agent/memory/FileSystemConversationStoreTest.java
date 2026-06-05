@@ -2,8 +2,9 @@ package org.hubbers.agent.memory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hubbers.model.FunctionCall;
-import org.hubbers.model.Message;
+import org.hubbers.react.model.FunctionCall;
+import org.hubbers.react.model.Message;
+import org.hubbers.react.memory.Fact;
 import org.hubbers.util.JacksonFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

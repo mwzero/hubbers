@@ -15,7 +15,11 @@
         "Add-Type": true,
         "mvn dependency:resolve": true,
         "New-Object": true,
-        "Out-Null": true
+        "Out-Null": true,
+        "/^cmd /c \"set JAVA_HOME=C:\\\\mwzero\\\\res\\\\openjdk-25\\.0\\.2_windows-x64_bin && C:\\\\mwzero\\\\res\\\\apache-maven-3\\.9\\.12\\\\bin\\\\mvn\\.cmd clean test -pl hubbers-react -am -B\" 2>&1 \\| Select-String \"Tests run\\|BUILD\\|FAIL\" \\| Select-Object -First 20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     },
     "java.debug.settings.onBuildFailureProceed": true
 }

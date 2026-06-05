@@ -2,7 +2,7 @@ package org.hubbers.annotation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.hubbers.app.RuntimeFacade;
-import org.hubbers.execution.RunResult;
+import org.hubbers.react.execution.RunResult;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.common.Metadata;
 import org.hubbers.manifest.pipeline.PipelineManifest;

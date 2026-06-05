@@ -1,0 +1,23 @@
+agent:
+  name: hubber.react
+  version: 1.0.0
+  description: ReAct loop agent with file system tools
+
+model:
+  name: qwen2.5-7b-instruct-q4_k_m.gguf
+
+config:
+  max_iterations: 5
+
+prompts:
+  soul:        system-prompt.md
+  tools:       tools.md
+  memory:      memory.md
+  observation: observation-prompt.md
+  reflection:  reflection-prompt.md
+  rejection:   rejection-prompt.md
+
+tool_rag:
+  enabled: true
+  top_k: 6
+  discovery_prompt: discovery-prompt.md

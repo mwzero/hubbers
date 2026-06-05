@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hubbers.manifest.tool.ToolManifest;
-import org.hubbers.model.FunctionDefinition;
+import org.hubbers.react.model.FunctionDefinition;
 
 /**
  * Utility to convert Hubbers ToolManifest (task definition) 

@@ -7,7 +7,7 @@ import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.manifest.skill.SkillMetadata;
-import org.hubbers.model.FunctionDefinition;
+import org.hubbers.react.model.FunctionDefinition;
 
 /**
  * Unified converter for all artifact types (tools, agents, pipelines, skills) to LLM FunctionDefinitions.
@@ -35,6 +35,7 @@ public class ArtifactToFunctionConverter {
      * Agents are AI-powered tasks that use LLM reasoning (sentiment, NER, summarization, etc.).
      */
     public FunctionDefinition convertAgent(AgentManifest agentManifest) {
+
         String name = extractAgentName(agentManifest);
         String description = extractAgentDescription(agentManifest);
         JsonNode parameters = extractAgentParameters(agentManifest);
@@ -48,6 +49,7 @@ public class ArtifactToFunctionConverter {
      * Pipelines are pre-built multi-step workflows.
      */
     public FunctionDefinition convertPipeline(PipelineManifest pipelineManifest) {
+
         String name = extractPipelineName(pipelineManifest);
         String description = extractPipelineDescription(pipelineManifest);
         JsonNode parameters = extractPipelineParameters(pipelineManifest);
@@ -62,6 +64,7 @@ public class ArtifactToFunctionConverter {
      * Only lightweight metadata is converted (progressive disclosure).
      */
     public FunctionDefinition convertSkill(SkillMetadata skillMetadata) {
+
         String name = skillMetadata.getName();
         String description = extractSkillDescription(skillMetadata);
         JsonNode parameters = createGenericSkillParameters();
@@ -72,6 +75,7 @@ public class ArtifactToFunctionConverter {
 
     // Agent extraction methods
     private String extractAgentName(AgentManifest manifest) {
+        
         if (manifest.getAgent() != null && manifest.getAgent().getName() != null) {
             return manifest.getAgent().getName();
         }

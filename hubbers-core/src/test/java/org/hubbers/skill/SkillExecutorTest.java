@@ -3,11 +3,13 @@ package org.hubbers.skill;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hubbers.app.ArtifactRepository;
-import org.hubbers.execution.ExecutionStatus;
-import org.hubbers.execution.RunResult;
+import org.hubbers.react.execution.ExecutionStatus;
+import org.hubbers.react.execution.RunResult;
 import org.hubbers.manifest.skill.SkillFrontmatter;
 import org.hubbers.manifest.skill.SkillManifest;
-import org.hubbers.model.*;
+import org.hubbers.react.model.*;
+import org.hubbers.model.ModelProvider;
+import org.hubbers.model.ModelProviderRegistry;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.util.JacksonFactory;
 import org.hubbers.validation.SchemaValidator;
@@ -37,7 +39,6 @@ class SkillExecutorTest {
 
         // Create mock model provider that returns valid JSON
         ModelProvider mockProvider = new ModelProvider() {
-            @Override
             public String providerName() {
                 return "ollama";
             }

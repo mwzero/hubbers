@@ -1,4 +1,5 @@
 package org.hubbers.agent.memory;
+import org.hubbers.react.memory.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -6,8 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.hubbers.model.FunctionCall;
-import org.hubbers.model.Message;
+import org.hubbers.react.model.FunctionCall;
+import org.hubbers.react.model.Message;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -147,10 +148,11 @@ public class FileSystemConversationStore implements ConversationMemory {
             return facts.values().stream()
                     .filter(node -> node.get("key").asText().toLowerCase().contains(lowerQuery)
                             || node.get("value").toString().toLowerCase().contains(lowerQuery))
-                    .map(node -> new Fact(
-                            node.get("key").asText(),
-                            node.get("value"),
-                            node.get("timestamp").asLong()))
+                    .map(node -> Fact.builder()
+                            .key(node.get("key").asText())
+                            .value(node.get("value"))
+                            .timestamp(node.get("timestamp").asLong())
+                            .build())
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Failed to search facts for conversation '{}'", conversationId, e);

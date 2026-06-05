@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.agent.Instructions;
-import org.hubbers.model.ModelRequest;
+import org.hubbers.react.model.ModelRequest;
 import org.hubbers.util.JacksonFactory;
 
 import java.util.Iterator;

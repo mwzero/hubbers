@@ -77,27 +77,26 @@ public class Bootstrap {
         var executorRegistry = new ExecutorRegistry();
         executorRegistry.register(ExecutorRegistry.ExecutorType.TOOL, toolExecutor);
 
-        // Create unified AgentExecutor (handles both simple and agentic execution)
-        var promptBuilder = new org.hubbers.agent.AgentPromptBuilder();
-        var agentExecutor = new org.hubbers.agent.AgentExecutor(
+        // Create the DIP adapters that bridge hubbers-react interfaces to platform types
+        var artifactResolver = new org.hubbers.app.ArtifactRepositoryResolver(repository, jsonMapper);
+        var toolCallHandler = new org.hubbers.agent.ArtifactDispatchHandler(
+                repository, toolExecutor, executorRegistry);
+
+        // Create HubberAgentLoop (platform-agnostic, from hubbers-react)
+        var agentExecutor = new org.hubbers.react.HubberAgentLoop(
                 modelRegistry,
-                promptBuilder,
-                schemaValidator,
-                jsonMapper,
-                toolExecutor,
-                repository,
-                conversationMemory,
-                executorRegistry
+                toolCallHandler,
+                artifactResolver,
+                conversationMemory
         );
 
-        // Register AgentExecutor in registry
+        // Register HubberAgentLoop in registry
         executorRegistry.register(ExecutorRegistry.ExecutorType.AGENT, agentExecutor);
 
         // Create ModelRouter for local-first routing and token tracking
         String ollamaUrl = config.getOllama() != null && config.getOllama().getBaseUrl() != null
                 ? config.getOllama().getBaseUrl() : "http://localhost:11434";
         var modelRouter = new org.hubbers.model.ModelRouter(modelRegistry, ollamaUrl, httpClient);
-        agentExecutor.setModelRouter(modelRouter);
 
         // Create PipelineExecutor with ExecutorRegistry (instead of direct AgentExecutor reference)
         var pipelineExecutor = new PipelineExecutor(repository, executorRegistry, toolExecutor, new InputMapper(jsonMapper));

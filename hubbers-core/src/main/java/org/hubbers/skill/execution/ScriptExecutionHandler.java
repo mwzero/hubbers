@@ -3,7 +3,7 @@ package org.hubbers.skill.execution;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.hubbers.execution.RunResult;
+import org.hubbers.react.execution.RunResult;
 import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.tool.ToolExecutor;
 import org.slf4j.Logger;

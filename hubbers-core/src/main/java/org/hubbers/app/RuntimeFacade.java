@@ -2,8 +2,10 @@ package org.hubbers.app;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.hubbers.agent.AgentExecutor;
+import org.hubbers.agent.AgentConfigAdapter;
+import org.hubbers.react.HubberAgentLoop;
 import org.hubbers.agent.ArtifactCatalogInjector;
+import org.hubbers.react.execution.*;
 import org.hubbers.execution.*;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
@@ -58,7 +60,7 @@ public class RuntimeFacade {
     private static final Logger logger = LoggerFactory.getLogger(RuntimeFacade.class);
     
     private final ArtifactRepository artifactRepository;
-    private final AgentExecutor agentExecutor;
+    private final HubberAgentLoop agentExecutor;
     private final ToolExecutor toolExecutor;
     private final PipelineExecutor pipelineExecutor;
     private final SkillExecutor skillExecutor;
@@ -90,7 +92,7 @@ public class RuntimeFacade {
     }
 
     public RuntimeFacade(ArtifactRepository artifactRepository,
-                         AgentExecutor agentExecutor,
+                         HubberAgentLoop agentExecutor,
                          ToolExecutor toolExecutor,
                          PipelineExecutor pipelineExecutor,
                          SkillExecutor skillExecutor,
@@ -156,7 +158,7 @@ public class RuntimeFacade {
             var manifest = artifactRepository.loadAgent(name);
             var validation = manifestValidator.validateAgent(manifest);
             if (!validation.isValid()) return RunResult.failed(String.join(", ", validation.getErrors()));
-            return agentExecutor.execute(manifest, input, conversationId);
+            return agentExecutor.execute(AgentConfigAdapter.from(manifest), input.toString(), conversationId);
         });
     }
     
@@ -221,12 +223,11 @@ public class RuntimeFacade {
             // Build input with request + optional context
             com.fasterxml.jackson.databind.node.ObjectNode agentInput =
                 JacksonFactory.jsonMapper().createObjectNode();
-            agentInput.put("request", request);
-            if (context != null) {
-                agentInput.set("context", context);
-            }
+            String agentInputStr = (context != null)
+                    ? request + "\n\nContext: " + context
+                    : request;
 
-            return agentExecutor.execute(agent, agentInput, convId);
+            return agentExecutor.execute(AgentConfigAdapter.from(agent), agentInputStr, convId);
         });
     }
 
@@ -432,7 +433,7 @@ public class RuntimeFacade {
      *
      * @return conversation memory, or null
      */
-    public org.hubbers.agent.memory.ConversationMemory getConversationMemory() {
+    public org.hubbers.react.memory.ConversationMemory getConversationMemory() {
         return agentExecutor.getConversationMemory();
     }
 
@@ -452,7 +453,7 @@ public class RuntimeFacade {
                                         String conversationId) {
         return executeWithTracking("agent", manifest.getAgent().getName(), input, () -> {
             // Manifest is already validated and configured by caller
-            return agentExecutor.execute(manifest, input, conversationId);
+            return agentExecutor.execute(AgentConfigAdapter.from(manifest), input.toString(), conversationId);
         });
     }
 

@@ -1,7 +1,8 @@
 package org.hubbers.agent.memory;
+import org.hubbers.react.memory.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.model.Message;
+import org.hubbers.react.model.Message;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class InMemoryConversationStore implements ConversationMemory {
     @Override
     public void saveFact(String conversationId, String key, JsonNode value) {
         Map<String, Fact> conversationFacts = facts.computeIfAbsent(conversationId, k -> new ConcurrentHashMap<>());
-        conversationFacts.put(key, new Fact(key, value, System.currentTimeMillis()));
+        conversationFacts.put(key, Fact.builder().key(key).value(value).timestamp(System.currentTimeMillis()).build());
     }
 
     @Override

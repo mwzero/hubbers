@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.hubbers.config.OllamaConfig;
+import org.hubbers.react.model.ModelRequest;
+import org.hubbers.react.model.ModelResponse;
 import org.hubbers.util.JacksonFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

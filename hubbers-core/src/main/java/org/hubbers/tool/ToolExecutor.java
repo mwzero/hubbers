@@ -1,7 +1,7 @@
 package org.hubbers.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.hubbers.execution.RunResult;
+import org.hubbers.react.execution.RunResult;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;

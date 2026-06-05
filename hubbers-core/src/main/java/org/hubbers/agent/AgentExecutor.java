@@ -4,8 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.hubbers.agent.memory.ConversationMemory;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.hubbers.react.memory.ConversationMemory;
 import org.hubbers.app.ArtifactRepository;
+import org.hubbers.react.execution.*;
 import org.hubbers.execution.*;
 import org.hubbers.manifest.agent.AgentManifest;
 import org.hubbers.manifest.pipeline.PipelineManifest;
@@ -13,11 +17,14 @@ import org.hubbers.manifest.skill.SkillManifest;
 import org.hubbers.manifest.skill.SkillMetadata;
 import org.hubbers.manifest.tool.ToolManifest;
 import org.hubbers.model.*;
+import org.hubbers.react.model.Message;
+import org.hubbers.react.model.FunctionDefinition;
+import org.hubbers.react.model.FunctionCall;
+import org.hubbers.react.model.ModelRequest;
+import org.hubbers.react.model.ModelResponse;
 import org.hubbers.tool.ToolExecutor;
 import org.hubbers.validation.SchemaValidator;
 import org.hubbers.validation.ValidationResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,21 +37,12 @@ import java.util.stream.StreamSupport;
 /**
  * Unified executor for all agent execution modes.
  *
- * <p>Both {@code "simple"} and {@code "agentic"} modes share a single ReAct loop. The mode
- * controls loop depth and whether a planning phase is performed:</p>
- * <ul>
- *   <li>{@code "simple"} — {@code maxIterations=1}; tools may be called, and if invoked a
- *       final synthesis LLM call (without function definitions) produces a natural-language
- *       answer. Phase 1 (planning) is skipped.</li>
- *   <li>{@code "agentic"} (default) — full ReAct loop; Phase 1 (planning) runs when the
- *       artifact catalog exceeds {@value #PLANNING_THRESHOLD}.</li>
- * </ul>
- *
- * <p>Every assistant message and every tool result is saved atomically to both the local
- * {@code history} list and {@link ConversationMemory} immediately after being produced.</p>
+ * @deprecated Use {@link HubberAgentLoop} instead. {@code AgentExecutor} now delegates
+ *             to {@link HubberAgentLoop} and will be removed in a future release.
  */
+@Deprecated(since = "0.2.0", forRemoval = true)
+@Slf4j
 public class AgentExecutor {
-    private static final Logger log = LoggerFactory.getLogger(AgentExecutor.class);
 
     // --- Loop constants ---
     private static final int DEFAULT_MAX_ITERATIONS = 10;
@@ -149,6 +147,7 @@ public class AgentExecutor {
      * @return execution result
      */
     public RunResult execute(AgentManifest manifest, JsonNode input, String conversationId) {
+
         boolean simpleMode = isSimpleMode(manifest);
         log.debug("Agent '{}' running in {} mode", manifest.getAgent().getName(),
                 simpleMode ? "simple" : "agentic");

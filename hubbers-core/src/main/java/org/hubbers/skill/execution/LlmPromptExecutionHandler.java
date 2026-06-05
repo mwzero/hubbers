@@ -2,11 +2,11 @@ package org.hubbers.skill.execution;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.hubbers.execution.RunResult;
+import org.hubbers.react.execution.RunResult;
 import org.hubbers.manifest.skill.SkillManifest;
-import org.hubbers.model.ModelProvider;
-import org.hubbers.model.ModelRequest;
-import org.hubbers.model.ModelResponse;
+import org.hubbers.react.model.ModelProvider;
+import org.hubbers.react.model.ModelRequest;
+import org.hubbers.react.model.ModelResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
