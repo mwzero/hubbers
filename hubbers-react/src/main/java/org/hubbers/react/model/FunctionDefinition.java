@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import org.hubbers.manifest.common.ExampleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;

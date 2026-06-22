@@ -1,4 +1,4 @@
-package org.hubbers.manifest.common;
+package org.hubbers.react.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
